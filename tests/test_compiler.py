@@ -1,0 +1,33 @@
+import unittest
+import mock
+from infi.recipe.application_packager import utils
+from os import path
+from . import get_archive_path, long_one
+
+class CompilerTestCase(unittest.TestCase):
+    def get_compiler(self):
+        compiler = utils.compiler.BinaryDistributionsCompiler(archives_directory=path.join(".cache", "dist"),
+                                                              eggs_directory='eggs')
+        return compiler
+
+    def test_compile_async(self):
+        lxml_archive = get_archive_path("async-0.6.1.tar.gz")
+        compiler = self.get_compiler()
+        with compiler.extract_archive(lxml_archive):
+            compiler.add_import_setuptools_to_setup_py()
+            built_egg = compiler.build_binary_egg()
+            self.assertTrue(path.exists(built_egg))
+
+    def test_get_packages_to_install(self):
+        expected = [get_archive_path("coverage-3.5.1.tar.gz"),
+                    get_archive_path("gitdb-0.5.4.tar.gz"),
+                    get_archive_path("lxml-2.3.4.tar.gz"),
+                    get_archive_path("async-0.6.1.tar.gz")]
+        actual = self.get_compiler().get_packages_to_install()
+        self.assertEquals(set(actual), set(expected))
+
+    @long_one
+    def test_compile_all(self):
+        with mock.patch("os.remove"), mock.patch("shutil.copy"):
+            utils.compiler.compile_binary_distributions(archives_directory=path.join(".cache", "dist"),
+                                                        eggs_directory='eggs')

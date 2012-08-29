@@ -1,0 +1,10 @@
+Source: $package_name
+Section: unknown
+Priority: optional
+Maintainer: $company
+Version: $package_version
+Homepage: http://www.infinidat.com
+Package: $package_name
+Architecture: $package_arch
+Description: $product_description
+$depends_declaration
