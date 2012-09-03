@@ -1,0 +1,181 @@
+%define product_name $product_name
+%define product_description $product_description
+%define package_name $package_name
+%define package_version $package_version
+%define package_arch $package_arch
+%define build_root $build_root
+%define post_install_script_name $post_install_script_name
+%define pre_uninstall_script_name $pre_uninstall_script_name
+$post_install_script_args_definition
+$pre_uninstall_script_args_definition
+%define prefix $prefix
+
+BuildArch: %{package_arch}
+BuildRoot: %{build_root}
+Source: %{package_name}-%{package_version}-%{package_arch}.tar.gz
+Version: %{package_version}
+Summary: %{product_name}
+AutoReqProv: no 
+
+Group: Utilities
+License: Commercial
+Name: %{package_name}
+Release: 1
+
+%description 
+%{product_description}
+
+%files
+%defattr(-,root,root)
+$directories
+$files
+
+%post
+
+RC=0
+
+function assert_rc() {
+    if test $$RC -ne 0; then
+        exit 1
+    fi
+}
+
+function execute() {
+    if test $$DEBUG -eq 0; then
+        $$@ > /dev/null 2>&1
+    else
+        $$@ 
+    fi
+}
+
+# debugging
+DEBUG=0
+if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
+    DEBUG=1
+    set -xv
+fi
+
+# bypass custom actions
+if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
+    exit 0
+fi
+
+# start
+execute pushd .
+execute cd %{prefix}
+
+# bootstrap
+execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/distribute_setup.py
+RC=$$?
+assert_rc
+
+# buildout
+execute bin/buildout
+RC=$$?
+assert_rc
+
+# link binaries to /usr/bin
+execute cd bin
+for script in *; do
+    if test "$$script" != "buildout"; then
+        execute ln -s -f %{prefix}/bin/$$script %{_bindir}/$$script
+        RC=$$?
+        assert_rc
+    fi
+done
+cd ..
+
+# execute application's post-install script
+if test -n "%{post_install_script_name}" -a -x "bin/%{post_install_script_name}"; then
+    execute bin/%{post_install_script_name} %{post_install_script_args}
+    RC=$$?
+    assert_rc
+fi 
+
+#end 
+execute popd
+exit 0
+
+
+%preun
+
+RC=0
+
+function assert_rc() {
+    if test $$RC -ne 0; then
+        exit 1
+    fi
+}
+
+function execute() {
+    if test $$DEBUG -eq 0; then
+        $$@ > /dev/null 2>&1
+    else
+        $$@ 
+    fi
+}
+
+# debugging
+DEBUG=0
+if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
+    DEBUG=1
+    set -xv
+fi
+
+# bypass custom actions
+if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
+    exit 0
+fi
+
+# start
+execute pushd .
+execute cd %{prefix}
+
+# execute application's pre-uninstall script
+if test -n "%{pre_uninstall_script_name}" -a -x "bin/%{pre_uninstall_script_name}"; then
+    execute bin/%{pre_uninstall_script_name} %{pre_uninstall_script_args}
+    RC=$$?
+    assert_rc
+fi
+
+# remove links to binaries from /usr/bin
+execute cd bin
+for script in *; do
+    if test -n "$$script" -a -L %{_bindir}/$$script -a "`readlink %{_bindir}/$$script`" == "%{prefix}/bin/$$script"; then
+        execute rm -f %{_bindir}/$$script
+        RC=$$?
+        assert_rc
+    fi
+done
+cd ..
+
+# clean installed directories
+# this also deletes installed files
+for dirname in $directories_to_clean; do
+    execute find $$dirname -maxdepth 1 -mindepth 1 -delete
+done 
+
+# end
+execute popd
+exit 0
+
+%postun
+
+RC=0
+
+function execute() {
+    if test $$DEBUG -eq 0; then
+        $$@ > /dev/null 2>&1
+    else
+        $$@ 
+    fi
+}
+
+# debugging
+DEBUG=0
+if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
+    DEBUG=1
+    set -xv
+fi
+
+execute rmdir %{prefix}

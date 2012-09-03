@@ -1,0 +1,18 @@
+<?xml version='1.0'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+    <Product Id='*' Name='' Language='1033' Version='' Manufacturer='{company}' UpgradeCode=''>
+        <Package Description='' Manufacturer='{company}' InstallerVersion='301' Compressed='yes'/>
+        <Media Id='1' Cabinet='everything.cab' EmbedCab='yes'/>
+        <Directory Id='TARGETDIR' Name='SourceDir'>
+            <Directory Id='ProgramFilesFolder'>
+                <Directory Id='COMPANYROOTDIRECTORY' Name='{company}'>
+                    <Directory Id='INSTALLDIR' Name=''/>
+                </Directory>
+            </Directory>
+        </Directory>
+        <Feature Id='Everything' Title='Everything' Level='1' Display='hidden' Absent='disallow' AllowAdvertise='no' InstallDefault='local' TypicalDefault='install'/>
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
+        <UIRef Id="WixUI_InstallDir"/>
+        <InstallExecuteSequence/>
+   </Product>
+</Wix>

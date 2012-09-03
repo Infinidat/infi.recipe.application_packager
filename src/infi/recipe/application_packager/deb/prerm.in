@@ -1,0 +1,65 @@
+#!/bin/bash
+
+if test "$$1" != "remove"; then
+    exit 0
+fi
+
+RC=0
+
+function assert_rc() {
+    if test $$RC -ne 0; then
+        exit 1
+    fi
+}
+
+function execute() {
+    if test $$DEBUG -eq 0; then
+        $$@ > /dev/null 2>&1
+    else
+        $$@ 
+    fi
+}
+
+# debugging
+DEBUG=0
+if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
+    DEBUG=1
+    set -xv
+fi
+
+# bypass custom actions
+if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
+    exit 0
+fi
+
+# start
+execute pushd .
+cd $prefix
+
+# execute application's pre-uninstall script
+if test -n "$pre_uninstall_script_name" -a -x "bin/$pre_uninstall_script_name"; then
+    execute bin/$pre_uninstall_script_name $pre_uninstall_script_args
+    RC=$$?
+    assert_rc
+fi
+
+# remove links to binaries from /usr/bin
+execute cd bin
+for script in *; do
+    if test -n "$$script" -a -L /usr/bin/$$script -a "`readlink /usr/bin/$$script`" == "$prefix/bin/$$script"; then
+        execute rm -f /usr/bin/$$script
+        RC=$$?
+        assert_rc
+    fi
+done
+cd ..
+
+# clean installed directories
+# this also deletes installed files
+for dirname in $directories_to_clean; do
+    execute find $$dirname -maxdepth 1 -mindepth 1 -delete
+done 
+
+# end
+execute popd
+exit 0
