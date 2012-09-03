@@ -1,6 +1,6 @@
 Overview
 ========
-This repository is just a skeleton we use for projects.
+This repository is a buildout recipe for created stand-alone, isolated, python packages.
 
 Usage
 -----
