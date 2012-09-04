@@ -1,7 +1,7 @@
 import unittest
 import mock
 from infi.recipe.application_packager import utils
-from os import path
+from os import path, curdir
 from . import get_archive_path, long_one
 
 class CompilerTestCase(unittest.TestCase):
