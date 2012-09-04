@@ -4,8 +4,8 @@ logger = getLogger(__name__)
 
 RECIPE_DEFAULTS = {'deb-dependencies': '',
                    'sign-executables-and-msi': 'false',
-                   'pfx-file': '~/.pfx/certificate.pfx',
-                   'pfx-password-file': '~/.pfx/certificate-password.txt',
+                   'pfx-file': '~/.authenticode/certificate.pfx',
+                   'pfx-password-file': '~/.authenticode/certificate-password.txt',
                    'timestamp-url':  "http://timestamp.verisign.com/scripts/timstamp.dll"
                   }
 
