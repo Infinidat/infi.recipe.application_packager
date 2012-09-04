@@ -1,6 +1,6 @@
 import unittest
 from infi.pyutils.decorators import wraps
-from os import environ, path
+from os import environ, path, curdir
 
 def get_archive_path(filename):
     return path.join(path.abspath(curdir), '.cache', 'dist', filename)
