@@ -37,12 +37,16 @@ class Signtool(object):
         self.certificate_password_file = certificate_password_file
         self.retry_counter = retry_counter
 
+    def read_password_from_file(self):
+        with open(self.certificate_password_file) as fd:
+            return fd.readline()[0].strip()
+
     def sign_file(self, filepath):
         from pkg_resources import resource_filename
         from ..execute import execute_assert_success
         signtool = resource_filename(__name__, "signtool.exe")
-        args = [signtool, 'sign', '/f', authenticode_certificate,
-                '/t', timestamp_url, '/p', certificate_password, '/v', filepath]
+        args = [signtool, 'sign', '/f', self.authenticode_certificate,
+                '/t', self.timestamp_url, '/p', self.read_password_from_file(), '/v', filepath]
         retry_counter = self.retry_counter
         while retry_counter:
             if execute_assert_success(args, allowed_return_codes=[0,2]).get_returncode() == 0:
