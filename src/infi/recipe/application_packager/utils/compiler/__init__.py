@@ -9,9 +9,10 @@ logger = getLogger(__name__)
 
 class BinaryDistributionsCompiler(object):
     SOURCE_EXTENSIONS =  ['.zip', '.tar.gz', '.tar.bz2']
-    def __init__(self, archives_directory, eggs_directory):
+    def __init__(self, buildout_directory, archives_directory, eggs_directory):
         from os.path import abspath
         super(BinaryDistributionsCompiler, self).__init__()
+        self.buildout_directory = buildout_directory
         self.archives_directory = abspath(archives_directory)
         self.eggs_directory = abspath(eggs_directory)
 
@@ -55,9 +56,20 @@ class BinaryDistributionsCompiler(object):
             with chdir(extracted_dir):
                 yield extracted_dir
 
+    def execute_with_isolated_python(commandline_or_args):
+        import sys
+        import os
+        from infi.recipe.application_packager.utils.execute import execute_assert_success, parse_args
+        from infi.recipe.application_packager.assertions import is_windows
+        args = parse_args(commandline_or_args)
+        executable = [os.path.join(self.buildout_directory, 'parts', 'python', 'bin',
+                                   'python{}'.format('.exe' if is_windows() else ''))]
+        env = os.environ.copy()
+        env['PYTHONPATH'] = os.path.pathsep.join([path for path in sys.path])
+        execute_assert_success(executable + args, env=env)
+
     def build_binary_egg(self):
-        from ..execute import execute_with_isolated_python
-        execute_with_isolated_python("setup.py bdist_egg".split())
+        self.execute_with_isolated_python("setup.py bdist_egg".split())
         [egg] = glob(path.join('dist', '*.egg'))
         return egg
 
@@ -84,5 +96,5 @@ class BinaryDistributionsCompiler(object):
                 copy(built_egg, self.archives_directory)
                 remove(archive)
 
-def compile_binary_distributions(archives_directory, eggs_directory):
-    BinaryDistributionsCompiler(archives_directory, eggs_directory).compile()
+def compile_binary_distributions(buidout_directory, archives_directory, eggs_directory):
+    BinaryDistributionsCompiler(buildout_directory, archives_directory, eggs_directory).compile()

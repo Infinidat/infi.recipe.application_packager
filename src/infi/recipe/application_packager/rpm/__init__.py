@@ -14,7 +14,8 @@ SPEC_TEMPLATE = resource_filename(__name__, 'rpmspec.in')
 class Recipe(PackagingRecipe):
     def install(self):
         utils.buildout.write_buildout_configuration_file_for_production(self.get_python_module_name())
-        utils.compiler.compile_binary_distributions(self.get_download_cache_dist(),
+        utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
+                                                    self.get_download_cache_dist(),
                                                     self.get_eggs_directory())
         utils.download_buildout(self.get_download_cache_dist())
         utils.download_distribute(self.get_download_cache_dist())
