@@ -180,7 +180,7 @@ class Wix(object):
 
     def set_add_remove_programs_icon(self, icon_path):
         icon_id = self.new_element("Icon" , {"Id": "icon.ico", "SourceFile": icon_path})
-        return self.new_element("Property", {"Id":"ARPPRODUCTICON", "Value":"icon.ico"})
+        return self.new_element("Property", {"Id":"ARPPRODUCTICON", "Value":"icon.ico"}, self.product)
 
     def set_allusers(self):
         return self.new_element("Property", {"Id":"ALLUSERS", "Value":"1"}, self.product)
