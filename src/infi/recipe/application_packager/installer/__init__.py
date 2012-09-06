@@ -126,7 +126,7 @@ class Installer(object):
 
     def create_package(self):
         with chdir(os.path.dirname(self._buildout_path)):
-            execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', ,'install', 'pack'])
+            execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s' ,'install', 'pack'])
 
     def is_product_installed(self):
         raise NotImplementedError()
