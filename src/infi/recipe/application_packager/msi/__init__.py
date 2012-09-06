@@ -78,7 +78,6 @@ class Recipe(PackagingRecipe):
             self.signtool.sign_executables_in_archive(archive_path)
         for archive_path in self.glob_in_dist_directory("infi.recipe.console_scripts*"):
             self.signtool.sign_executables_in_archive(archive_path)
-        self.silent_launcher = self._get_signed_silent_launcher()
         self.signtool.sign_file(path.join(self.get_buildout_dir(), 'parts', 'python', 'bin', 'python.exe'))
 
     def glob_in_dist_directory(self, basename):
