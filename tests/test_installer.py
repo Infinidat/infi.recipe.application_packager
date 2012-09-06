@@ -24,7 +24,7 @@ def delete_existing_builds():
 
 def create_package():
     from infi.execute import execute_assert_success
-    execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', 'buildout:develop=.' ,'install', 'pack'])
+    execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', 'install', 'pack'])
 
 from infi.recipe.application_packager.utils.execute import execute_assert_success
 from infi.recipe.application_packager.utils import chdir
