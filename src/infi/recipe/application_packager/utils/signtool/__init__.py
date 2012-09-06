@@ -32,9 +32,10 @@ class SigntoolError(Exception):
 class Signtool(object):
     def __init__(self, timestamp_url, authenticode_certificate, certificate_password_file, retry_counter=5):
         super(Signtool, self).__init__()
+        from os import path
         self.timestamp_url = timestamp_url
-        self.authenticode_certificate = authenticode_certificate
-        self.certificate_password_file = certificate_password_file
+        self.authenticode_certificate = path.abspath(path.expanduser(authenticode_certificate))
+        self.certificate_password_file = path.abspath(path.expanduser(certificate_password_file))
         self.retry_counter = retry_counter
 
     def read_password_from_file(self):
