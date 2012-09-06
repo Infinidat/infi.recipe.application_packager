@@ -96,5 +96,5 @@ class BinaryDistributionsCompiler(object):
                 copy(built_egg, self.archives_directory)
                 remove(archive)
 
-def compile_binary_distributions(buidout_directory, archives_directory, eggs_directory):
+def compile_binary_distributions(buildout_directory, archives_directory, eggs_directory):
     BinaryDistributionsCompiler(buildout_directory, archives_directory, eggs_directory).compile()
