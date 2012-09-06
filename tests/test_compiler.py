@@ -1,10 +1,16 @@
 import unittest
 import mock
 from infi.recipe.application_packager import utils
-from os import path, curdir
+from os import path, curdir, name
 from . import get_archive_path, long_one
 
+is_windows = name == 'nt'
+
 class CompilerTestCase(unittest.TestCase):
+    def setUp(self):
+        if is_windows:
+            raise unittest.SkipTest("Not applicable on Windows")
+
     def get_compiler(self):
         compiler = utils.compiler.BinaryDistributionsCompiler(archives_directory=path.join(".cache", "dist"),
                                                               eggs_directory='eggs')
