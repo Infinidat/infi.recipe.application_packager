@@ -47,7 +47,9 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | install-on-windows-7              | false                                              |                                                                      |
 | install-on-windows-vista          | false                                              |                                                                      |
 | install-on-windows-xp             | false                                              |                                                                      |
-
+| add-remove-programs-icon          | None                                               | ICO file to use in the add/remove program applet                     |
+| msi-banner-nmp                    | None                                               | Top banner                                                           |
+| msi-dialog-bmp                    | None                                               | Background bitmap used on the welcome and completion dialogs         |
 
 Using the installers
 --------------------
