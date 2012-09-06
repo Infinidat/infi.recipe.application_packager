@@ -40,7 +40,7 @@ class Signtool(object):
 
     def read_password_from_file(self):
         with open(self.certificate_password_file) as fd:
-            return fd.readline()[0].strip()
+            return fd.readlines()[0].strip()
 
     def sign_file(self, filepath):
         from pkg_resources import resource_filename
