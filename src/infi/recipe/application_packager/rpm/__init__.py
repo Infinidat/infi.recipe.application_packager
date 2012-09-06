@@ -3,7 +3,7 @@ __import__("pkg_resources").declare_namespace(__name__)
 from logging import getLogger
 from ..base import PackagingRecipe, RECIPE_DEFAULTS
 from .. import utils
-from os import path, curdir, makedirs, listdir
+from os import path, curdir, makedirs, listdir, remove
 from shutil import rmtree, copy
 from pkg_resources import resource_filename
 
