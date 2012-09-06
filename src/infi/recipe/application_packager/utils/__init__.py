@@ -21,7 +21,10 @@ def chdir(destination_directory):
     try:
         yield
     finally:
-        _chdir_and_log(current_dir)
+        try:
+            _chdir_and_log(current_dir)
+        except:
+            logger.exception("Failed to change back to directory {}".format(current_dir))
 
 @contextmanager
 def temporary_directory_context():

@@ -56,8 +56,8 @@ class BinaryDistributionsCompiler(object):
                 yield extracted_dir
 
     def build_binary_egg(self):
-        from ..execute import execute_with_python
-        execute_with_python("setup.py bdist_egg".split())
+        from ..execute import execute_with_isolated_python
+        execute_with_isolated_python("setup.py bdist_egg".split())
         [egg] = glob(path.join('dist', '*.egg'))
         return egg
 

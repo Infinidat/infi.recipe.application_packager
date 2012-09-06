@@ -18,22 +18,22 @@ def is_executable_exists(filepath):
 def assert_buildout_executable_exists():
     if not is_executable_exists(path.join("bin", "buildout")):
         logger.error("buildout executable does not exist, run `projector devenv build`")
-        raise SystemExit(1)
+        raise AssertionError()
 
 def assert_setup_py_exists():
     if not path.exists("setup.py"):
         logger.error("setup.py does not exist, run `projector devenv build`")
-        raise SystemExit(1)
+        raise AssertionError()
 
 def assert_buildout_configfile_exists():
     if not path.exists("buildout.cfg"):
         logger.error("buidlout.cfg does not exist, the current directory is not a home of a project")
-        raise SystemExit(1)
+        raise AssertionError()
 
 def assert_git_repository():
     if not path.exists(".git"):
         logger.error("the current directory is not a home of a git repository")
-        raise SystemExit(1)
+        raise AssertionError()
 
 def assert_no_uncommitted_changes():
     repository = LocalRepository(curdir)
@@ -41,7 +41,7 @@ def assert_no_uncommitted_changes():
     if changes:
         message = "There are changes pending commit, cannot continue. please commit or checkout those changes:\n"
         logger.error(message+repr(changes))
-        raise SystemExit(1)
+        raise AssertionError()
 
 def is_isolated_python_exists():
     return path.exists(path.join("parts", "python", "bin",
@@ -50,14 +50,14 @@ def is_isolated_python_exists():
 def assert_isolated_python_exists():
     if not is_isolated_python_exists():
         logger.error("Isolated python is required")
-        raise SystemExit(1)
+        raise AssertionError()
 
 def assert_on_branch(branch_name):
     repository = LocalRepository(curdir)
     current_branch = repository.getCurrentBranch()
     if current_branch is None or current_branch.name != branch_name:
         logger.error("not currently on branch {}".format(branch_name))
-        raise SystemExit(1)
+        raise AssertionError()
 
 def is_buildout_executable_using_isolated_python():
     with open(path.join("bin", "buildout-script.py" if is_windows() else "buildout")) as fd:

@@ -23,10 +23,8 @@ def delete_existing_builds():
         shutil.rmtree(path)
 
 def create_package():
-    import sys
-    sys.argv = ['buildout', '-v', '-v', '-v', '-v', '-v', 'buildout:develop=.', 'install', 'pack']
-    from zc.buildout.buildout import main
-    main()
+    from infi.execute import execute_assert_success
+    execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', 'buildout:develop=.' ,'install', 'pack'])
 
 from infi.recipe.application_packager.utils.execute import execute_assert_success
 from infi.recipe.application_packager.utils import chdir

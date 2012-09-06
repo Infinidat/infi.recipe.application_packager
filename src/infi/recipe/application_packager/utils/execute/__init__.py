@@ -41,10 +41,10 @@ def execute_with_python(commandline_or_args):
 def execute_with_isolated_python(commandline_or_args):
     import sys
     import os
-    from ...assertions import is_windows
+    from infi.recipe.application_packager.scripts import INSTALLDIR
+    from infi.recipe.application_packager.assertions import is_windows
     args = parse_args(commandline_or_args)
-    executable = [os.path.join('parts', 'python', 'bin', 'python{}'.format('.exe' if is_windows() else ''))]
-    with open_buildout_configfile() as buildout:
-        if buildout.get('buildout', 'relative-paths') in ['True', 'true']:
-            [executable] = os.path.abspath(executable[0])
-    execute_assert_success(executable + args)
+    executable = [os.path.join(INSTALLDIR, 'parts', 'python', 'bin', 'python{}'.format('.exe' if is_windows() else ''))]
+    env = os.environ.copy()
+    env['PYTHONPATH'] = os.path.pathsep.join([path for path in sys.path])
+    execute_assert_success(executable + args, env=env)

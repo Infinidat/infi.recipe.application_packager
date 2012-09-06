@@ -6,7 +6,10 @@ RECIPE_DEFAULTS = {'deb-dependencies': '',
                    'sign-executables-and-msi': 'false',
                    'pfx-file': '~/.authenticode/certificate.pfx',
                    'pfx-password-file': '~/.authenticode/certificate-password.txt',
-                   'timestamp-url':  "http://timestamp.verisign.com/scripts/timstamp.dll"
+                   'timestamp-url':  "http://timestamp.verisign.com/scripts/timstamp.dll",
+                   'add-remove-programs-icon': None,
+                   'msi-banner-bmp': None,
+                   'msi-dialog-bmp': None,
                   }
 
 class PackagingRecipe(object):
@@ -90,14 +93,14 @@ class PackagingRecipe(object):
         company = self.get_project_section().get('company', 'None')
         if company in [None, 'None', 'none']: # pragma: no cover
             logger.error("Section [project] is missing an attribute 'company'")
-            raise SystemExit(1)
+            raise AssertionError()
         return company
 
     def get_upgrade_code(self):
         upgrade_code = self.get_project_section().get('upgrade_code')
         if upgrade_code in [None, 'None', 'none']: # pragma: no cover
             logger.error("Section [project] is missing an attribute 'upgrade_code'")
-            raise SystemExit(1)
+            raise AssertionError()
         return upgrade_code.upper()
 
     def get_description(self):
@@ -159,3 +162,21 @@ class PackagingRecipe(object):
         from os.path import normpath, expanduser
         key = 'pfx-password-file'
         return normpath(expanduser(self.get_recipe_section().get(key, RECIPE_DEFAULTS[key])))
+
+    def _get_resource_file_from_recipe_section(self, name):
+        from os.path import exists, expanduser, abspath
+        resource_file = self.get_recipe_section().get(name, None)
+        if resource_file is None:
+            return None
+        resource_file = abspath(expanduser(resource_file))
+        return resource_file if exists(resource_file) else None
+
+    def get_add_remove_programs_icon(self):
+        return self._get_resource_file_from_recipe_section('add-remove-programs-icon')
+
+    def get_msi_banner_bmp(self):
+        return self._get_resource_file_from_recipe_section('msi-banner-bmp')
+
+    def get_msi_dialog_bmp(self):
+        return self._get_resource_file_from_recipe_section('msi-dialog-bmp')
+

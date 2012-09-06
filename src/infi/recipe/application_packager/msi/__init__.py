@@ -111,6 +111,15 @@ class Recipe(PackagingRecipe):
         self._prepare_for_major_upgrade(wix)
         self._add_launch_conditions(wix)
         self._add_project_entry_points(wix, silent_launcher_file_id)
+        arp_icon = self.get_add_remove_programs_icon()
+        if arp_icon:
+            wix.set_add_remove_programs_icon(arp_icon)
+        banner_bmp = self.get_msi_banner_bmp()
+        if banner_bmp:
+            wix.new_element("WixVariable", {"Id": "WixUIBannerBmp", "Value": banner_bmp})
+        dialog_bmp = self.get_msi_dialog_bmp()
+        if dialog_bmp:
+            wix.new_element("WixVariable", {"Id": "WixUIDialogBmp", "Value": dialog_bmp})
         wix.set_allusers()
         return wix
 
