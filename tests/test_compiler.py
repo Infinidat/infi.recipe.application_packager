@@ -12,7 +12,8 @@ class CompilerTestCase(unittest.TestCase):
             raise unittest.SkipTest("Not applicable on Windows")
 
     def get_compiler(self):
-        compiler = utils.compiler.BinaryDistributionsCompiler(archives_directory=path.join(".cache", "dist"),
+        compiler = utils.compiler.BinaryDistributionsCompiler(buildout_directory='.',
+                                                              archives_directory=path.join(".cache", "dist"),
                                                               eggs_directory='eggs')
         return compiler
 
@@ -35,5 +36,6 @@ class CompilerTestCase(unittest.TestCase):
     @long_one
     def test_compile_all(self):
         with mock.patch("os.remove"), mock.patch("shutil.copy"):
-            utils.compiler.compile_binary_distributions(archives_directory=path.join(".cache", "dist"),
+            utils.compiler.compile_binary_distributions(buildout_directory='.',
+                                                        archives_directory=path.join(".cache", "dist"),
                                                         eggs_directory='eggs')
