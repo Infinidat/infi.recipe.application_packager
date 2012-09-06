@@ -116,9 +116,11 @@ class Recipe(PackagingRecipe):
             wix.set_add_remove_programs_icon(arp_icon)
         banner_bmp = self.get_msi_banner_bmp()
         if banner_bmp:
+            logger.info("Setting custom banner {}".format(banner_bmp))
             wix.new_element("WixVariable", {"Id": "WixUIBannerBmp", "Value": banner_bmp})
         dialog_bmp = self.get_msi_dialog_bmp()
         if dialog_bmp:
+            logger.info("Setting custom dialog {}".format(dialog_bmp))
             wix.new_element("WixVariable", {"Id": "WixUIDialogBmp", "Value": dialog_bmp})
         wix.set_allusers()
         return wix
