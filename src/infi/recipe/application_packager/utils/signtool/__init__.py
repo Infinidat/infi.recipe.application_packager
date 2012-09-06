@@ -37,7 +37,7 @@ class Signtool(object):
         self.certificate_password_file = certificate_password_file
         self.retry_counter = retry_counter
 
-    def sign_file(filepath):
+    def sign_file(self, filepath):
         from pkg_resources import resource_filename
         from ..execute import execute_assert_success
         signtool = resource_filename("signtool.exe")
