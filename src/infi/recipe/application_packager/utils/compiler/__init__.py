@@ -56,7 +56,7 @@ class BinaryDistributionsCompiler(object):
             with chdir(extracted_dir):
                 yield extracted_dir
 
-    def execute_with_isolated_python(commandline_or_args):
+    def execute_with_isolated_python(self, commandline_or_args):
         import sys
         import os
         from infi.recipe.application_packager.utils.execute import execute_assert_success, parse_args
