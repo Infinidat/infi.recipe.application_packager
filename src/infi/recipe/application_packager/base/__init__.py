@@ -90,14 +90,14 @@ class PackagingRecipe(object):
         company = self.get_project_section().get('company', 'None')
         if company in [None, 'None', 'none']: # pragma: no cover
             logger.error("Section [project] is missing an attribute 'company'")
-            raise SystemExit(1)
+            raise AssertionError()
         return company
 
     def get_upgrade_code(self):
         upgrade_code = self.get_project_section().get('upgrade_code')
         if upgrade_code in [None, 'None', 'none']: # pragma: no cover
             logger.error("Section [project] is missing an attribute 'upgrade_code'")
-            raise SystemExit(1)
+            raise AssertionError()
         return upgrade_code.upper()
 
     def get_description(self):
