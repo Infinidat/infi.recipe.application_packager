@@ -87,7 +87,7 @@ class PackagingRecipe(object):
         return self._get_recipe_atribute("eggs")
 
     def get_scripts_for_production(self):
-        return self._get_recipe_atribute("eggs")
+        return self._get_recipe_atribute("scripts")
 
     def get_deb_dependencies(self):
         return self._get_recipe_atribute("deb-dependencies")

@@ -41,4 +41,4 @@ def write_buildout_configuration_file_for_production(dependent_scripts, eggs, sc
         buildout.set("production-scripts", "dependent-scripts", dependent_scripts)
         buildout.set("production-scripts", "eggs", eggs)
         if scripts:
-            buildout.set("production-scripts", "eggs", scripts)
+            buildout.set("production-scripts", "scripts", scripts)
