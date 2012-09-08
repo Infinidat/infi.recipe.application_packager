@@ -11,7 +11,9 @@ logger = getLogger(__name__)
 
 class Recipe(PackagingRecipe):
     def install(self):
-        utils.buildout.write_buildout_configuration_file_for_production(self.get_python_module_name())
+        utils.buildout.write_buildout_configuration_file_for_production(self.get_dependent_scripts(),
+                                                                        self.get_eggs_for_production(),
+                                                                        self.get_scripts_for_prodcution())
         utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                     self.get_download_cache_dist(),
                                                     self.get_eggs_directory())

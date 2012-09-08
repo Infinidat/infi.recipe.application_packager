@@ -2,7 +2,10 @@ from zc.buildout.download import Download
 from logging import getLogger
 logger = getLogger(__name__)
 
-RECIPE_DEFAULTS = {'deb-dependencies': '',
+RECIPE_DEFAULTS = {'dependent-scripts': 'true',
+                   'eggs': '',
+                   'scripts': '',
+                   'deb-dependencies': '',
                    'sign-executables-and-msi': 'false',
                    'pfx-file': '~/.authenticode/certificate.pfx',
                    'pfx-password-file': '~/.authenticode/certificate-password.txt',
@@ -74,8 +77,20 @@ class PackagingRecipe(object):
         from os import path
         return path.join(self.get_buildout_dir(), 'parts')
 
+    def _get_recipe_atribute(self, attribute):
+        return self.get_recipe_section().get(attribute, RECIPE_DEFAULTS[attribute])
+
+    def get_dependent_scripts(self):
+        return self._get_recipe_atribute("dependent-scripts")
+
+    def get_eggs_for_production(self):
+        return self._get_recipe_atribute("eggs")
+
+    def get_scripts_for_production(self):
+        return self._get_recipe_atribute("eggs")
+
     def get_deb_dependencies(self):
-        return self.get_recipe_section().get('deb-dependencies', RECIPE_DEFAULTS['deb-dependencies'])
+        return self._get_recipe_atribute("deb-dependencies")
 
     def get_product_name(self):
         return self.get_project_section().get('product_name', self.get_project_section().get('name'))
@@ -180,3 +195,9 @@ class PackagingRecipe(object):
     def get_msi_dialog_bmp(self):
         return self._get_resource_file_from_recipe_section('msi-dialog-bmp')
 
+    def write_buildout_configuration_file_for_production(self):
+        from .. import utils, assertions
+        method = utils.buildout.write_buildout_configuration_file_for_production
+        return method(self.get_dependent_scripts(),
+                      self.get_eggs_for_production() or self.get_python_module_name(),
+                      self.get_scripts_for_prodcution())

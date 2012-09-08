@@ -16,9 +16,7 @@ develop = .
 parts = production-scripts
 
 [production-scripts]
-dependent-scripts = false
 recipe = infi.recipe.console_scripts
-eggs = {}
 """
 
 @contextmanager
@@ -34,7 +32,14 @@ def open_buildout_configfile(filepath="buildout.cfg", write_on_exit=False):
         with open(filepath, 'w') as fd:
             parser.write(fd)
 
-def write_buildout_configuration_file_for_production(python_package_name):
+def write_buildout_configuration_file_for_production(dependent_scripts, eggs, scripts):
     from textwrap import dedent
+    from ConfigParser import ConfigParser
     with open("buildout.in", 'w') as fd:
-        fd.write(dedent(BUILDOUT_IN).format(python_package_name))
+        fd.write(dedent(BUILDOUT_IN))
+    with open_buildout_configfile("buildout.in", True) as buildout:
+        buildout.set("production-scripts", "dependent-scripts",
+                     "true" if dependent-scripts in ['true', True] else 'false')
+        buildout.set("production-scripts", "eggs", eggs)
+        if scripts:
+            buildout.set("production-scripts", "eggs", scripts)
