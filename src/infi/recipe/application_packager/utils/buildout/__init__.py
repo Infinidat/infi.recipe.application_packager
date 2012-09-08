@@ -38,8 +38,7 @@ def write_buildout_configuration_file_for_production(dependent_scripts, eggs, sc
     with open("buildout.in", 'w') as fd:
         fd.write(dedent(BUILDOUT_IN))
     with open_buildout_configfile("buildout.in", True) as buildout:
-        buildout.set("production-scripts", "dependent-scripts",
-                     "true" if dependent-scripts in ['true', True] else 'false')
+        buildout.set("production-scripts", "dependent-scripts")
         buildout.set("production-scripts", "eggs", eggs)
         if scripts:
             buildout.set("production-scripts", "eggs", scripts)
