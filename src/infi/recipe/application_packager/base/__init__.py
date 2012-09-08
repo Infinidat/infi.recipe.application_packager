@@ -200,4 +200,4 @@ class PackagingRecipe(object):
         method = utils.buildout.write_buildout_configuration_file_for_production
         return method(self.get_dependent_scripts(),
                       self.get_eggs_for_production() or self.get_python_module_name(),
-                      self.get_scripts_for_prodcution())
+                      self.get_scripts_for_production())
