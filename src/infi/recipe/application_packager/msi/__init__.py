@@ -42,7 +42,7 @@ SILENT_LAUNCHER = "silent_launcher-{}.exe"
 class Recipe(PackagingRecipe):
     def install(self):
         self.signtool = self.get_signtool()
-        utils.buildout.write_buildout_configuration_file_for_production(self.get_python_module_name())
+        self.write_buildout_configuration_file_for_production()
         utils.download_buildout(self.get_download_cache_dist())
         utils.download_distribute(self.get_download_cache_dist())
         silent_launcher = self.get_silent_launcher()
