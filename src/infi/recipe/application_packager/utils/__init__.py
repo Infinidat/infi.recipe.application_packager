@@ -30,7 +30,6 @@ def chdir(destination_directory):
 def temporary_directory_context():
     from tempfile import mkdtemp
     from shutil import rmtree
-    from infi.projector.helper.utils import chdir
     tempdir = mkdtemp()
     with chdir(tempdir):
         yield tempdir
