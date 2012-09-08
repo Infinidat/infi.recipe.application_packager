@@ -125,6 +125,7 @@ class Installer(object):
         return self._get_packages()[0]
 
     def create_package(self):
+        from ..utils import chdir
         with chdir(os.path.dirname(self._buildout_path)):
             execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s' ,'install', 'pack'])
 
