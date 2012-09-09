@@ -43,6 +43,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | pfx-file                          | ~/.authenticode/certificate.pfx                    | Absolute location of the certificate file                            |
 | pfx-password-file                 | ~/.authenticode/certificate-password.txt           | Absolute locaton for the private txt of the certificate              |
 | timestamp-url                     | http://timestamp.verisign.com/scripts/timstamp.dll | Timestamp server                                                     |
+| require-administrative-privileges | false                                              |                                                                      |
 | install-on-windows-server-2012    | true                                               |                                                                      |
 | install-on-windows-server-2008-r2 | true                                               |                                                                      |
 | install-on-windows-server-2008    | true                                               |                                                                      |

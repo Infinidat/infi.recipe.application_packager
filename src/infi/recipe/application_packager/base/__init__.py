@@ -2,7 +2,8 @@ from zc.buildout.download import Download
 from logging import getLogger
 logger = getLogger(__name__)
 
-RECIPE_DEFAULTS = {'dependent-scripts': 'true',
+RECIPE_DEFAULTS = {'require-administrative-privileges': 'true',
+                   'dependent-scripts': 'true',
                    'eggs': '',
                    'scripts': '',
                    'deb-dependencies': '',
@@ -88,6 +89,9 @@ class PackagingRecipe(object):
 
     def get_scripts_for_production(self):
         return self._get_recipe_atribute("scripts")
+
+    def get_require_administrative_privileges(self):
+        return self._get_recipe_atribute("require-administrative-privileges")
 
     def get_deb_dependencies(self):
         return self._get_recipe_atribute("deb-dependencies")
@@ -200,4 +204,5 @@ class PackagingRecipe(object):
         method = utils.buildout.write_buildout_configuration_file_for_production
         return method(self.get_dependent_scripts(),
                       self.get_eggs_for_production() or self.get_python_module_name(),
-                      self.get_scripts_for_production())
+                      self.get_scripts_for_production(),
+                      self.get_require_administrative_privileges())
