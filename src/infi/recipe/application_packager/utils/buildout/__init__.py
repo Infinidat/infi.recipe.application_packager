@@ -32,7 +32,7 @@ def open_buildout_configfile(filepath="buildout.cfg", write_on_exit=False):
         with open(filepath, 'w') as fd:
             parser.write(fd)
 
-def write_buildout_configuration_file_for_production(dependent_scripts, eggs, scripts):
+def write_buildout_configuration_file_for_production(dependent_scripts, eggs, scripts, require_administrative_privileges):
     from textwrap import dedent
     from ConfigParser import ConfigParser
     with open("buildout.in", 'w') as fd:
@@ -42,3 +42,4 @@ def write_buildout_configuration_file_for_production(dependent_scripts, eggs, sc
         buildout.set("production-scripts", "eggs", eggs)
         if scripts:
             buildout.set("production-scripts", "scripts", scripts)
+        buildout.set("require-administrative-privileges", require_administrative_privileges)
