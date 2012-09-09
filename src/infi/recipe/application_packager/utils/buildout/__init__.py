@@ -42,4 +42,4 @@ def write_buildout_configuration_file_for_production(dependent_scripts, eggs, sc
         buildout.set("production-scripts", "eggs", eggs)
         if scripts:
             buildout.set("production-scripts", "scripts", scripts)
-        buildout.set("require-administrative-privileges", require_administrative_privileges)
+        buildout.set("production-scripts" ,"require-administrative-privileges", require_administrative_privileges)
