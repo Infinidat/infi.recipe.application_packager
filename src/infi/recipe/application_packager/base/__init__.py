@@ -152,13 +152,13 @@ class PackagingRecipe(object):
         is_64 = maxsize > 2 ** 32
         arch_name = 'x64' if is_64 else 'x86'
         system_name = system().lower().replace('-', '').replace('_', '')
-        distribution_name, distribution_version, _ = dist()
-        distribution_name = distribution_name.lower()
-        is_ubuntu = distribution_name == 'ubuntu'
-        distribution_version = distribution_version.lower() if is_ubuntu else distribution_version.lower().split('.')[0]
+        dist_name, dist_version, dist_version_name = dist()
+        dist_name = dist_name.lower()
+        is_ubuntu = dist_name == 'ubuntu'
+        dist_version_string = dist_version_name.lower() if is_ubuntu else dist_version.lower().split('.')[0]
         string_by_os = {
                         "Windows": '-'.join([system_name, arch_name]),
-                        "Linux": '-'.join([system_name, distribution_name, distribution_version, arch_name]),
+                        "Linux": '-'.join([system_name, dist_name, dist_version, arch_name]),
         }
         return string_by_os.get(system())
 
