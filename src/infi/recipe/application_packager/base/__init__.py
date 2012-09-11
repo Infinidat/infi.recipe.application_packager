@@ -126,10 +126,10 @@ class PackagingRecipe(object):
         return self.get_project_section().get('long_description')
 
     def get_platform_arch(self):
-        from platform import system, linux_distribution
+        from platform import system, dist
         from sys import maxsize
         is_64 = maxsize > 2 ** 32
-        distribution_name, _, _ = linux_distribution()
+        distribution_name, _, _ = dist()
         is_redhat_or_centos = distribution_name.lower().startswith('red') or distribution_name.lower().startswith('cent')
         arch_by_distro = {''}
         arch_by_os = {
@@ -147,18 +147,18 @@ class PackagingRecipe(object):
         return "/opt/{}/{}".format(self.get_company_name().lower(), self.get_project_name())
 
     def get_os_string(self):
-        from platform import architecture, system, linux_distribution
+        from platform import architecture, system, dist
         from sys import maxsize
         is_64 = maxsize > 2 ** 32
         arch_name = 'x64' if is_64 else 'x86'
         system_name = system().lower().replace('-', '').replace('_', '')
-        distribution_name, distribution_version, _ = linux_distribution()
-        distribution_name = distribution_name.lower()
-        is_ubuntu = distribution_name == 'ubuntu'
-        distribution_version = distribution_version.lower() if is_ubuntu else distribution_version.lower().split('.')[0]
+        dist_name, dist_version, dist_version_name = dist()
+        dist_name = dist_name.lower()
+        is_ubuntu = dist_name == 'ubuntu'
+        dist_version_string = dist_version_name.lower() if is_ubuntu else dist_version.lower().split('.')[0]
         string_by_os = {
                         "Windows": '-'.join([system_name, arch_name]),
-                        "Linux": '-'.join([system_name, distribution_name, distribution_version, arch_name]),
+                        "Linux": '-'.join([system_name, dist_name, dist_version, arch_name]),
         }
         return string_by_os.get(system())
 
