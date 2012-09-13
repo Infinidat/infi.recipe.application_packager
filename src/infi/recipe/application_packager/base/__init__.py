@@ -157,8 +157,8 @@ class PackagingRecipe(object):
         is_ubuntu = dist_name == 'ubuntu'
         dist_version_string = dist_version_name.lower() if is_ubuntu else dist_version.lower().split('.')[0]
         string_by_os = {
-                        "Windows": '-'.join([system_name, arch_name]),
-                        "Linux": '-'.join([system_name, dist_name, dist_version, arch_name]),
+                        "windows": '-'.join([system_name, arch_name]),
+                        "linux": '-'.join([system_name, dist_name, dist_version_string, arch_name]),
         }
         return string_by_os.get(system())
 
