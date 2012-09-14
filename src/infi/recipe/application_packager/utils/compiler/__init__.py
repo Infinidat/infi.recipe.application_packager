@@ -78,8 +78,12 @@ class BinaryDistributionsCompiler(object):
                            filename for filename in self.get_source_archives()}
         installed_binary_archives = {self.extract_package_name_from_dirpath(dirname): dirname
                                      for dirname in self.get_installed_packages()}
+        # WORKAROUND python-cjson is installed as python_cjson
+        keys_for_install_binary_archives = set(installed_binary_archives.keys())
+        for key in keys_for_install_binary_archives:
+            keys_for_install_binary_archives.add(key.replace('_', '-'))
         return [source_archives[key]
-                for key in set.intersection(set(source_archives.keys()), set(installed_binary_archives.keys()))]
+                for key in set.intersection(set(source_archives.keys()), keys_for_install_binary_archives)]
 
     def compile(self):
         from ..execute import ExecutionError
