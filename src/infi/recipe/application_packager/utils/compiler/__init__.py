@@ -80,7 +80,7 @@ class BinaryDistributionsCompiler(object):
                                      for dirname in self.get_installed_packages()}
         # WORKAROUND python-cjson is installed as python_cjson
         keys_for_install_binary_archives = set(installed_binary_archives.keys())
-        for key in keys_for_install_binary_archives:
+        for key in list(keys_for_install_binary_archives):
             keys_for_install_binary_archives.add(key.replace('_', '-'))
         return [source_archives[key]
                 for key in set.intersection(set(source_archives.keys()), keys_for_install_binary_archives)]
