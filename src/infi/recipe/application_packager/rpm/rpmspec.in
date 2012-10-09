@@ -99,7 +99,7 @@ exit 0
 
 %preun
 
-if test "$$1" != "0"; then
+if test -n "$$1" -a "$$1" != "0"; then
   exit 0
 fi
 
