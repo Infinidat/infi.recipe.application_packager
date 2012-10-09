@@ -58,9 +58,8 @@ cd ..
 # this also deletes installed files
 set +e
 for dirname in $directories_to_clean; do
-    rm -rf $$dirname
-done 
-set -e
+    execute find $$dirname -maxdepth 1 -mindepth 1 -delete
+done
 
 # end
 execute popd

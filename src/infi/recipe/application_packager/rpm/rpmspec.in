@@ -155,11 +155,9 @@ cd ..
 
 # clean installed directories
 # this also deletes installed files
-set +e
 for dirname in $directories_to_clean; do
-    rm -rf $$dirname
-done 
-set -e
+    execute find $$dirname -maxdepth 1 -mindepth 1 -delete
+done
 
 # end
 execute popd
@@ -173,7 +171,7 @@ function execute() {
     if test $$DEBUG -eq 0; then
         $$@ > /dev/null 2>&1
     else
-        $$@ 
+        $$@
     fi
 }
 
