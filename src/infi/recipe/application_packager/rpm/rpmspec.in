@@ -127,7 +127,7 @@ if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
     exit 0
 fi
 
-if [ "$1" = "0" ]; then
+if [ "$$1" = "0" ]; then
   # HOSTDEV-417 pre-uninstall should not be called during upgrade
   # http://www.rpm.org/max-rpm/s1-rpm-inside-scripts.html
   # When the last version of a package is erased, its %preun and %postun scripts will be passed an argument equal to 0.
@@ -185,7 +185,7 @@ if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
     set -xv
 fi
 
-if [ "$1" = "0" ]; then
+if [ "$$1" = "0" ]; then
   # HOSTDEV-417 pre-uninstall should not be called during upgrade
   # http://www.rpm.org/max-rpm/s1-rpm-inside-scripts.html
   # When the last version of a package is erased, its %preun and %postun scripts will be passed an argument equal to 0.
