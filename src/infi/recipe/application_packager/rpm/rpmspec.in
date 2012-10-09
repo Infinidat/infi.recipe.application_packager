@@ -15,14 +15,14 @@ BuildRoot: %{build_root}
 Source: %{package_name}-%{package_version}-%{package_arch}.tar.gz
 Version: %{package_version}
 Summary: %{product_name}
-AutoReqProv: no 
+AutoReqProv: no
 
 Group: Utilities
 License: Commercial
 Name: %{package_name}
 Release: 1
 
-%description 
+%description
 %{product_description}
 
 %files
@@ -44,7 +44,7 @@ function execute() {
     if test $$DEBUG -eq 0; then
         $$@ > /dev/null 2>&1
     else
-        $$@ 
+        $$@
     fi
 }
 
@@ -90,9 +90,9 @@ if test -n "%{post_install_script_name}" -a -x "bin/%{post_install_script_name}"
     execute bin/%{post_install_script_name} %{post_install_script_args}
     RC=$$?
     assert_rc
-fi 
+fi
 
-#end 
+#end
 execute popd
 exit 0
 
@@ -115,7 +115,7 @@ function execute() {
     if test $$DEBUG -eq 0; then
         $$@ > /dev/null 2>&1
     else
-        $$@ 
+        $$@
     fi
 }
 
@@ -182,6 +182,6 @@ if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
     set -xv
 fi
 
-set -e
-execute rmdir %{prefix}
 set +e
+execute rmdir %{prefix}
+set -e
