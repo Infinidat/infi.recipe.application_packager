@@ -99,6 +99,10 @@ exit 0
 
 %preun
 
+if test "$$1" != "0"; then
+  exit 0
+fi
+
 RC=0
 
 function assert_rc() {
@@ -127,13 +131,6 @@ if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
     exit 0
 fi
 
-if [ "$$1" = "0" ]; then
-  # HOSTDEV-417 pre-uninstall should not be called during upgrade
-  # http://www.rpm.org/max-rpm/s1-rpm-inside-scripts.html
-  # When the last version of a package is erased, its %preun and %postun scripts will be passed an argument equal to 0.
-  exit 0
-fi
-
 # start
 execute pushd .
 execute cd %{prefix}
@@ -158,9 +155,11 @@ cd ..
 
 # clean installed directories
 # this also deletes installed files
+set +e
 for dirname in $directories_to_clean; do
-    execute find $$dirname -maxdepth 1 -mindepth 1 -delete
+    rm -rf $$dirname
 done 
+set -e
 
 # end
 execute popd
