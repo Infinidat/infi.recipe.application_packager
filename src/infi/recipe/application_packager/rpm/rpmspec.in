@@ -100,7 +100,7 @@ exit 0
 %preun
 
 if test -n "$$1" -a "$$1" != "0"; then
-  exit 0
+    exit 0
 fi
 
 RC=0
@@ -184,4 +184,6 @@ if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
     set -xv
 fi
 
+set -e
 execute rmdir %{prefix}
+set +e
