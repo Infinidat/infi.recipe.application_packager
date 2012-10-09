@@ -158,11 +158,9 @@ cd ..
 
 # clean installed directories
 # this also deletes installed files
-set +e
 for dirname in $directories_to_clean; do
-    rm -rf $$dirname
+    execute find $$dirname -maxdepth 1 -mindepth 1 -delete
 done 
-set -e
 
 # end
 execute popd
