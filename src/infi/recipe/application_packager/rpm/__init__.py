@@ -50,17 +50,18 @@ class Recipe(PackagingRecipe):
         with open(SPEC_TEMPLATE) as fd:
             return Template(fd.read())
 
-    def _mkdir(self, name, parent_directory, just_add_it=False):
+    def _mkdir(self, name, parent_directory, just_add_it=False, rm_on_uninstall=False):
         dst = path.join(parent_directory, name)
         src = "{}{}/{}".format(self._buildroot, parent_directory, name)
         self._directories.add(dst) if not just_add_it else None
-        self._directories_to_clean.add(dst)
+        self._directories_to_clean.add(dst) if rm_on_uninstall else None
         makedirs(src) if not just_add_it else None
         return dst
 
     def _add_directory(self, src, parent_directory, recursive=True, only_directory_tree=False):
         source_dirname = path.basename(src)
-        destination_directory = self._mkdir(source_dirname, parent_directory, only_directory_tree)
+        destination_directory = self._mkdir(source_dirname, parent_directory, only_directory_tree,
+                                            rm_on_uninstall=only_directory_tree)
         for filename in listdir(src):
             filepath = path.join(src, filename)
             if path.isfile(filepath):
@@ -118,10 +119,10 @@ class Recipe(PackagingRecipe):
         cachedir = self._mkdir('.cache', self.get_install_prefix())
         develop_eggs = self._mkdir('develop-eggs', self.get_install_prefix())
         self._add_directory(path.join(self.get_buildout_dir(), '.cache', 'dist'), cachedir, recursive=False)
-        parts = self._mkdir('parts', self.get_install_prefix())
-        self._mkdir('bin', self.get_install_prefix())
-        self._mkdir('buildout', parts)
-        self._mkdir('production-scripts', parts)
+        parts = self._mkdir('parts', self.get_install_prefix(), rm_on_uninstall=True)
+        self._mkdir('bin', self.get_install_prefix(), rm_on_uninstall=True)
+        self._mkdir('buildout', parts, rm_on_uninstall=True)
+        self._mkdir('production-scripts', parts, rm_on_uninstall=True)
         self._add_directory(path.join(self.get_buildout_dir(), 'parts', 'python'), parts)
         self._add_directory(path.join(self.get_buildout_dir(), 'src'), self.get_install_prefix())
         self._add_directory(path.join(self.get_buildout_dir(), 'eggs'), self.get_install_prefix(), True, True)
