@@ -152,7 +152,7 @@ cd ..
 # clean installed directories
 # this also deletes installed files
 for dirname in $directories_to_clean; do
-    execute find $$dirname -maxdepth 1 -mindepth 1 -delete
+    rm -rf $$dirname
 done 
 
 # end
