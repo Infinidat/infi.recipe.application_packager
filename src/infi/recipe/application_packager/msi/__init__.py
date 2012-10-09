@@ -147,7 +147,7 @@ class Recipe(PackagingRecipe):
         bindir = wix.mkdir('bin', wix.installdir)
         assembly_dir = wix.mkdir('Microsoft.VC90.CRT', bindir)
         component = wix.new_component(wix.new_id('bin'), bindir, generate_guid())
-        wix.add_environment_variable('Path', r'[INSTALLDIR]\bin', component)
+        wix.add_environment_variable('Path', r'[INSTALLDIR]bin', component)
         wix.add_delete_all_files_on_removal_component_to_directory(bindir)
         wix.add_delete_empty_folder_component_to_directory(bindir)
 
