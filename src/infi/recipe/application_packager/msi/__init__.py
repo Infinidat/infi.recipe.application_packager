@@ -123,7 +123,6 @@ class Recipe(PackagingRecipe):
         if dialog_bmp:
             logger.info("Setting custom dialog {}".format(dialog_bmp))
             wix.new_element("WixVariable", {"Id": "WixUIDialogBmp", "Value": dialog_bmp}, wix.product)
-        wix.set_allusers()
         return wix
 
     @contextmanager
@@ -239,6 +238,7 @@ class Recipe(PackagingRecipe):
 
     def _add_shortcuts(self, wix, arp_icon):
         if not self.get_startmenu_shortcuts():
+            wix.set_allusers()
             return
         for item in eval(self.get_startmenu_shortcuts()):
             shortcut_name, executable_name = item.split('=')
