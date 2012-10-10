@@ -209,7 +209,7 @@ class Wix(object):
         attributes = {'Id': self.new_id('shortcut_{}'.format(shortcut_name)),
                       'Name': shortcut_name,
                       'Description': shortcut_name,
-                      'Advertise': 'No',
+                      'Advertise': 'no',
                       'Target': r'[INSTALLDIR]bin\{}.exe'.format(executable_name),
                       'WorkingDirectory': 'INSTALLDIR',
                      }
