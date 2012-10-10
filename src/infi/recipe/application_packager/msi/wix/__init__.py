@@ -199,9 +199,9 @@ class Wix(object):
                                            "Key": r"Software\{}\{}".format(self.product.get("Manufacturer"),
                                                                            self.product.get("Name")),
                                            "Name": "Shortcuts",
-                                           "Type": "Integer",
+                                           "Type": "integer",
                                            "Value": "1",
-                                           "KeyPath": "Yes"}, component)
+                                           "KeyPath": "yes"}, component)
         self._append_component_to_feature(component, self.feature)
         return component
 
