@@ -165,6 +165,10 @@ exit 0
 
 %postun
 
+if test -n "$$1" -a "$$1" != "0"; then
+    exit 0
+fi
+
 RC=0
 
 function execute() {
