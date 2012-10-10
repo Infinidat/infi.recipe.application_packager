@@ -248,7 +248,7 @@ class Recipe(PackagingRecipe):
                         wix.new_component(wix.new_id("removal"), wix.application_program_menu_folder))
         for item in eval(self.get_startmenu_shortcuts()):
             shortcut_name, executable_name = item.split('=')
-            wix.add_shortcut(shortcut_name, executable_name)
+            wix.add_shortcut(shortcut_name, executable_name, arp_icon)
 
     def get_msi_filepath(self):
         return path.join(self.get_working_directory(), "{}-{}-{}.msi".format(self.get_package_name(),

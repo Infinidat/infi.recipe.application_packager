@@ -190,6 +190,8 @@ class Wix(object):
                       'Target': r'[INSTALLDIR]bin\{}.exe'.format(executable_name),
                       'WorkingDirectory': 'INSTALLDIR',
                      }
+        if icon:
+            attributes['Icon'] = icon.get("Id")
         shortcut = self.new_element("Shortcut", attributes, component)
         self._append_component_to_feature(component, self.feature)
 
