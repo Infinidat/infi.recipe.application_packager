@@ -201,7 +201,7 @@ class PackagingRecipe(object):
         return self._get_resource_file_from_recipe_section('msi-dialog-bmp')
 
     def get_startmenu_shortcuts(self):
-        return self._get_recipe_atribute("startmentu-shortcuts")
+        return self._get_recipe_atribute("startmenu-shortcuts")
 
     def write_buildout_configuration_file_for_production(self):
         from .. import utils, assertions
