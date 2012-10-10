@@ -190,7 +190,7 @@ class Wix(object):
 
     def _new_shortcuts_component(self):
         # http://stackoverflow.com/questions/470662/how-to-create-a-multi-level-subfolder-in-start-menu-using-wix
-        wix.disable_advertised_shortcuts()
+        self.disable_advertised_shortcuts()
         component = self.new_component(self.new_id("shortcuts"), self.application_program_menu_folder)
         for element in [self.company_program_menu_folder, self.application_program_menu_folder]:
             self.new_element("CreateFolder", {"Directory": element.get("Id")}, component)
