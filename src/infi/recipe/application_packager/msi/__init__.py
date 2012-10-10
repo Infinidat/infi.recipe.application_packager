@@ -246,7 +246,7 @@ class Recipe(PackagingRecipe):
 
         wix.new_element("RemoveFolder", {"Id": wix.application_program_menu_folder.get('Id'), "On": "uninstall"},
                         wix.new_component(wix.new_id("removal"), wix.application_program_menu_folder))
-        for item in self.get_startmenu_shortcuts():
+        for item in eval(self.get_startmenu_shortcuts()):
             shortcut_name, executable_name = item.split('=')
             wix.add_shortcut(shortcut_name, executable_name)
 
