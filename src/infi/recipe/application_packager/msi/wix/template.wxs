@@ -16,7 +16,7 @@
             </Directory>
         </Directory>
         <Feature Id='Everything' Title='Everything' Level='1' Display='hidden' Absent='disallow' AllowAdvertise='no' InstallDefault='local' TypicalDefault='install'/>
-        <Property Id='WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
         <UIRef Id="WixUI_InstallDir"/>
         <InstallExecuteSequence/>
    </Product>
