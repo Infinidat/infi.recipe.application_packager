@@ -201,7 +201,7 @@ class Wix(object):
                                            "Name": "Shortcuts",
                                            "Type": "Integer",
                                            "Value": "1",
-                                           "KeyPath": "Yes", component)
+                                           "KeyPath": "Yes"}, component)
         self._append_component_to_feature(component, self.feature)
         return component
 
