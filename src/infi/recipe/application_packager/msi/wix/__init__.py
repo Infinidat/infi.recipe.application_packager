@@ -226,7 +226,7 @@ class Wix(object):
 
     @property
     def program_menu_folder(self):
-        return self.product[3]
+        return self.targetdir[1]
 
     @property
     def company_root_directory(self):
