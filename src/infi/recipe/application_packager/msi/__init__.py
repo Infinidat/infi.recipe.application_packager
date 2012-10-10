@@ -123,7 +123,7 @@ class Recipe(PackagingRecipe):
         if dialog_bmp:
             logger.info("Setting custom dialog {}".format(dialog_bmp))
             wix.new_element("WixVariable", {"Id": "WixUIDialogBmp", "Value": dialog_bmp}, wix.product)
-        wix.set_allusers()
+        # wix.set_allusers()
         return wix
 
     @contextmanager
