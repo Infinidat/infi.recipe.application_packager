@@ -221,11 +221,23 @@ class Wix(object):
         icon_id = self.new_element("Icon" , {"Id": "icon.ico", "SourceFile": icon_path})
         return self.new_element("Property", {"Id":"ARPPRODUCTICON", "Value":"icon.ico"}, self.product)
 
+    def get_msi_property(self, name):
+        for element in self.product.getchildren():
+            if element.tag.endswith("Property") and element.get("Id") == name:
+                return element
+
+    def set_msi_property(self, key, value):
+        element = self.get_msi_property(key)
+        if element is None:
+            element = self.new_element("Property", {"Id":key, "Value": value}, self.product)
+        element.set("Value", value)
+        return element
+
     def set_allusers(self):
-        return self.new_element("Property", {"Id":"ALLUSERS", "Value":"1"}, self.product)
+        return self.set_msi_property("ALLUSERS", "1")
 
     def disable_advertised_shortcuts(self):
-        return self.new_element("Property", {"Id": "DISABLEADVTSHORTCUTS", "Value":"1"}, self.product)
+        return self.set_msi_property("DISABLEADVTSHORTCUTS", "1")
 
     def _append_component_to_feature(self, component, feature):
         _ = self.new_element("ComponentRef", {"Id": component.get('Id')}, feature)
