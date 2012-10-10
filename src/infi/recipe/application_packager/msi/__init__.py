@@ -240,12 +240,6 @@ class Recipe(PackagingRecipe):
     def _add_shortcuts(self, wix, arp_icon):
         if not self.get_startmenu_shortcuts():
             return
-        wix.disable_advertised_shortcuts()
-        wix.new_element("RemoveFolder", {"Id": wix.company_program_menu_folder.get('Id'), "On": "uninstall"},
-                        wix.new_component(wix.new_id("removal"), wix.company_program_menu_folder))
-
-        wix.new_element("RemoveFolder", {"Id": wix.application_program_menu_folder.get('Id'), "On": "uninstall"},
-                        wix.new_component(wix.new_id("removal"), wix.application_program_menu_folder))
         for item in eval(self.get_startmenu_shortcuts()):
             shortcut_name, executable_name = item.split('=')
             wix.add_shortcut(shortcut_name.strip(), executable_name.strip(), arp_icon)

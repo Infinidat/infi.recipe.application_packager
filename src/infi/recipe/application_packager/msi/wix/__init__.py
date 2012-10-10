@@ -30,11 +30,13 @@ class Wix(object):
         self._inject_company_name(company_name)
         self._inject_product_properties(product_name, product_version, architecture, upgrade_code, description)
         self._architecture = architecture
+        self._shortcuts_component = None
 
     def _inject_company_name(self, company_name):
         self.product.set("Manufacturer", company_name)
         self.package.set("Manufacturer", company_name)
         self.company_root_directory.set("Name", company_name)
+        self.company_program_menu_folder.set('Name', company_name)
 
     def _inject_product_properties(self, product_name, product_version, architecture, upgrade_code, description):
         # Product
@@ -181,8 +183,29 @@ class Wix(object):
                             (sequence.text or '')
         return action
 
+    def get_shortcuts_component(self):
+        if self._shortcuts_component is None:
+            self._shortcuts_component = self._new_shortcuts_component()
+        return self._shortcuts_component
+
+    def _new_shortcuts_component(self):
+        # http://stackoverflow.com/questions/470662/how-to-create-a-multi-level-subfolder-in-start-menu-using-wix
+        wix.disable_advertised_shortcuts()
+        component = self.new_component(self.new_id("shortcuts"), self.application_program_menu_folder)
+        for element in [self.company_program_menu_folder, self.application_program_menu_folder]:
+            self.new_element("CreateFolder", {"Directory": element.get("Id")}, component)
+            self.new_element("RemoveFolder", {"Id": element.get('Id'), "On": "uninstall"}, component)
+        self.new_element("RegistryValue", {"Root": "HKLM",
+                                           "Key": r"Software\{}\{}".format(self.product.get("Manufacturer"),
+                                                                           self.product.get("Name")),
+                                           "Name": "Shortcuts",
+                                           "Type": "Integer",
+                                           "Value": "1",
+                                           "KeyPath": "Yes", component)
+        self._append_component_to_feature(component, self.feature)
+        return component
+
     def add_shortcut(self, shortcut_name, executable_name, icon):
-        component = self.new_component(self.new_id("shortcut"), self.application_program_menu_folder)
         attributes = {'Id': self.new_id('shortcut_{}'.format(shortcut_name)),
                       'Name': shortcut_name,
                       'Description': shortcut_name,
@@ -192,8 +215,7 @@ class Wix(object):
                      }
         if icon:
             attributes['Icon'] = icon.get("Id")
-        shortcut = self.new_element("Shortcut", attributes, component)
-        self._append_component_to_feature(component, self.feature)
+        shortcut = self.new_element("Shortcut", attributes, self.get_shortcuts_component())
 
     def set_add_remove_programs_icon(self, icon_path):
         icon_id = self.new_element("Icon" , {"Id": "icon.ico", "SourceFile": icon_path})
