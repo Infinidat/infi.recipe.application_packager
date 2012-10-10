@@ -43,12 +43,15 @@ class Wix(object):
         self.product.set('Version', '.'.join(product_version.split('.')[:3]))
         self.product.set('UpgradeCode', upgrade_code)
         # Package
+        self.package.set('InstallScope', 'perMachine')
         self.package.set('Description', description)
         # ProgramFiles
         is64 = architecture == 'x64'
         self.programfiles.set('Id', 'ProgramFiles64Folder' if is64 else 'ProgramFilesFolder')
         # InstallDir
         self.installdir.set('Name', product_name)
+        # Startmenu application folder
+        self.application_program_menu_folder.set('Name', product_name)
 
     def _safe_id(self, unsafe_id):
         from re import sub
@@ -178,12 +181,27 @@ class Wix(object):
                             (sequence.text or '')
         return action
 
+    def add_shortcut(self, shortcut_name, executable_name, icon):
+        component = self.new_component(self.new_id("shortcut"), self.application_program_menu_folder)
+        attributes = {'Id': self.new_id('shortcut_{}'.format(shortcut_name)),
+                      'Name': shortcut_name,
+                      'Description': shortcut_name,
+                      'Advertise': 'No',
+                      'Target': r'[INSTALLDIR]bin\{}.exe'.format(executable_name),
+                      'WorkingDirectory': 'INSTALLDIR',
+                     }
+        shortcut = self.new_element("Shortcut", attributes, component)
+        self._append_component_to_feature(component, self.feature)
+
     def set_add_remove_programs_icon(self, icon_path):
         icon_id = self.new_element("Icon" , {"Id": "icon.ico", "SourceFile": icon_path})
         return self.new_element("Property", {"Id":"ARPPRODUCTICON", "Value":"icon.ico"}, self.product)
 
     def set_allusers(self):
         return self.new_element("Property", {"Id":"ALLUSERS", "Value":"1"}, self.product)
+
+    def disable_advertised_shortcuts(self):
+        return self.new_element("Property", {"Id": "DISABLEADVTSHORTCUTS", "Value":"1"}, self.product)
 
     def _append_component_to_feature(self, component, feature):
         _ = self.new_element("ComponentRef", {"Id": component.get('Id')}, feature)
@@ -205,12 +223,24 @@ class Wix(object):
         return self.targetdir[0]
 
     @property
+    def program_menu_folder(self):
+        return self.targetdir[1]
+
+    @property
     def company_root_directory(self):
         return self.programfiles[0]
 
     @property
     def installdir(self):
         return self.company_root_directory[0]
+
+    @property
+    def company_program_menu_folder(self):
+        return self.program_menu_folder[0]
+
+    @property
+    def application_program_menu_folder(self):
+        return self.company_program_menu_folder[0]
 
     @property
     def feature(self):

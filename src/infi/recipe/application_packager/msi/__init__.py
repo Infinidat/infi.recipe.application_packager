@@ -114,6 +114,7 @@ class Recipe(PackagingRecipe):
         arp_icon = self.get_add_remove_programs_icon()
         if arp_icon:
             wix.set_add_remove_programs_icon(arp_icon)
+        self._add_shortcuts(wix, arp_icon)
         banner_bmp = self.get_msi_banner_bmp()
         if banner_bmp:
             logger.info("Setting custom banner {}".format(banner_bmp))
@@ -235,6 +236,19 @@ class Recipe(PackagingRecipe):
             wix.add_deferred_in_system_context_custom_action(script_name, commandline, after=value['after'],
                                                              condition=value['condition'],
                                                              silent_launcher_file_id=silent_launcher_file_id)
+
+    def _add_shortcuts(self, wix, arp_icon):
+        if not self.get_startmenu_shortcuts():
+            return
+        wix.disable_advertised_shortcuts()
+        wix.new_element("RemoveFolder", {"Id": wix.company_program_menu_folder.get('Id'), "On": "uninstall"},
+                        wix.new_component(wix.new_id("removal"), wix.company_program_menu_folder))
+
+        wix.new_element("RemoveFolder", {"Id": wix.application_program_menu_folder.get('Id'), "On": "uninstall"},
+                        wix.new_component(wix.new_id("removal"), wix.application_program_menu_folder))
+        for item in self.get_startmenu_shortcuts():
+            shortcut_name, executable_name = item.split('=')
+            wix.add_shortcut(shortcut_name, executable_name)
 
     def get_msi_filepath(self):
         return path.join(self.get_working_directory(), "{}-{}-{}.msi".format(self.get_package_name(),
