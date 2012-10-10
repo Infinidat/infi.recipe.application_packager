@@ -9,6 +9,11 @@
                     <Directory Id='INSTALLDIR' Name=''/>
                 </Directory>
             </Directory>
+            <Directory Id='ProgramMenuFolder'>
+                <Directory Id='CompanyProgramsFolder' Name='{company}'>
+                    <Directory Id='ApplicationProgramsFolder' Name=''/>
+                </Directory>
+            </Directory>
         </Directory>
         <Feature Id='Everything' Title='Everything' Level='1' Display='hidden' Absent='disallow' AllowAdvertise='no' InstallDefault='local' TypicalDefault='install'/>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
