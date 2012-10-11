@@ -26,6 +26,15 @@ def create_package():
     from infi.execute import execute_assert_success
     execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', 'install', 'pack'])
 
+def do_an_empty_commit():
+    from gitpy import LocalRepository
+    repository = LocalRepository('.')
+    repository.commit("TRIVIAL empty commit for testing upgrades", allowEmpty=True)
+
+def devenv_build():
+    from infi.execute import execute_assert_success
+    execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', 'setup.py', '__version__'])
+
 from infi.recipe.application_packager.utils.execute import execute_assert_success
 from infi.recipe.application_packager.utils import chdir
 from infi.recipe.application_packager.installer import Installer, MsiInstaller, DebInstaller, RpmInstaller
@@ -102,6 +111,18 @@ class Base(unittest.TestCase):
         self.assert_product_was_installed_successfully(with_custom_actions)
         self.uninstall_package(with_custom_actions)
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
+
+    @unittest.parameters.iterate("with_custom_actions", [True, False])
+    def test_upgrade(self, with_custom_actions=True):
+        self.assertFalse(self.is_product_installed())
+        self.install_package(with_custom_actions)
+        self.assert_product_was_installed_successfully(with_custom_actions)
+        delete_existing_builds()
+        do_an_empty_commit()
+        devenv_build()
+        create_package()
+        self.install_package(with_custom_actions)
+        self.assert_product_was_installed_successfully(with_custom_actions)
 
     @classmethod
     def platform_specific_cleanup(cls):
