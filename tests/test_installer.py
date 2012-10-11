@@ -33,7 +33,7 @@ def do_an_empty_commit():
 
 def devenv_build():
     from infi.execute import execute_assert_success
-    execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', 'setup.py', '__version__'])
+    execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', 'install', 'setup.py', '__version__'])
 
 from infi.recipe.application_packager.utils.execute import execute_assert_success
 from infi.recipe.application_packager.utils import chdir
