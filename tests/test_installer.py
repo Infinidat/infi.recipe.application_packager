@@ -123,6 +123,8 @@ class Base(unittest.TestCase):
         create_package()
         self.install_package(with_custom_actions)
         self.assert_product_was_installed_successfully(with_custom_actions)
+        self.uninstall_package(with_custom_actions)
+        self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
     @classmethod
     def platform_specific_cleanup(cls):
