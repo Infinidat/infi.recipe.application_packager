@@ -238,7 +238,6 @@ class Recipe(PackagingRecipe):
 
     def _add_shortcuts(self, wix, arp_icon):
         if not self.get_startmenu_shortcuts():
-            wix.set_allusers()
             return
         for item in eval(self.get_startmenu_shortcuts()):
             shortcut_name, executable_name = item.split('=')
