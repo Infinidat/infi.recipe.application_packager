@@ -113,7 +113,7 @@ class Recipe(PackagingRecipe):
         self._add_project_entry_points(wix, silent_launcher_file_id)
         arp_icon = self.get_add_remove_programs_icon()
         if arp_icon:
-            wix.set_add_remove_programs_icon(arp_icon)
+            arp_icon = wix.set_add_remove_programs_icon(arp_icon)
         self._add_shortcuts(wix, arp_icon)
         banner_bmp = self.get_msi_banner_bmp()
         if banner_bmp:
