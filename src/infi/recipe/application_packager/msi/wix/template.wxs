@@ -18,6 +18,7 @@
         <Feature Id='Everything' Title='Everything' Level='1' Display='hidden' Absent='disallow' AllowAdvertise='no' InstallDefault='local' TypicalDefault='install'/>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
         <InstallExecuteSequence/>
+        <UIRef Id="WixUI_InstallDir"/>
    </Product>
    <Fragment>
         <UI Id="WixUI_InstallDir">
