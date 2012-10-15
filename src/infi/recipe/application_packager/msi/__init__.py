@@ -19,7 +19,7 @@ LAUNCH_CONDITION__WINDOWS_2008_AND_R2_ONLY = \
     "(Not VersionNT=502) And (Not (VersionNT=600 And (MsiNTProductType=1))) And " + \
     "(Not (VersionNT=601 And (MsiNTProductType=1)))"
 OS_REQUIREMENTS_LAUNCH_CONDITION_MESSAGE = "The operating system is not adequate for running [ProductName]."
-
+OS_32BIT_ON_64BIT_LAUNCH_CONDITION_MESSAGE = "[ProductName] installation on a 64-bit operating system requires the 64-bit installation package. Please get the 64-bit package and try again."
 OPERATING_SYSTEMS = {
                      # OS Name: (allow-install, condition)
                      "Windows Server 2012": (True, '(VersionNT=602 And (MsiNTProductType=2 Or MsiNTProductType=3))'),
@@ -199,6 +199,16 @@ class Recipe(PackagingRecipe):
 
     def _add_launch_conditions(self, wix):
         self._add_os_requirements_launch_condition(wix)
+        self._prevent_32bit_installations_on_64bit_os(wix)
+
+    def _prevent_32bit_installations_on_64bit_os(self, wix):
+        from sys import maxsize
+        is_64 = maxsize > 2 ** 32
+        if is_64:
+            return
+        condition = wix.new_element("Condition", {'Message': OS_32BIT_ON_64BIT_LAUNCH_CONDITION_MESSAGE},
+                                    wix.product)
+        condition.text = "Not VersionNT64"
 
     def _add_os_requirements_launch_condition(self, wix):
         condition = wix.new_element("Condition", {'Message': OS_REQUIREMENTS_LAUNCH_CONDITION_MESSAGE},
