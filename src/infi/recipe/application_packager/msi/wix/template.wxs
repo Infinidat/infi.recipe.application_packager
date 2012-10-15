@@ -17,10 +17,9 @@
         </Directory>
         <Feature Id='Everything' Title='Everything' Level='1' Display='hidden' Absent='disallow' AllowAdvertise='no' InstallDefault='local' TypicalDefault='install'/>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
-        <UIRef Id="WixUI_InstallDir"/>
         <InstallExecuteSequence/>
    </Product>
-    <Fragment>
+   <Fragment>
         <UI Id="WixUI_InstallDir">
             <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
             <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
