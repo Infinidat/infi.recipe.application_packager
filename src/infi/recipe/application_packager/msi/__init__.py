@@ -22,8 +22,8 @@ OS_REQUIREMENTS_LAUNCH_CONDITION_MESSAGE = "The operating system is not adequate
 
 OPERATING_SYSTEMS = {
                      # OS Name: (allow-install, condition)
-                     "Windows Server 2012": (True, '(VersionNT=602 And (MsiNTProductType=2 Or MsiNTProductType=3)'),
-                     "Windows 8": (False, '(VersionNT=602 And (MsiNTProductType=1)'),
+                     "Windows Server 2012": (True, '(VersionNT=602 And (MsiNTProductType=2 Or MsiNTProductType=3))'),
+                     "Windows 8": (False, '(VersionNT=602 And (MsiNTProductType=1))'),
                      "Windows Server 2008 R2": (True,
                                                 '(VersionNT=601 And (MsiNTProductType=2 Or MsiNTProductType=3))'),
                      "Windows Server 2008": (True,
