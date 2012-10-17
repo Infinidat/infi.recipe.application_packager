@@ -218,7 +218,7 @@ class Wix(object):
         shortcut = self.new_element("Shortcut", attributes, self.get_shortcuts_component())
 
     def set_add_remove_programs_icon(self, icon_path):
-        icon_id = self.new_element("Icon" , {"Id": "icon.ico", "SourceFile": icon_path})
+        icon_id = self.new_element("Icon" , {"Id": "icon.ico", "SourceFile": icon_path}, self.product)
         return self.new_element("Property", {"Id":"ARPPRODUCTICON", "Value":"icon.ico"}, self.product)
 
     def get_msi_property(self, name):
