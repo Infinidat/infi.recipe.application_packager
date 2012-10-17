@@ -205,7 +205,7 @@ class Wix(object):
         self._append_component_to_feature(component, self.feature)
         return component
 
-    def add_shortcut(self, shortcut_name, executable_name, icon):
+    def add_shortcut(self, shortcut_name, executable_name, icon=None):
         attributes = {'Id': self.new_id('shortcut_{}'.format(shortcut_name)),
                       'Name': shortcut_name,
                       'Description': shortcut_name,
@@ -213,12 +213,20 @@ class Wix(object):
                       'Target': r'[INSTALLDIR]bin\{}.exe'.format(executable_name),
                       'WorkingDirectory': 'INSTALLDIR',
                      }
-        if icon:
+        if icon is not None:
             attributes['Icon'] = icon.get("Id")
         shortcut = self.new_element("Shortcut", attributes, self.get_shortcuts_component())
 
+    def new_icon(self, icon_path):
+        from os.path import basename
+        filename = basename(icon_path)
+        extension = '.' + filename.split('.')[-1]
+        icon_id = self.new_id(filename.replace(extension, ''))
+        icon_id += extension
+        return self.new_element("Icon" , {"Id": icon_id, "SourceFile": icon_path}, self.product)
+
     def set_add_remove_programs_icon(self, icon_path):
-        icon_id = self.new_element("Icon" , {"Id": "icon.ico", "SourceFile": icon_path}, self.product)
+        icon_id = self.new_icon(icon_path)
         return self.new_element("Property", {"Id":"ARPPRODUCTICON", "Value":"icon.ico"}, self.product)
 
     def get_msi_property(self, name):

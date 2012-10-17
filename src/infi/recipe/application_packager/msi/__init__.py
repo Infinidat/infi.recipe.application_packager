@@ -114,7 +114,7 @@ class Recipe(PackagingRecipe):
         arp_icon = self.get_add_remove_programs_icon()
         if arp_icon:
             arp_icon = wix.set_add_remove_programs_icon(arp_icon)
-        self._add_shortcuts(wix, arp_icon)
+        self._add_shortcuts(wix)
         banner_bmp = self.get_msi_banner_bmp()
         if banner_bmp:
             logger.info("Setting custom banner {}".format(banner_bmp))
@@ -246,12 +246,13 @@ class Recipe(PackagingRecipe):
                                                              condition=value['condition'],
                                                              silent_launcher_file_id=silent_launcher_file_id)
 
-    def _add_shortcuts(self, wix, arp_icon):
-        if not self.get_startmenu_shortcuts():
+    def _add_shortcuts(self, wix):
+        if not self.get_startmenu_shortcuts() or not self.get_shortcuts_icon():
             return
+        icon_id = wix.new_icon(self.get_shortcuts_icon())
         for item in eval(self.get_startmenu_shortcuts()):
             shortcut_name, executable_name = item.split('=')
-            wix.add_shortcut(shortcut_name.strip(), executable_name.strip(), arp_icon)
+            wix.add_shortcut(shortcut_name.strip(), executable_name.strip(), icon_id)
 
     def get_msi_filepath(self):
         return path.join(self.get_working_directory(), "{}-{}-{}.msi".format(self.get_package_name(),
