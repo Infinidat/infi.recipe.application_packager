@@ -56,6 +56,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | msi-banner-nmp                    | None                                               | Top banner                                                           |
 | msi-dialog-bmp                    | None                                               | Background bitmap used on the welcome and completion dialogs         |
 | startmenu-shortcuts               | []                                                 | ['shortcut_name' = 'executable_name', ...]                           |
+| shortcuts-icon                    | None                                               | Icon file in EXE binary format to be used as icon for shortcuts      |
 
 Using the installers
 --------------------
