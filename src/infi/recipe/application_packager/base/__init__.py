@@ -12,8 +12,10 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'true',
                    'pfx-password-file': '~/.authenticode/certificate-password.txt',
                    'timestamp-url':  "http://timestamp.verisign.com/scripts/timstamp.dll",
                    'add-remove-programs-icon': None,
+                   'shortcuts-icon': None,
                    'msi-banner-bmp': None,
                    'msi-dialog-bmp': None,
+                   'startmenu-shortcuts': [],
                   }
 
 class PackagingRecipe(object):
@@ -198,6 +200,12 @@ class PackagingRecipe(object):
 
     def get_msi_dialog_bmp(self):
         return self._get_resource_file_from_recipe_section('msi-dialog-bmp')
+
+    def get_shortcuts_icon(self):
+        return self._get_resource_file_from_recipe_section("shortcuts-icon")
+
+    def get_startmenu_shortcuts(self):
+        return self._get_recipe_atribute("startmenu-shortcuts")
 
     def write_buildout_configuration_file_for_production(self):
         from .. import utils, assertions

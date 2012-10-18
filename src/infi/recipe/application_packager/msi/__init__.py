@@ -19,11 +19,11 @@ LAUNCH_CONDITION__WINDOWS_2008_AND_R2_ONLY = \
     "(Not VersionNT=502) And (Not (VersionNT=600 And (MsiNTProductType=1))) And " + \
     "(Not (VersionNT=601 And (MsiNTProductType=1)))"
 OS_REQUIREMENTS_LAUNCH_CONDITION_MESSAGE = "The operating system is not adequate for running [ProductName]."
-
+OS_32BIT_ON_64BIT_LAUNCH_CONDITION_MESSAGE = "[ProductName] installation on a 64-bit operating system requires the 64-bit installation package. Please get the 64-bit package and try again."
 OPERATING_SYSTEMS = {
                      # OS Name: (allow-install, condition)
-                     "Windows Server 2012": (True, '(VersionNT=602 And (MsiNTProductType=2 Or MsiNTProductType=3)'),
-                     "Windows 8": (False, '(VersionNT=602 And (MsiNTProductType=1)'),
+                     "Windows Server 2012": (True, '(VersionNT=602 And (MsiNTProductType=2 Or MsiNTProductType=3))'),
+                     "Windows 8": (False, '(VersionNT=602 And (MsiNTProductType=1))'),
                      "Windows Server 2008 R2": (True,
                                                 '(VersionNT=601 And (MsiNTProductType=2 Or MsiNTProductType=3))'),
                      "Windows Server 2008": (True,
@@ -113,7 +113,8 @@ class Recipe(PackagingRecipe):
         self._add_project_entry_points(wix, silent_launcher_file_id)
         arp_icon = self.get_add_remove_programs_icon()
         if arp_icon:
-            wix.set_add_remove_programs_icon(arp_icon)
+            arp_icon = wix.set_add_remove_programs_icon(arp_icon)
+        self._add_shortcuts(wix)
         banner_bmp = self.get_msi_banner_bmp()
         if banner_bmp:
             logger.info("Setting custom banner {}".format(banner_bmp))
@@ -122,7 +123,6 @@ class Recipe(PackagingRecipe):
         if dialog_bmp:
             logger.info("Setting custom dialog {}".format(dialog_bmp))
             wix.new_element("WixVariable", {"Id": "WixUIDialogBmp", "Value": dialog_bmp}, wix.product)
-        wix.set_allusers()
         return wix
 
     @contextmanager
@@ -147,7 +147,7 @@ class Recipe(PackagingRecipe):
         bindir = wix.mkdir('bin', wix.installdir)
         assembly_dir = wix.mkdir('Microsoft.VC90.CRT', bindir)
         component = wix.new_component(wix.new_id('bin'), bindir, generate_guid())
-        wix.add_environment_variable('Path', r'[INSTALLDIR]\bin', component)
+        wix.add_environment_variable('Path', r'[INSTALLDIR]bin', component)
         wix.add_delete_all_files_on_removal_component_to_directory(bindir)
         wix.add_delete_empty_folder_component_to_directory(bindir)
 
@@ -199,6 +199,16 @@ class Recipe(PackagingRecipe):
 
     def _add_launch_conditions(self, wix):
         self._add_os_requirements_launch_condition(wix)
+        self._prevent_32bit_installations_on_64bit_os(wix)
+
+    def _prevent_32bit_installations_on_64bit_os(self, wix):
+        from sys import maxsize
+        is_64 = maxsize > 2 ** 32
+        if is_64:
+            return
+        condition = wix.new_element("Condition", {'Message': OS_32BIT_ON_64BIT_LAUNCH_CONDITION_MESSAGE},
+                                    wix.product)
+        condition.text = "Not VersionNT64"
 
     def _add_os_requirements_launch_condition(self, wix):
         condition = wix.new_element("Condition", {'Message': OS_REQUIREMENTS_LAUNCH_CONDITION_MESSAGE},
@@ -235,6 +245,14 @@ class Recipe(PackagingRecipe):
             wix.add_deferred_in_system_context_custom_action(script_name, commandline, after=value['after'],
                                                              condition=value['condition'],
                                                              silent_launcher_file_id=silent_launcher_file_id)
+
+    def _add_shortcuts(self, wix):
+        if not self.get_startmenu_shortcuts() or not self.get_shortcuts_icon():
+            return
+        icon_id = wix.new_icon(self.get_shortcuts_icon())
+        for item in eval(self.get_startmenu_shortcuts()):
+            shortcut_name, executable_name = item.split('=')
+            wix.add_shortcut(shortcut_name.strip(), executable_name.strip(), icon_id)
 
     def get_msi_filepath(self):
         return path.join(self.get_working_directory(), "{}-{}-{}.msi".format(self.get_package_name(),

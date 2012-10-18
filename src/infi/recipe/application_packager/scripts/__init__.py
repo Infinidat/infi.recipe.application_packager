@@ -24,3 +24,5 @@ def post_install(argv=argv):
 def pre_uninstall(argv=argv):
     _write_file(os.path.join(INSTALLDIR, os.path.pardir, 'pre_uninstall'))
 
+def sample(argv=argv):
+    raw_input('sample, hit enter to exit')

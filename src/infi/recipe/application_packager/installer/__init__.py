@@ -194,7 +194,7 @@ class RpmInstaller(Installer):
         if not with_custom_actions:
             env['NO_CUSTOM_ACTIONS'] = '1'
         with prevent_access_to_pypi_servers(), prevent_access_to_gcc():
-            execute_assert_success(['rpm', '-i', self.get_package()], env=env)
+            execute_assert_success(['rpm', '-Uvh', self.get_package()], env=env)
 
     def uninstall_package(self, with_custom_actions=True):
         env = os.environ.copy()

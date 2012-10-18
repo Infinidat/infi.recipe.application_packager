@@ -15,14 +15,14 @@ BuildRoot: %{build_root}
 Source: %{package_name}-%{package_version}-%{package_arch}.tar.gz
 Version: %{package_version}
 Summary: %{product_name}
-AutoReqProv: no 
+AutoReqProv: no
 
 Group: Utilities
 License: Commercial
 Name: %{package_name}
 Release: 1
 
-%description 
+%description
 %{product_description}
 
 %files
@@ -44,7 +44,7 @@ function execute() {
     if test $$DEBUG -eq 0; then
         $$@ > /dev/null 2>&1
     else
-        $$@ 
+        $$@
     fi
 }
 
@@ -90,14 +90,18 @@ if test -n "%{post_install_script_name}" -a -x "bin/%{post_install_script_name}"
     execute bin/%{post_install_script_name} %{post_install_script_args}
     RC=$$?
     assert_rc
-fi 
+fi
 
-#end 
+#end
 execute popd
 exit 0
 
 
 %preun
+
+if test -n "$$1" -a "$$1" != "0"; then
+    exit 0
+fi
 
 RC=0
 
@@ -111,7 +115,7 @@ function execute() {
     if test $$DEBUG -eq 0; then
         $$@ > /dev/null 2>&1
     else
-        $$@ 
+        $$@
     fi
 }
 
@@ -153,7 +157,7 @@ cd ..
 # this also deletes installed files
 for dirname in $directories_to_clean; do
     execute find $$dirname -maxdepth 1 -mindepth 1 -delete
-done 
+done
 
 # end
 execute popd
@@ -161,13 +165,17 @@ exit 0
 
 %postun
 
+if test -n "$$1" -a "$$1" != "0"; then
+    exit 0
+fi
+
 RC=0
 
 function execute() {
     if test $$DEBUG -eq 0; then
         $$@ > /dev/null 2>&1
     else
-        $$@ 
+        $$@
     fi
 }
 
@@ -178,4 +186,6 @@ if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
     set -xv
 fi
 
+set +e
 execute rmdir %{prefix}
+set -e

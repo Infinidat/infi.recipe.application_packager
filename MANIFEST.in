@@ -1,0 +1,1 @@
+recursive-include src postinst.in signtool.exe control.in changelog.in rules.in prerm.in template.wxs silent_launcher-x86.exe rpmspec.in md5sums.in silent_launcher-x64.exe

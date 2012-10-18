@@ -16,7 +16,7 @@ function execute() {
     if test $$DEBUG -eq 0; then
         $$@ > /dev/null 2>&1
     else
-        $$@ 
+        $$@
     fi
 }
 
@@ -58,7 +58,7 @@ cd ..
 # this also deletes installed files
 for dirname in $directories_to_clean; do
     execute find $$dirname -maxdepth 1 -mindepth 1 -delete
-done 
+done
 
 # end
 execute popd
