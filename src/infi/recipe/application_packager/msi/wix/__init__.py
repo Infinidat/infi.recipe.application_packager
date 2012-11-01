@@ -227,7 +227,7 @@ class Wix(object):
 
     def set_add_remove_programs_icon(self, icon_path):
         icon_id = self.new_icon(icon_path)
-        return self.new_element("Property", {"Id":"ARPPRODUCTICON", "Value":"icon.ico"}, self.product)
+        return self.new_element("Property", {"Id":"ARPPRODUCTICON", "Value":icon_id.get("Id")}, self.product)
 
     def get_msi_property(self, name):
         for element in self.product.getchildren():
