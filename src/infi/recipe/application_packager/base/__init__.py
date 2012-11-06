@@ -3,7 +3,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 RECIPE_DEFAULTS = {'require-administrative-privileges': 'true',
-                   'dependent-scripts': 'true',
+                   'dependent-scripts': 'false',
                    'eggs': '',
                    'scripts': '',
                    'deb-dependencies': '',
