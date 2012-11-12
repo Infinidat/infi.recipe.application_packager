@@ -37,6 +37,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | dependent-scripts                 | false                                              |                                                                      |
 | eggs                              | \<project name>                                    |                                                                      |
 | scripts                           | \<empty list>                                      |                                                                      |
+| gui-scripts                       | \<empty list>                                      |                                                                      |
 | deb-dependencies                  |                                                    | List of debian packages to be required prior installing your package |
 | deb-dependencies                  |                                                    | List of debian packages to be required prior installing your package |
 | sign-executables-and-msi          | false                                              | Digitally signed the MSI using Authenticode certificate              |

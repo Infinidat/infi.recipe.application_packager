@@ -13,10 +13,13 @@ unzip = true
 newest = true
 download-cache = .cache
 develop = .
-parts = production-scripts
+parts = production-scripts production-gui-scripts
 
 [production-scripts]
 recipe = infi.recipe.console_scripts
+
+[production-gui-scripts]
+recipe = infi.recipe.console_scripts:gui_scripts
 """
 
 @contextmanager
@@ -32,7 +35,7 @@ def open_buildout_configfile(filepath="buildout.cfg", write_on_exit=False):
         with open(filepath, 'w') as fd:
             parser.write(fd)
 
-def write_buildout_configuration_file_for_production(dependent_scripts, eggs, scripts, require_administrative_privileges):
+def write_buildout_configuration_file_for_production(dependent_scripts, eggs, scripts, gui_scripts, require_admin):
     from textwrap import dedent
     from ConfigParser import ConfigParser
     with open("buildout.in", 'w') as fd:
@@ -42,4 +45,8 @@ def write_buildout_configuration_file_for_production(dependent_scripts, eggs, sc
         buildout.set("production-scripts", "eggs", eggs)
         if scripts:
             buildout.set("production-scripts", "scripts", scripts)
-        buildout.set("production-scripts" ,"require-administrative-privileges", require_administrative_privileges)
+        buildout.set("production-gui-scripts", "dependent-scripts", dependent_scripts)
+        buildout.set("production-gui-scripts", "eggs", eggs)
+        if gui_scripts:
+            buildout.set("production-gui-scripts", "scripts", gui_scripts)
+        buildout.set("production-scripts" ,"require-administrative-privileges", require_admin)

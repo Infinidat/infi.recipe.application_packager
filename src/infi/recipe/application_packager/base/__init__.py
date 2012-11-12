@@ -6,6 +6,7 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'true',
                    'dependent-scripts': 'false',
                    'eggs': '',
                    'scripts': '',
+                   'gui-scripts': '',
                    'deb-dependencies': '',
                    'sign-executables-and-msi': 'false',
                    'pfx-file': '~/.authenticode/certificate.pfx',
@@ -89,8 +90,11 @@ class PackagingRecipe(object):
     def get_eggs_for_production(self):
         return self._get_recipe_atribute("eggs")
 
-    def get_scripts_for_production(self):
+    def get_console_scripts_for_production(self):
         return self._get_recipe_atribute("scripts")
+
+    def get_gui_scripts_for_production(self):
+        return self._get_recipe_atribute("gui-scripts")
 
     def get_require_administrative_privileges(self):
         return self._get_recipe_atribute("require-administrative-privileges")
@@ -212,5 +216,6 @@ class PackagingRecipe(object):
         method = utils.buildout.write_buildout_configuration_file_for_production
         return method(self.get_dependent_scripts(),
                       self.get_eggs_for_production() or self.get_python_module_name(),
-                      self.get_scripts_for_production(),
+                      self.get_console_scripts_for_production(),
+                      self.get_gui_scripts_for_production(),
                       self.get_require_administrative_privileges())
