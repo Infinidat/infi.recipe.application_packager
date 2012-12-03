@@ -54,3 +54,26 @@ def download_distribute(destination_dir):
     with chdir(destination_dir):
         urlretrieve(buildout_url, buildout_filepath)
         urlretrieve("http://python-distribute.org/distribute_setup.py", "distribute_setup.py")
+
+def get_dependencies(name):
+    from pkg_resources import get_distribution
+    from collections import deque
+    distribution = get_distribution(name)
+    queue = deque()
+    queue.extend(distribution.requires())
+    dependencies = set()
+    while queue:
+        depenency = queue.popleft().project_name
+        if depenency in dependencies:
+            continue
+        dependencies.add(depenency)
+        queue.extend(get_distribution(depenency).requires())
+    return dependencies
+
+def get_distributions_from_dependencies(dependencies):
+    """:returns a dict of {distname:version}"""
+    from pkg_resources import get_distribution
+    get_distname = lambda dist: dist.egg_name().split('-')[0]
+    get_version = lambda dist: dist.version
+    distributions = [get_distribution(name) for name in dependencies]
+    return {get_distname(dist): get_version(dist) for dist in distributions}

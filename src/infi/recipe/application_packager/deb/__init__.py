@@ -15,6 +15,7 @@ class Recipe(PackagingRecipe):
         utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                     self.get_download_cache_dist(),
                                                     self.get_eggs_directory())
+        self.delete_non_production_packages_from_cache_dist()
         utils.download_buildout(self.get_download_cache_dist())
         utils.download_distribute(self.get_download_cache_dist())
         package = self.build_package()
