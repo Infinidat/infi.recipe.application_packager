@@ -221,8 +221,7 @@ class PackagingRecipe(object):
                       self.get_require_administrative_privileges())
 
     def delete_non_production_packages_from_cache_dist(self):
-        from .. import utils
-        from pkg_resources import get_distribution, get_distributions_from_dependencies
+        from ..utils import get_dependencies, get_distributions_from_dependencies
         from glob import glob
         from os import path, remove
         dependencies = set.union(*[utils.get_dependencies(name) for name in self.get_eggs_for_production()])
