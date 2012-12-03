@@ -13,11 +13,11 @@ SPEC_TEMPLATE = resource_filename(__name__, 'rpmspec.in')
 
 class Recipe(PackagingRecipe):
     def install(self):
+        self.delete_non_production_packages_from_cache_dist()
         self.write_buildout_configuration_file_for_production()
         utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                     self.get_download_cache_dist(),
                                                     self.get_eggs_directory())
-        self.delete_non_production_packages_from_cache_dist()
         utils.download_buildout(self.get_download_cache_dist())
         utils.download_distribute(self.get_download_cache_dist())
         package = self.build_package()

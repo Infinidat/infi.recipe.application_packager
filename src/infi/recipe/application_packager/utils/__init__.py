@@ -76,4 +76,8 @@ def get_distributions_from_dependencies(dependencies):
     get_distname = lambda dist: dist.egg_name().split('-')[0]
     get_version = lambda dist: dist.version
     distributions = [get_distribution(name) for name in dependencies]
-    return {get_distname(dist): get_version(dist) for dist in distributions}
+    # handling the mess with packages with '-' and '_' in their names, and their filenames
+    dist_dict = {get_distname(dist): get_version(dist) for dist in distributions}
+    dist_dict.update(**{key.replace('-', '_'): value for key, value in dist_dict.items()})
+    dist_dict.update(**{key.replace('_', '-'): value for key, value in dist_dict.items()})
+    return dist_dict
