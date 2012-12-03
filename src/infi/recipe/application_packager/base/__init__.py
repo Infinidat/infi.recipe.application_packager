@@ -225,6 +225,7 @@ class PackagingRecipe(object):
         from glob import glob
         from os import path, remove
         eggs = self.get_eggs_for_production() or [self.get_python_module_name()]
+        eggs += ["infi.recipe.console_scripts"]
         dependencies = set.union(*[get_dependencies(name) for name in eggs])
         distributions = get_distributions_from_dependencies(dependencies)
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
