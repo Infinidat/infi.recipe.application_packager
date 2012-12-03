@@ -224,7 +224,8 @@ class PackagingRecipe(object):
         from ..utils import get_dependencies, get_distributions_from_dependencies
         from glob import glob
         from os import path, remove
-        dependencies = set.union(*[get_dependencies(name) for name in self.get_eggs_for_production()])
+        eggs = self.get_eggs_for_production() or [self.get_python_module_name()]
+        dependencies = set.union(*[get_dependencies(name) for name in eggs])
         distributions = get_distributions_from_dependencies(dependencies)
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
             basename = path.basename(filepath)
