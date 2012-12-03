@@ -74,7 +74,7 @@ def get_distributions_from_dependencies(dependencies):
     """:returns a dict of {distname:version}"""
     from pkg_resources import get_distribution
     get_distname = lambda dist: dist.egg_name().split('-')[0]
-    get_version = lambda dist: dist.version
+    get_version = lambda dist: dist.version.lower()
     distributions = dict()
     for dependency in dependencies:
         distribution = get_distribution(dependency)
