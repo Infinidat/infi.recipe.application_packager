@@ -75,9 +75,13 @@ def get_distributions_from_dependencies(dependencies):
     from pkg_resources import get_distribution
     get_distname = lambda dist: dist.egg_name().split('-')[0]
     get_version = lambda dist: dist.version
-    distributions = [get_distribution(name) for name in dependencies]
-    # handling the mess with packages with '-' and '_' in their names, and their filenames
-    dist_dict = {get_distname(dist): get_version(dist) for dist in distributions}
-    dist_dict.update(**{key.replace('-', '_'): value for key, value in dist_dict.items()})
-    dist_dict.update(**{key.replace('_', '-'): value for key, value in dist_dict.items()})
-    return dist_dict
+    distributions = dict()
+    for dependency in dependencies:
+        distribution = get_distribution(dependency)
+        version = get_version(distribution)
+        # adding both solves two problems:
+        # * git-py is saved as git_py
+        # * egg_name for Archive on windows is archive
+        distributions[get_distname(distribution)] = version
+        distributions[dependency] = version
+    return distributions
