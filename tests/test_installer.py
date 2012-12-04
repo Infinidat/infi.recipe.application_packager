@@ -31,7 +31,8 @@ def create_console_scripts():
                                 "console-scripts", "add", name,
                                 "infi.recipe.application_packager.scripts:{0}".format(name),
                                 "--commit-changes"])
-        execute_assert_success(["projector", "devenv", "build"])
+        execute_assert_success([os.path.join('bin', 'projector'),
+                               "devenv", "build"])
 
 def create_package():
     from infi.execute import execute_assert_success
