@@ -27,7 +27,8 @@ CONSOLE_SCRIPTS = ["hello", "sample", "post_install", "pre_uninstall"]
 def create_console_scripts():
     from infi.execute import execute_assert_success
     for name in CONSOLE_SCRIPTS:
-        execute_assert_success(["projector", "console-scripts", "add", name,
+        execute_assert_success([os.path.join('bin', 'projector'),
+                                "console-scripts", "add", name,
                                 "infi.recipe.application_packager.scripts:{0}".format(name),
                                 "--commit-changes"])
 
