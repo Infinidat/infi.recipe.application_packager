@@ -22,6 +22,15 @@ def delete_existing_builds():
             continue
         shutil.rmtree(path)
 
+CONSOLE_SCRIPTS = ["hello", "sample", "post_install", "pre_uninstall"]
+
+def create_console_scripts():
+    from infi.execute import execute_assert_success
+    for name in CONSOLE_SCRIPTS:
+        execute_assert_success(["projector", "console-scripts", "add", name,
+                                "infi.recipe.application_packager.scripts:{0}".format(name),
+                                "--commit-changes"])
+
 def create_package():
     from infi.execute import execute_assert_success
     execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', 'install', 'pack'])
@@ -50,6 +59,7 @@ class Base(unittest.TestCase):
             raise unittest.SkipTest("Skipping")
         with chdir(TESTCASE_DIR):
             delete_existing_builds()
+            create_console_scripts()
             create_package()
 
     def setUp(self):
