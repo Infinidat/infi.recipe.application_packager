@@ -32,7 +32,7 @@ def create_console_scripts():
                                 "infi.recipe.application_packager.scripts:{0}".format(name),
                                 "--commit-changes"])
         execute_assert_success([os.path.join('bin', 'projector'),
-                               "devenv", "build"])
+                               "devenv", "build", "--no-scripts"])
 
 def create_package():
     from infi.execute import execute_assert_success
