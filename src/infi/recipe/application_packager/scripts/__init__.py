@@ -11,7 +11,7 @@ INSTALLDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), #scripts
                                           os.path.pardir, #src
                                           os.path.pardir))
 
-def main(argv=argv):
+def hello(argv=argv):
     print('hello world')
 
 def _write_file(name):
