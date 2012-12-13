@@ -55,7 +55,7 @@ for script in *; do
     if test -n "$post_install_script_name" -a "$$script" == "$post_install_script_name"; then
         continue;
     fi
-    if test -n "$pre_uninstall_script_name" -a "$$script" == "%{pre_uninstall_script_name}"; then
+    if test -n "$pre_uninstall_script_name" -a "$$script" == "$pre_uninstall_script_name"; then
         continue;
     fi
     execute ln -s -f %{prefix}/bin/$$script %{_bindir}/$$script
