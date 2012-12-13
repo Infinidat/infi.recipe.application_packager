@@ -259,6 +259,3 @@ class Recipe(PackagingRecipe):
         return path.join(self.get_working_directory(), "{}-{}-{}.msi".format(self.get_package_name(),
                                                                       self.get_project_version__long(),
                                                                       self.get_os_string()))
-
-
-

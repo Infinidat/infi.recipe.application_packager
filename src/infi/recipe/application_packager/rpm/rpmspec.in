@@ -77,11 +77,18 @@ assert_rc
 # link binaries to /usr/bin
 execute cd bin
 for script in *; do
-    if test "$$script" != "buildout"; then
-        execute ln -s -f %{prefix}/bin/$$script %{_bindir}/$$script
-        RC=$$?
-        assert_rc
+    if test "$$script" == "buildout"; then
+        continue;
     fi
+    if test -n "%{post_install_script_name}" -a "$$script" == "%{post_install_script_name}"; then
+        continue;
+    fi
+    if test -n "%{pre_install_script_name}" -a "$$script" == "%{pre_install_script_name}"; then
+        continue;
+    fi
+    execute ln -s -f %{prefix}/bin/$$script %{_bindir}/$$script
+    RC=$$?
+    assert_rc
 done
 cd ..
 
