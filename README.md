@@ -96,7 +96,7 @@ To use these (example):
 
 
  Checking out the code
-=====================
+======================
 
 This project uses buildout and infi-projector, and git to generate setup.py and __version__.py.
 In order to generate these, first get infi-projector:
