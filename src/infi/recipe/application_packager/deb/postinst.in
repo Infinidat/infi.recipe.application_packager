@@ -36,6 +36,9 @@ fi
 execute pushd .
 execute cd $prefix
 
+# delete old eggs
+rm -rf eggs
+
 # bootstrap
 execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/distribute_setup.py
 RC=$$?
