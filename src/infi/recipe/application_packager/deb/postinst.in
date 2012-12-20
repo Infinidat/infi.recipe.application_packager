@@ -16,7 +16,7 @@ function execute() {
     if test $$DEBUG -eq 0; then
         $$@ > /dev/null 2>&1
     else
-        $$@ 
+        $$@
     fi
 }
 
@@ -36,6 +36,9 @@ fi
 execute pushd .
 execute cd $prefix
 
+# delete old eggs
+rm -rf eggs
+
 # bootstrap
 execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/distribute_setup.py
 RC=$$?
@@ -49,11 +52,18 @@ assert_rc
 # link binaries to /usr/bin
 execute cd bin
 for script in *; do
-    if test "$$script" != "buildout"; then
-        execute ln -s -f $prefix/bin/$$script /usr/bin/$$script
-        RC=$$?
-        assert_rc
+    if test "$$script" == "buildout"; then
+        continue;
     fi
+    if test -n "$post_install_script_name" -a "$$script" == "$post_install_script_name"; then
+        continue;
+    fi
+    if test -n "$pre_uninstall_script_name" -a "$$script" == "$pre_uninstall_script_name"; then
+        continue;
+    fi
+    execute ln -s -f $prefix/bin/$$script /usr/bin/$$script
+    RC=$$?
+    assert_rc
 done
 cd ..
 
@@ -62,8 +72,8 @@ if test -n "$post_install_script_name" -a -x "bin/$post_install_script_name"; th
     execute bin/$post_install_script_name $post_install_script_args
     RC=$$?
     assert_rc
-fi 
+fi
 
-#end 
+#end
 execute popd
 exit 0

@@ -54,3 +54,34 @@ def download_distribute(destination_dir):
     with chdir(destination_dir):
         urlretrieve(buildout_url, buildout_filepath)
         urlretrieve("http://python-distribute.org/distribute_setup.py", "distribute_setup.py")
+
+def get_dependencies(name):
+    from pkg_resources import get_distribution
+    from collections import deque
+    distribution = get_distribution(name)
+    queue = deque()
+    queue.extend(distribution.requires())
+    dependencies = set()
+    while queue:
+        depenency = queue.popleft().project_name
+        if depenency in dependencies:
+            continue
+        dependencies.add(depenency)
+        queue.extend(get_distribution(depenency).requires())
+    return dependencies
+
+def get_distributions_from_dependencies(dependencies):
+    """:returns a dict of {distname:version}"""
+    from pkg_resources import get_distribution
+    get_distname = lambda dist: dist.egg_name().split('-')[0]
+    get_version = lambda dist: dist.version.lower()
+    distributions = dict()
+    for dependency in dependencies:
+        distribution = get_distribution(dependency)
+        version = get_version(distribution)
+        # adding both solves two problems:
+        # * git-py is saved as git_py
+        # * egg_name for Archive on windows is archive
+        distributions[get_distname(distribution)] = version
+        distributions[dependency] = version
+    return distributions

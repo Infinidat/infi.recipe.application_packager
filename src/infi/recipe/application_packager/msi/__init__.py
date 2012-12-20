@@ -41,6 +41,7 @@ SILENT_LAUNCHER = "silent_launcher-{}.exe"
 
 class Recipe(PackagingRecipe):
     def install(self):
+        self.delete_non_production_packages_from_cache_dist()
         self.signtool = self.get_signtool()
         self.write_buildout_configuration_file_for_production()
         utils.download_buildout(self.get_download_cache_dist())
@@ -258,6 +259,3 @@ class Recipe(PackagingRecipe):
         return path.join(self.get_working_directory(), "{}-{}-{}.msi".format(self.get_package_name(),
                                                                       self.get_project_version__long(),
                                                                       self.get_os_string()))
-
-
-
