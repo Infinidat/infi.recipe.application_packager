@@ -229,7 +229,7 @@ class PackagingRecipe(object):
         distributions = get_distributions_from_dependencies(dependencies)
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
             basename = path.basename(filepath)
-            if any([distname in basename and version.replace('-', '_') in basename.lower()
+            if any([distname in basename and version.replace('-', '_') in basename.lower().replace('-', '_')
                    for distname, version in distributions.items()]):
                 continue
             remove(filepath)
