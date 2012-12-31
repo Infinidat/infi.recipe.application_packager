@@ -32,33 +32,33 @@ In order create an application with proper packaging, you'll need more than just
 
 Under the `pack` recipe in your `buildout.cfg`, you can define the following options:
 
-| Key                               | Default value                                      | Description                                                          |
-| --------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------- |
-| dependent-scripts                 | false                                              |                                                                      |
-| eggs                              | \<project name>                                    |                                                                      |
-| scripts                           | \<empty list>                                      |                                                                      |
-| gui-scripts                       | \<empty list>                                      |                                                                      |
-| deb-dependencies                  |                                                    | List of debian packages to be required prior installing your package |
-| deb-dependencies                  |                                                    | List of debian packages to be required prior installing your package |
-| sign-executables-and-msi          | false                                              | Digitally signed the MSI using Authenticode certificate              |
-| pfx-file                          | ~/.authenticode/certificate.pfx                    | Absolute location of the certificate file                            |
-| pfx-password-file                 | ~/.authenticode/certificate-password.txt           | Absolute locaton for the private txt of the certificate              |
-| timestamp-url                     | http://timestamp.verisign.com/scripts/timstamp.dll | Timestamp server                                                     |
-| require-administrative-privileges | false                                              |                                                                      |
-| install-on-windows-server-2012    | true                                               |                                                                      |
-| install-on-windows-server-2008-r2 | true                                               |                                                                      |
-| install-on-windows-server-2008    | true                                               |                                                                      |
-| install-on-windows-server-2003    | false                                              |                                                                      |
-| install-on-windows-8              | false                                              |                                                                      |
-| install-on-windows-7              | false                                              |                                                                      |
-| install-on-windows-vista          | false                                              |                                                                      |
-| install-on-windows-xp             | false                                              |                                                                      |
-| add-remove-programs-icon          | None                                               | ICO file to use in the add/remove program applet                     |
-| msi-banner-nmp                    | None                                               | Top banner                                                           |
-| msi-dialog-bmp                    | None                                               | Background bitmap used on the welcome and completion dialogs         |
-| startmenu-shortcuts               | []                                                 | ['shortcut_name' = 'executable_name', ...]                           |
-| shortcuts-icon                    | None                                               | Icon file in EXE binary format to be used as icon for shortcuts      |
-
+| Key                               | Default value                                      | Description                                                              |
+| --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------ |
+| dependent-scripts                 | false                                              |                                                                          |
+| eggs                              | \<project name>                                    |                                                                          |
+| scripts                           | \<empty list>                                      |                                                                          |
+| gui-scripts                       | \<empty list>                                      |                                                                          |
+| deb-dependencies                  |                                                    | List of debian packages to be required prior installing your package     |
+| deb-dependencies                  |                                                    | List of debian packages to be required prior installing your package     |
+| sign-executables-and-msi          | false                                              | Digitally signed the MSI using Authenticode certificate                  |
+| pfx-file                          | ~/.authenticode/certificate.pfx                    | Absolute location of the certificate file                                |
+| pfx-password-file                 | ~/.authenticode/certificate-password.txt           | Absolute locaton for the private txt of the certificate                  |
+| timestamp-url                     | http://timestamp.verisign.com/scripts/timstamp.dll | Timestamp server                                                         |
+| require-administrative-privileges | false                                              |                                                                          |
+| install-on-windows-server-2012    | true                                               |                                                                          |
+| install-on-windows-server-2008-r2 | true                                               |                                                                          |
+| install-on-windows-server-2008    | true                                               |                                                                          |
+| install-on-windows-server-2003    | false                                              |                                                                          |
+| install-on-windows-8              | false                                              |                                                                          |
+| install-on-windows-7              | false                                              |                                                                          |
+| install-on-windows-vista          | false                                              |                                                                          |
+| install-on-windows-xp             | false                                              |                                                                          |
+| add-remove-programs-icon          | None                                               | ICO file to use in the add/remove program applet                         |
+| msi-banner-nmp                    | None                                               | Top banner                                                               |
+| msi-dialog-bmp                    | None                                               | Background bitmap used on the welcome and completion dialogs             |
+| startmenu-shortcuts               | []                                                 | ['shortcut_name' = 'executable_name', ...]                               |
+| shortcuts-icon                    | None                                               | Icon file in EXE binary format to be used as icon for shortcuts          |
+| shrink-cache-dist                 | true                                               | delete sources from .cache/dist that are under the install-requires tree |
 Using the installers
 --------------------
 
