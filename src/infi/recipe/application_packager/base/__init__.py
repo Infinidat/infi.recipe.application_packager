@@ -4,6 +4,7 @@ logger = getLogger(__name__)
 
 RECIPE_DEFAULTS = {'require-administrative-privileges': 'true',
                    'dependent-scripts': 'false',
+                   'shrink-cache-dist': 'true',
                    'eggs': '',
                    'scripts': '',
                    'gui-scripts': '',
@@ -178,6 +179,10 @@ class PackagingRecipe(object):
         key = 'sign-executables-and-msi'
         return self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]) in [True, 'true', 'True']
 
+    def should_shrink_cache_dist(self):
+        key = 'shrink-cache-dist'
+        return self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]) in [True, 'true', 'True']
+
     def get_pfx_file(self):
         from os.path import normpath, expanduser
         key = 'pfx-file'
@@ -224,6 +229,8 @@ class PackagingRecipe(object):
         from ..utils import get_dependencies, get_distributions_from_dependencies
         from glob import glob
         from os import path, remove
+        if not self.should_shrink_cache_dist():
+            return
         eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
         dependencies = set.union(*[get_dependencies(name) for name in eggs])
         distributions = get_distributions_from_dependencies(dependencies)
