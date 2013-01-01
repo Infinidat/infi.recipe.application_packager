@@ -39,9 +39,9 @@ def download_buildout(destination_dir):
     from urllib import urlretrieve
     from infi.pypi_manager import PyPI
     pypi = PyPI()
-    versions_1_x = [version for version in pypi.get_available_versions("zc.buildout")
-                    if version.startswith('1.')]
-    buildout_url = pypi.get_source_distribution_url_of_specific_release_version("zc.buildout", versions_1_x[0])
+    versions_1_6_x = [version for version in pypi.get_available_versions("zc.buildout")
+                    if version.startswith('1.6')]
+    buildout_url = pypi.get_source_distribution_url_of_specific_release_version("zc.buildout", versions_1_6_x[0])
     buildout_filepath = buildout_url.split('/')[-1]
     with chdir(destination_dir):
         urlretrieve(buildout_url, buildout_filepath)
