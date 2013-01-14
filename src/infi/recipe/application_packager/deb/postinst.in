@@ -40,7 +40,7 @@ execute cd $prefix
 rm -rf eggs
 
 # bootstrap
-execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/distribute_setup.py
+execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/distribute_setup.py --version=1.6.3
 RC=$$?
 assert_rc
 
