@@ -35,21 +35,22 @@ def temporary_directory_context():
         yield tempdir
     rmtree(tempdir, ignore_errors=True)
 
+def _get_package_url(package_name):
+    import pkg_resources
+    pkg_info = pkg_resources.get_distribution(package_name)
+    url_template = "http://pypi.python.org/packages/source/{0}/{1}/{1}-{2}.tar.gz"
+    return url_template.format(pkg_info.project_name[0], pkg_info.project_name, pkg_info.version)
+
 def download_buildout(destination_dir):
     from urllib import urlretrieve
-    from infi.pypi_manager import PyPI
-    pypi = PyPI()
-    versions_1_6_x = [version for version in pypi.get_available_versions("zc.buildout")
-                    if version.startswith('1.6')]
-    buildout_url = pypi.get_source_distribution_url_of_specific_release_version("zc.buildout", versions_1_6_x[0])
+    buildout_url = _get_package_url("zc.buildout")
     buildout_filepath = buildout_url.split('/')[-1]
     with chdir(destination_dir):
         urlretrieve(buildout_url, buildout_filepath)
 
 def download_distribute(destination_dir):
     from urllib import urlretrieve
-    from infi.pypi_manager import PyPI
-    buildout_url = PyPI().get_latest_source_distribution_url("distribute")
+    buildout_url = _get_package_url("distribute")
     buildout_filepath = buildout_url.split('/')[-1]
     with chdir(destination_dir):
         urlretrieve(buildout_url, buildout_filepath)
