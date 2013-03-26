@@ -39,7 +39,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | scripts                           | \<empty list>                                      |                                                                          |
 | gui-scripts                       | \<empty list>                                      |                                                                          |
 | deb-dependencies                  |                                                    | List of debian packages to be required prior installing your package     |
-| deb-dependencies                  |                                                    | List of debian packages to be required prior installing your package     |
+| rpm-dependencies                  |                                                    | List of redhat packages to be required prior installing your package     |
 | sign-executables-and-msi          | false                                              | Digitally signed the MSI using Authenticode certificate                  |
 | pfx-file                          | ~/.authenticode/certificate.pfx                    | Absolute location of the certificate file                                |
 | pfx-password-file                 | ~/.authenticode/certificate-password.txt           | Absolute locaton for the private txt of the certificate                  |

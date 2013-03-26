@@ -16,6 +16,7 @@ Source: %{package_name}-%{package_version}-%{package_arch}.tar.gz
 Version: %{package_version}
 Summary: %{product_name}
 AutoReqProv: no
+$requires_declaration
 
 Group: Utilities
 License: Commercial

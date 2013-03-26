@@ -81,6 +81,11 @@ class Recipe(PackagingRecipe):
         copy(source_filepath, buildroot_filepath)
         self._files.add(destination_filepath)
 
+    def _get_requires_declaration(self):
+        rpm_dependencies = self.get_recipe_section().get("rpm-dependencies", RECIPE_DEFAULTS["rpm-dependencies"])
+        deps = [item.strip() for item in rpm_dependencies.splitlines()]
+        return "Requires: {}".format(', '.join(deps)) if deps else ''
+
     def _inject_product_properties_to_spec(self):
         directories_to_clean = [item for item in self._directories_to_clean]
         directories_to_clean.sort()
@@ -92,6 +97,7 @@ class Recipe(PackagingRecipe):
                   'package_name': self.get_package_name(),
                   'package_version': self.get_project_version__short(),
                   'package_arch': self.get_platform_arch(),
+                  'requires_declaration': self._get_requires_declaration(),
                   'prefix': self.get_install_prefix(),
                   'build_root': self._buildroot,
                   'post_install_script_name': self.get_script_name("post_install") or "''",
