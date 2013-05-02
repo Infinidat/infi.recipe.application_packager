@@ -36,7 +36,7 @@ def create_console_scripts():
 
 def create_package():
     from infi.execute import execute_assert_success
-    execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', 'install', 'pack'])
+    execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack'])
 
 def do_an_empty_commit():
     from gitpy import LocalRepository
@@ -45,7 +45,7 @@ def do_an_empty_commit():
 
 def devenv_build():
     from infi.execute import execute_assert_success
-    execute_assert_success([os.path.join('bin', 'buildout'), '-v', '-s', 'install', 'setup.py', '__version__.py'])
+    execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'setup.py', '__version__.py'])
 
 from infi.recipe.application_packager.utils.execute import execute_assert_success
 from infi.recipe.application_packager.utils import chdir

@@ -5,7 +5,7 @@ from . import buildout, compiler, execute, signtool
 
 logger = getLogger(__name__)
 
-BUILDOUT_PARAMETERS = ['-s']
+BUILDOUT_PARAMETERS = []
 
 def _chdir_and_log(path):
     from os import chdir
