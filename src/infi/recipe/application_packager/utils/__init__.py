@@ -62,7 +62,6 @@ def write_distribute_setup_py(destination_dir):
         content = content.replace("http://pypi.python.org/packages/source/d/distribute/", ".cache/dist/")
         with open("distribute_setup.py", "w") as fd:
             fd.write(content)
-            content = content.read()
 
 def download_distribute(destination_dir):
     from urllib import urlretrieve
