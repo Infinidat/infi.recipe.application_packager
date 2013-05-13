@@ -1,10 +1,11 @@
 
+from pkg_resources import resource_filename
 from contextlib import contextmanager
 from logging import getLogger
 from . import buildout, compiler, execute, signtool
 
 logger = getLogger(__name__)
-
+distribute_setup_txt = resource_filename(__name__, "distribute_setup.txt")
 BUILDOUT_PARAMETERS = []
 
 def _chdir_and_log(path):
@@ -35,6 +36,11 @@ def temporary_directory_context():
         yield tempdir
     rmtree(tempdir, ignore_errors=True)
 
+def _get_install_package_verion(package_name):
+    import pkg_resources
+    pkg_info = pkg_resources.get_distribution(package_name)
+    return pkg_info.version
+
 def _get_package_url(package_name):
     import pkg_resources
     pkg_info = pkg_resources.get_distribution(package_name)
@@ -48,13 +54,22 @@ def download_buildout(destination_dir):
     with chdir(destination_dir):
         urlretrieve(buildout_url, buildout_filepath)
 
+def write_distribute_setup_py(destination_dir):
+    with chdir(destination_dir):
+        with open(distribute_setup_txt) as fd:
+            content = fd.read()
+        content = content.replace("0.6.39", _get_install_package_verion("distribute"))
+        content = content.replace("http://pypi.python.org/packages/source/d/distribute/", ".cache/dist/")
+        with open("distribute_setup.py", "w") as fd:
+            fd.write(content)
+
 def download_distribute(destination_dir):
     from urllib import urlretrieve
-    buildout_url = _get_package_url("distribute")
-    buildout_filepath = buildout_url.split('/')[-1]
+    distribute_url = _get_package_url("distribute")
+    distribute_filepath = distribute_url.split('/')[-1]
     with chdir(destination_dir):
-        urlretrieve(buildout_url, buildout_filepath)
-        urlretrieve("http://python-distribute.org/distribute_setup.py", "distribute_setup.py")
+        urlretrieve(distribute_url, distribute_filepath)
+    write_distribute_setup_py(destination_dir)
 
 def get_dependencies(name):
     from pkg_resources import get_distribution
