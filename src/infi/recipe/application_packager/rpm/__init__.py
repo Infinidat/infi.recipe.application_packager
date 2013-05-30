@@ -84,7 +84,7 @@ class Recipe(PackagingRecipe):
     def _get_requires_declaration(self):
         rpm_dependencies = self.get_recipe_section().get("rpm-dependencies", RECIPE_DEFAULTS["rpm-dependencies"])
         deps = [item.strip() for item in rpm_dependencies.splitlines()]
-        return "Requires: {}".format(', '.join(deps)) if deps else ''
+        return "\n".join(["Requires: {}".format(dep) for dep in deps])
 
     def _inject_product_properties_to_spec(self):
         directories_to_clean = [item for item in self._directories_to_clean]
