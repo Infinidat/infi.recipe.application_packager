@@ -41,10 +41,10 @@ class BinaryDistributionsCompiler(object):
 
     def add_import_setuptools_to_setup_py(self):
         with open("setup.py") as fd:
-            content = fd.readlines()
-        content.insert(1, "import setuptools")
+            content = fd.read()
+        content = content.replace("from distutils.core import setup", "from setuptools import setup")
         with open("setup.py", 'w') as fd:
-            fd.write('\n'.join(content))
+            fd.write(content)
 
     @contextmanager
     def extract_archive(self, archive_path):
