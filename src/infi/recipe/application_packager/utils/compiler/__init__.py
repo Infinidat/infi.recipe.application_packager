@@ -43,6 +43,7 @@ class BinaryDistributionsCompiler(object):
         with open("setup.py") as fd:
             content = fd.read()
         content = content.replace("from distutils.core import setup", "from setuptools import setup")
+        content = content.replace("from distutils import core", "import setuptools as core")
         with open("setup.py", 'w') as fd:
             fd.write(content)
 
