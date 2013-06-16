@@ -90,7 +90,7 @@ class BinaryDistributionsCompiler(object):
         from os import remove
         from shutil import copy
         for archive in self.get_packages_to_install():
-            logger.debug("Compiling egg for {}".format(archive))
+            logger.info("Compiling egg for {}".format(archive))
             with self.extract_archive(archive) as extracted_dir:
                 try:
                     built_egg = self.build_binary_egg()
