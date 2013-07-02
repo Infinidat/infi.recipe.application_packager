@@ -60,7 +60,7 @@ def _get_package_url(package_name):
     pypi_url = get_pypi_index_url().replace("/simple", "")
     pkg_info = pkg_resources.get_distribution(package_name)
     pypi = PyPI() if is_official_pypi(pypi_url) else DjangoPyPI(pypi_url)
-    return pypi.get_source_distribution_url_of_specific_release_version(package_name, pkg_info.version)
+    return pypi.get_source_distribution_url_of_specific_release_version(package_name, pkg_info.version).split("#")[0]
 
 def download_buildout(destination_dir):
     from urllib import urlretrieve

@@ -8,7 +8,9 @@ class PyPITestCase(unittest.TestCase):
     def test_custom_pypi(self):
         with patch("ConfigParser.ConfigParser") as ConfigParser:
             ConfigParser().get.return_value = "http://pypi01.infinidat.com/simple"
-            self.assertIn("pypi01.infinidat.com//media/", utils._get_package_url("distribute"))
+            url = utils._get_package_url("distribute")
+            self.assertIn("pypi01.infinidat.com//media/", url)
+            self.assertNotIn("#", url)
 
     @unittest.parameters.iterate("exception_class", [NoSectionError, NoOptionError])
     def test_official_pypi(self, exception_class):
@@ -17,4 +19,6 @@ class PyPITestCase(unittest.TestCase):
                 ConfigParser().get.side_effect = exception_class("x")
             except TypeError:
                 ConfigParser().get.side_effect = exception_class("x", "y")
-            self.assertIn("pypi.python.org/packages/source", utils._get_package_url("distribute"))
+            url = utils._get_package_url("distribute")
+            self.assertIn("pypi.python.org/packages/source", url)
+            self.assertNotIn("#", url)
