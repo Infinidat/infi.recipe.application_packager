@@ -41,11 +41,26 @@ def _get_install_package_verion(package_name):
     pkg_info = pkg_resources.get_distribution(package_name)
     return pkg_info.version
 
+def get_pypi_index_url():
+    from ConfigParser import ConfigParser, NoOptionError, NoSectionError
+    from os import path
+    pydistutils = ConfigParser()
+    pydistutils.read([path.expanduser(path.join("~", basename)) for basename in ['.pydistutils.cfg', 'pydistutils.cfg']])
+    try:
+        return pydistutils.get("easy_install", "index-url").strip("/")
+    except (NoSectionError, NoOptionError):
+        return "http://pypi.python.org/simple"
+
+def is_official_pypi(url):
+    return 'python.org' in url
+
 def _get_package_url(package_name):
     import pkg_resources
+    from infi.pypi_manager import DjangoPyPI, PyPI
+    pypi_url = get_pypi_index_url().replace("/simple", "")
     pkg_info = pkg_resources.get_distribution(package_name)
-    url_template = "http://pypi.python.org/packages/source/{0}/{1}/{1}-{2}.tar.gz"
-    return url_template.format(pkg_info.project_name[0], pkg_info.project_name, pkg_info.version)
+    pypi = PyPI() if is_official_pypi(pypi_url) else DjangoPyPI(pypi_url)
+    return pypi.get_source_distribution_url_of_specific_release_version(package_name, pkg_info.version).split("#")[0]
 
 def download_buildout(destination_dir):
     from urllib import urlretrieve
