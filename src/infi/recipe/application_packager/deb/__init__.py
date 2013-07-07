@@ -18,6 +18,7 @@ class Recipe(PackagingRecipe):
                                                     self.get_eggs_directory())
         utils.download_buildout(self.get_download_cache_dist())
         utils.download_distribute(self.get_download_cache_dist())
+        utils.download_setuptools(self.get_download_cache_dist())
         package = self.build_package()
         logger.debug("Built {}".format(package))
         return [package, ]

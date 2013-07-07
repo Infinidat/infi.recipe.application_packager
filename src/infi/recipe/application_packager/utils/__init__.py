@@ -5,7 +5,7 @@ from logging import getLogger
 from . import buildout, compiler, execute, signtool
 
 logger = getLogger(__name__)
-distribute_setup_txt = resource_filename(__name__, "distribute_setup.txt")
+ez_setup_txt = resource_filename(__name__, "ez_setup.txt")
 BUILDOUT_PARAMETERS = []
 
 def _chdir_and_log(path):
@@ -49,7 +49,7 @@ def get_pypi_index_url():
     try:
         return pydistutils.get("easy_install", "index-url").strip("/")
     except (NoSectionError, NoOptionError):
-        return "http://pypi.python.org/simple"
+        return "https://pypi.python.org/simple"
 
 def is_official_pypi(url):
     return 'python.org' in url
@@ -69,13 +69,13 @@ def download_buildout(destination_dir):
     with chdir(destination_dir):
         urlretrieve(buildout_url, buildout_filepath)
 
-def write_distribute_setup_py(destination_dir):
+def write_ez_setup_py(destination_dir):
     with chdir(destination_dir):
-        with open(distribute_setup_txt) as fd:
+        with open(ez_setup_txt) as fd:
             content = fd.read()
-        content = content.replace("0.6.39", _get_install_package_verion("distribute"))
-        content = content.replace("http://pypi.python.org/packages/source/d/distribute/", ".cache/dist/")
-        with open("distribute_setup.py", "w") as fd:
+        content = content.replace("0.8", _get_install_package_verion("setuptools"))
+        content = content.replace("https://pypi.python.org/packages/source/s/setuptools/", ".cache/dist/")
+        with open("ez_setup.py", "w") as fd:
             fd.write(content)
 
 def download_distribute(destination_dir):
@@ -84,7 +84,16 @@ def download_distribute(destination_dir):
     distribute_filepath = distribute_url.split('/')[-1]
     with chdir(destination_dir):
         urlretrieve(distribute_url, distribute_filepath)
-    write_distribute_setup_py(destination_dir)
+
+
+def download_setuptools(destination_dir):
+    from urllib import urlretrieve
+    distribute_url = _get_package_url("setuptools")
+    distribute_filepath = distribute_url.split('/')[-1]
+    with chdir(destination_dir):
+        urlretrieve(distribute_url, distribute_filepath)
+    write_ez_setup_py(destination_dir)
+
 
 def get_dependencies(name):
     from pkg_resources import get_distribution
