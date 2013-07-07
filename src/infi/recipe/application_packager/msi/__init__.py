@@ -46,6 +46,7 @@ class Recipe(PackagingRecipe):
         self.write_buildout_configuration_file_for_production()
         utils.download_buildout(self.get_download_cache_dist())
         utils.download_distribute(self.get_download_cache_dist())
+        utils.download_setuptools(self.get_download_cache_dist())
         silent_launcher = self.get_silent_launcher()
         if self.should_sign_files():
             self.sign_all_executables_in_project()
@@ -75,7 +76,7 @@ class Recipe(PackagingRecipe):
         return utils.signtool.Signtool(timestamp_url, certificate, password_file)
 
     def sign_all_executables_in_project(self):
-        for archive_path in self.glob_in_dist_directory("distribute*"):
+        for archive_path in self.glob_in_dist_directory("setuptools*"):
             self.signtool.sign_executables_in_archive(archive_path)
         for archive_path in self.glob_in_dist_directory("infi.recipe.console_scripts*"):
             self.signtool.sign_executables_in_archive(archive_path)
@@ -179,7 +180,7 @@ class Recipe(PackagingRecipe):
 
     def _append_bootstrap_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
         commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" bootstrap.py ' + \
-                      r'--download-base=.cache\dist --setup-source=.cache\dist\distribute_setup.py'
+                      r'--download-base=.cache\dist --setup-source=.cache\dist\ez_setup.py'
         action = wix.add_deferred_in_system_context_custom_action('bootstrap', commandline,
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
