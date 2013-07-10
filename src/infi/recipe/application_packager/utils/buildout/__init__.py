@@ -14,6 +14,7 @@ newest = true
 download-cache = .cache
 develop = .
 parts = production-scripts production-gui-scripts
+prefer-final = false
 
 [production-scripts]
 recipe = infi.recipe.console_scripts
