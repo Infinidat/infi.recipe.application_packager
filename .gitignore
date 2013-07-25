@@ -31,6 +31,7 @@ build/
 dist/
 src/infi/hello/__version__.py
 .achievements
+bootstrap.py
 
 # scm
 .bzr/
