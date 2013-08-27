@@ -36,17 +36,20 @@ def open_buildout_configfile(filepath="buildout.cfg", write_on_exit=False):
         with open(filepath, 'w') as fd:
             parser.write(fd)
 
-def write_buildout_configuration_file_for_production(dependent_scripts, eggs, scripts, gui_scripts, require_admin):
+def write_buildout_configuration_file_for_production(dependent_scripts, minimal_packages, eggs, scripts,
+                                                     gui_scripts, require_admin):
     from textwrap import dedent
     from ConfigParser import ConfigParser
     with open("buildout.in", 'w') as fd:
         fd.write(dedent(BUILDOUT_IN))
     with open_buildout_configfile("buildout.in", True) as buildout:
         buildout.set("production-scripts", "dependent-scripts", dependent_scripts)
+        buildout.set("production-scripts", "minimal-packages", minimal_packages)
         buildout.set("production-scripts", "eggs", eggs)
         if scripts:
             buildout.set("production-scripts", "scripts", scripts)
         buildout.set("production-gui-scripts", "dependent-scripts", dependent_scripts)
+        buildout.set("production-gui-scripts", "minimal-packages", minimal_packages)
         buildout.set("production-gui-scripts", "eggs", eggs)
         if gui_scripts:
             buildout.set("production-gui-scripts", "scripts", gui_scripts)

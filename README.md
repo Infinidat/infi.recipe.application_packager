@@ -38,6 +38,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | eggs                              | \<project name>                                    |                                                                          |
 | scripts                           | \<empty list>                                      |                                                                          |
 | gui-scripts                       | \<empty list>                                      |                                                                          |
+| minimal-packages                  | false                                              | Adds code to the entry point wrapper that tries to use less packages     |
 | deb-dependencies                  |                                                    | List of debian packages to be required prior installing your package     |
 | rpm-dependencies                  |                                                    | List of redhat packages to be required prior installing your package     |
 | sign-executables-and-msi          | false                                              | Digitally signed the MSI using Authenticode certificate                  |

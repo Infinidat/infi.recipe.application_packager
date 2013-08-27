@@ -4,6 +4,7 @@ logger = getLogger(__name__)
 
 RECIPE_DEFAULTS = {'require-administrative-privileges': 'true',
                    'dependent-scripts': 'false',
+                   'minimal-packages': '',
                    'shrink-cache-dist': 'true',
                    'eggs': '',
                    'scripts': '',
@@ -88,6 +89,9 @@ class PackagingRecipe(object):
 
     def get_dependent_scripts(self):
         return self._get_recipe_atribute("dependent-scripts")
+
+    def get_minimal_packages(self):
+        return self._get_recipe_atribute("minimal-packages")
 
     def get_eggs_for_production(self):
         return self._get_recipe_atribute("eggs")
@@ -220,7 +224,7 @@ class PackagingRecipe(object):
     def write_buildout_configuration_file_for_production(self):
         from .. import utils, assertions
         method = utils.buildout.write_buildout_configuration_file_for_production
-        return method(self.get_dependent_scripts(),
+        return method(self.get_dependent_scripts(), self.get_minimal_packages(),
                       self.get_eggs_for_production() or self.get_python_module_name(),
                       self.get_console_scripts_for_production(),
                       self.get_gui_scripts_for_production(),
