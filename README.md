@@ -38,14 +38,14 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | eggs                              | \<project name>                                    |                                                                          |
 | scripts                           | \<empty list>                                      |                                                                          |
 | gui-scripts                       | \<empty list>                                      |                                                                          |
-| minimal-packages                  | false                                              | Adds code to the entry point wrapper that tries to use less packages     |
+| minimal-packages                  |                                                    | Adds code to the entry point wrapper that tries to use less packages     |
 | deb-dependencies                  |                                                    | List of debian packages to be required prior installing your package     |
 | rpm-dependencies                  |                                                    | List of redhat packages to be required prior installing your package     |
 | sign-executables-and-msi          | false                                              | Digitally signed the MSI using Authenticode certificate                  |
 | pfx-file                          | ~/.authenticode/certificate.pfx                    | Absolute location of the certificate file                                |
 | pfx-password-file                 | ~/.authenticode/certificate-password.txt           | Absolute locaton for the private txt of the certificate                  |
 | timestamp-url                     | http://timestamp.verisign.com/scripts/timstamp.dll | Timestamp server                                                         |
-| require-administrative-privileges | false                                              |                                                                          |
+| require-administrative-privileges | true                                               |                                                                          |
 | install-on-windows-server-2012    | true                                               |                                                                          |
 | install-on-windows-server-2008-r2 | true                                               |                                                                          |
 | install-on-windows-server-2008    | true                                               |                                                                          |
