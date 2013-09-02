@@ -2,7 +2,7 @@ from zc.buildout.download import Download
 from logging import getLogger
 logger = getLogger(__name__)
 
-RECIPE_DEFAULTS = {'require-administrative-privileges': 'true',
+RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'dependent-scripts': 'false',
                    'minimal-packages': '',
                    'shrink-cache-dist': 'true',
