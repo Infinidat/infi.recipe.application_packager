@@ -3,6 +3,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
+                   'require-administrative-privileges-gui': 'false',
                    'dependent-scripts': 'false',
                    'minimal-packages': '',
                    'shrink-cache-dist': 'true',
@@ -104,6 +105,9 @@ class PackagingRecipe(object):
 
     def get_require_administrative_privileges(self):
         return self._get_recipe_atribute("require-administrative-privileges")
+
+    def get_require_administrative_privileges_gui(self):
+        return self._get_recipe_atribute("require-administrative-privileges-gui")
 
     def get_deb_dependencies(self):
         return self._get_recipe_atribute("deb-dependencies")
@@ -228,7 +232,8 @@ class PackagingRecipe(object):
                       self.get_eggs_for_production() or self.get_python_module_name(),
                       self.get_console_scripts_for_production(),
                       self.get_gui_scripts_for_production(),
-                      self.get_require_administrative_privileges())
+                      self.get_require_administrative_privileges(),
+                      self.get_require_administrative_privileges_gui())
 
     def delete_non_production_packages_from_cache_dist(self):
         from ..utils import get_dependencies, get_distributions_from_dependencies

@@ -37,7 +37,7 @@ def open_buildout_configfile(filepath="buildout.cfg", write_on_exit=False):
             parser.write(fd)
 
 def write_buildout_configuration_file_for_production(dependent_scripts, minimal_packages, eggs, scripts,
-                                                     gui_scripts, require_admin):
+                                                     gui_scripts, require_admin, gui_require_admin):
     from textwrap import dedent
     from ConfigParser import ConfigParser
     with open("buildout.in", 'w') as fd:
@@ -54,3 +54,4 @@ def write_buildout_configuration_file_for_production(dependent_scripts, minimal_
         if gui_scripts:
             buildout.set("production-gui-scripts", "scripts", gui_scripts)
         buildout.set("production-scripts" ,"require-administrative-privileges", require_admin)
+        buildout.set("production-gui-scripts" ,"require-administrative-privileges", gui_require_admin)
