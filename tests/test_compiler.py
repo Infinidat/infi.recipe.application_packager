@@ -31,7 +31,7 @@ class CompilerTestCase(unittest.TestCase):
         expected = [get_archive_path("coverage-3.6.tar.gz"),
                     get_archive_path("gitdb-0.5.4.tar.gz"),
                     get_archive_path("lxml-3.2.3.tar.gz"),
-                    get_archive_path("PyYAML-3.10.tar.gz"),
+                    get_archive_path("PyYAML-3.10.zip"),
                     get_archive_path("pycrypto-2.6.tar.gz"),
                     get_archive_path("async-0.6.1.tar.gz")]
         actual = self.get_compiler().get_packages_to_install()
