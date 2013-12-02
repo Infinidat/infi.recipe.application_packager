@@ -47,6 +47,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | timestamp-url                         | http://timestamp.verisign.com/scripts/timstamp.dll | Timestamp server                                                         |
 | require-administrative-privileges     | false                                              |                                                                          |
 | require-administrative-privileges-gui | false                                              |                                                                          |
+| install-on-windows-server-2012-r2     | true                                               |                                                                          |
 | install-on-windows-server-2012        | true                                               |                                                                          |
 | install-on-windows-server-2008-r2     | true                                               |                                                                          |
 | install-on-windows-server-2008        | true                                               |                                                                          |
