@@ -25,6 +25,7 @@ In order create an application with proper packaging, you'll need more than just
 * Obtain `projector` from https://github.com/Infinidat/infi.projector
 * Create a project using projector, build the development environment using the isolated python option.
 * Add `company` attribute to the `project` section in your `buildout.cfg`.
+* Run `projector requirements add infi.recipe.console_script` and `projector requirements add infi.recipe.buildout_logging`.
 * Run `projector devenv pack`. Depending on the platform you're running, it'll generate a proper package under the `parts` directory.
 
 
@@ -62,6 +63,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | startmenu-shortcuts                   | []                                                 | ['shortcut_name' = 'executable_name', ...]                               |
 | shortcuts-icon                        | None                                               | Icon file in EXE binary format to be used as icon for shortcuts          |
 | shrink-cache-dist                     | true                                               | delete sources from .cache/dist that are under the install-requires tree |
+
 Using the installers
 --------------------
 
@@ -83,6 +85,10 @@ The uninstall procedure is:
 This module also provides Installer classes that'll help you create integration tests for your installer, and to test it out before going to production.
 
 ### Debugging installations
+
+The buildout logs are available at:
+* /var/log/ if writable, else /tmp/
+* %TEMP% if exists or %SystemRoot%\Windows\Temp
 
 The installer accept two variables:
 
