@@ -31,7 +31,7 @@ def create_console_scripts():
         with open_buildout_configfile(filepath="buildout.cfg", write_on_exit=True) as buildout:
             scripts = buildout.get("pack", "scripts").split() \
                       if buildout.has_section("pack") and buildout.has_option("pack", "scripts") \
-                      else ''
+                      else []
             scripts.append(name)
             buildout.set("pack", "scripts", "\n".join(scripts))
         execute_assert_success([os.path.join('bin', 'projector'),
