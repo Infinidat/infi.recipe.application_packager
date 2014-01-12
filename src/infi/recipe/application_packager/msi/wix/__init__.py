@@ -193,8 +193,9 @@ class Wix(object):
                       'PromptToContinue': 'yes',
                       'RebootPrompt': 'no',
                       'Target': name,
-                      'TerminateProcess': 'yes'}
-        element = self.new_element("CloseApplication", attributes, self.product)
+                      'TerminateProcess': '0',
+                      'Timeout': '1'}
+        element = self.new_element("util:CloseApplication", attributes, self.product)
         return element
 
     def get_shortcuts_component(self):
