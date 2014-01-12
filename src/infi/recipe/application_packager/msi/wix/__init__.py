@@ -195,7 +195,7 @@ class Wix(object):
                       'Target': name,
                       'TerminateProcess': 0,
                       'Timeout': 1}
-        element = self.new_element("CloseApplication",attribute, self.product)
+        element = self.new_element("CloseApplication", attributes, self.product)
         return select
 
     def get_shortcuts_component(self):
