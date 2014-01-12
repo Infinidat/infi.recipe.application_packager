@@ -292,7 +292,7 @@ class Wix(object):
 
     @property
     def install_execute_sequence(self):
-        return self.product[5]
+        return self.product[6]
 
     def build(self, wix_basedir, input_file, output_file):
         from ...utils.execute import execute_assert_success

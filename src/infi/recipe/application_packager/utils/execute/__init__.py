@@ -1,5 +1,5 @@
 from logging import getLogger
-from infi.execute import ExecutionError
+from infi.execute import ExecutionError, execute_async
 
 logger = getLogger(__name__)
 

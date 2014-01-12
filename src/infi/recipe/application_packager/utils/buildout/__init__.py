@@ -25,6 +25,10 @@ recipe = infi.recipe.console_scripts
 
 [production-gui-scripts]
 recipe = infi.recipe.console_scripts:gui_scripts
+
+[close-application]
+recipe = infi.recipe.close_application
+
 """
 
 @contextmanager

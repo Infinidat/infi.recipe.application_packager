@@ -2,6 +2,7 @@ from __future__ import print_function
 __import__("pkg_resources").declare_namespace(__name__)
 
 from sys import argv
+import time
 import os
 
 INSTALLDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), #scripts
@@ -26,3 +27,12 @@ def pre_uninstall(argv=argv):
 
 def sample(argv=argv):
     raw_input('sample, hit enter to exit')
+
+def sleep(argv=argv):
+    t0 = time.time()
+    timeout = int(argv[-1])
+    try:
+        time.sleep(timeout)
+    except KeyboardInterrupt:  # windows installer does this
+        timeout = abs(timeout - (time.time() - t0))
+        time.sleep(timeout)

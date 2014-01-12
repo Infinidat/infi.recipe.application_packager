@@ -25,7 +25,6 @@ In order create an application with proper packaging, you'll need more than just
 * Obtain `projector` from https://github.com/Infinidat/infi.projector
 * Create a project using projector, build the development environment using the isolated python option.
 * Add `company` attribute to the `project` section in your `buildout.cfg`.
-* Run `projector requirements add infi.recipe.console_script` and `projector requirements add infi.recipe.buildout_logging`.
 * Run `projector devenv pack`. Depending on the platform you're running, it'll generate a proper package under the `parts` directory.
 
 

@@ -12,6 +12,7 @@ TEST_BUIILDOUT = os.path.join(TESTCASE_DIR, 'buildout.cfg')
 PACKAGE_NAME = 'infi.recipe.application_packager'
 PREFIX = '/opt/infinidat/application-packager'
 INSTALLDIR = r"C:\Program Files\Infinidat\Application Packager"
+EXTENSION = '.exe' if os.name == 'nt' else ''
 
 def delete_existing_builds():
     items = glob.glob(os.path.join(TESTCASE_DIR, 'parts', '*'))
@@ -22,11 +23,18 @@ def delete_existing_builds():
             continue
         shutil.rmtree(path)
 
-CONSOLE_SCRIPTS = ["hello", "sample", "post_install", "pre_uninstall"]
+CONSOLE_SCRIPTS = ["hello", "sample", "post_install", "pre_uninstall", "sleep"]
 
 def create_console_scripts():
     from infi.execute import execute_assert_success
+    from infi.projector.helper.utils import open_buildout_configfile
     for name in CONSOLE_SCRIPTS:
+        with open_buildout_configfile(filepath="buildout.cfg", write_on_exit=True) as buildout:
+            scripts = buildout.get("pack", "scripts").split() \
+                      if buildout.has_section("pack") and buildout.has_option("pack", "scripts") \
+                      else []
+            scripts.append(name)
+            buildout.set("pack", "scripts", "\n".join(scripts))
         execute_assert_success([os.path.join('bin', 'projector'),
                                 "console-scripts", "add", name,
                                 "infi.recipe.application_packager.scripts:{0}".format(name),
@@ -47,7 +55,7 @@ def devenv_build():
     from infi.execute import execute_assert_success
     execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'setup.py', '__version__.py'])
 
-from infi.recipe.application_packager.utils.execute import execute_assert_success
+from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
 from infi.recipe.application_packager.utils import chdir
 from infi.recipe.application_packager.installer import Installer, MsiInstaller, DebInstaller, RpmInstaller
 
@@ -139,9 +147,37 @@ class Base(unittest.TestCase):
         self.uninstall_package(with_custom_actions)
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
+    def test_processes_from_previous_version_are_killed_during_upgrade(self):
+        from time import time, sleep
+        from psutil import Process
+        self.install_package()
+
+        # start process
+        timeout = 3600
+        t0 = time()
+        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
+        # we need to give the process time to start, checking it didn't return 1 because of an error
+        sleep(10)
+        process = Process(pid.get_pid())
+        self.assertTrue(process.is_running())
+        self.assertFalse(pid.is_finished())
+
+        # upgrade
+        delete_existing_builds()
+        do_an_empty_commit()
+        devenv_build()
+        create_package()
+        self.install_package()
+
+        # assert
+        self.assertFalse(process.is_running())
+        self.assertTrue(pid.is_finished())
+        self.assertLess(time(), t0 + timeout)
+
     @classmethod
     def platform_specific_cleanup(cls):
         raise NotImplementedError()
+
 
 class MsiTestCase(Base, MsiInstaller):
     def __init__(self, *args, **kwargs):
@@ -157,8 +193,10 @@ class MsiTestCase(Base, MsiInstaller):
     def should_run(cls):
         return platform.system() == "Windows"
 
+
 class Posix(Base):
     pass
+
 
 class RpmTestCase(Posix, RpmInstaller):
     def __init__(self, *args, **kwargs):
@@ -174,6 +212,7 @@ class RpmTestCase(Posix, RpmInstaller):
     @classmethod
     def should_run(cls):
         return platform.system() == "Linux" and platform.linux_distribution()[0].lower().startswith('red')
+
 
 class DebTestCase(Posix, DebInstaller):
     def __init__(self, *args, **kwargs):
