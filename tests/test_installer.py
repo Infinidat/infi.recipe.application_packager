@@ -172,7 +172,7 @@ class MsiTestCase(Base, MsiInstaller):
         # start process
         timeout = 3600
         t0 = time()
-        pid = execute_async([path.join(self.targetdir, "bin", "sleep.exe"), str(timeout)])
+        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep.exe"), str(timeout)])
         process = Process(pid.get._pid())
         self.assertTrue(process.is_running())
         self.assertFalse(pid.is_finished())
