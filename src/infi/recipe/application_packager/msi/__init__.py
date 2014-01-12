@@ -114,6 +114,7 @@ class Recipe(PackagingRecipe):
         self._prepare_for_major_upgrade(wix)
         self._add_launch_conditions(wix)
         self._add_project_entry_points(wix, silent_launcher_file_id)
+        self._add_close_applications(wix)
         arp_icon = self.get_add_remove_programs_icon()
         if arp_icon:
             arp_icon = wix.set_add_remove_programs_icon(arp_icon)
@@ -248,6 +249,13 @@ class Recipe(PackagingRecipe):
             wix.add_deferred_in_system_context_custom_action(script_name, commandline, after=value['after'],
                                                              condition=value['condition'],
                                                              silent_launcher_file_id=silent_launcher_file_id)
+
+    def _add_close_applications(self, wix):
+        # http://wixtoolset.org/documentation/manual/v3/xsd/util/closeapplication.html
+        script_names = self.get_console_scripts_for_production().split()
+        script_names.extend(self.get_gui_scripts_for_production().split())
+        for script_name in script_names:
+            wix.add_close_application(script_name)
 
     def _add_shortcuts(self, wix):
         if not self.get_startmenu_shortcuts() or not self.get_shortcuts_icon():
