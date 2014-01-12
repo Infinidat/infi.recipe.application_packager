@@ -26,7 +26,7 @@ CONSOLE_SCRIPTS = ["hello", "sample", "post_install", "pre_uninstall", "sleep"]
 
 def create_console_scripts():
     from infi.execute import execute_assert_success
-    from infi.projector.plugins.builtins.devenv.utils import open_buildout_configfile
+    from infi.projector.helper.utils import open_buildout_configfile
     for name in CONSOLE_SCRIPTS:
         with open_buildout_configfile(filepath="buildout.cfg", write_on_exit=True) as buildout:
             scripts = buildout.get("pack", "scripts").split()
