@@ -165,7 +165,7 @@ class MsiTestCase(Base, MsiInstaller):
         return platform.system() == "Windows"
 
     def test_processes_from_previous_version_are_killed_during_upgrade(self):
-        from time import time
+        from time import time, sleep
         from psutil import Process
         self.install_package()
 
@@ -173,7 +173,9 @@ class MsiTestCase(Base, MsiInstaller):
         timeout = 3600
         t0 = time()
         pid = execute_async([os.path.join(self.targetdir, "bin", "sleep.exe"), str(timeout)])
-        process = Process(pid.get._pid())
+        # we need to give the process time to start, checking it didn't return 1 because of an error
+        sleep(10)
+        process = Process(pid.get_pid())
         self.assertTrue(process.is_running())
         self.assertFalse(pid.is_finished())
 
