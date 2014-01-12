@@ -184,7 +184,7 @@ class Wix(object):
         return action
 
     def add_close_application(self, name):
-        name += '.exe' if not endswith(".exe") else ''
+        name += '.exe' if not name.endswith(".exe") else ''
         attributes = {'Id': self.new_id('close_application_{}'.format(name)),
                       'Description': '{} is running and needs to be closed'.format(name.replace('.exe', '')),
                       'ElevatedCloseMessage': 'yes',
