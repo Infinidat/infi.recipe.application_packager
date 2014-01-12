@@ -195,7 +195,7 @@ class Wix(object):
                       'Target': name,
                       'TerminateProcess': '0',
                       'Timeout': '1'}
-        element = self.new_element("util:CloseApplication", attributes, self.product)
+        element = self.new_element("CloseApplication", attributes, self.product)
         return element
 
     def get_shortcuts_component(self):
@@ -315,5 +315,5 @@ class Wix(object):
         candle = path.join(wix_basedir, "candle.exe")
         light = path.join(wix_basedir, "light.exe")
         execute_assert_success([candle, input_file, '-arch', self._architecture])
-        execute_assert_success([light, '-sval', '-ext', 'WixUIExtension', '-cultures:en-us',
+        execute_assert_success([light, '-sval', '-ext', 'WixUIExtension', '-ext', 'WixUtilExtension', '-cultures:en-us',
                                'product.wixobj', '-o', output_file])
