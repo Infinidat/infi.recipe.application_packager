@@ -54,7 +54,7 @@ def devenv_build():
     from infi.execute import execute_assert_success
     execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'setup.py', '__version__.py'])
 
-from infi.recipe.application_packager.utils.execute import execute_assert_success
+from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
 from infi.recipe.application_packager.utils import chdir
 from infi.recipe.application_packager.installer import Installer, MsiInstaller, DebInstaller, RpmInstaller
 
@@ -163,6 +163,33 @@ class MsiTestCase(Base, MsiInstaller):
     @classmethod
     def should_run(cls):
         return platform.system() == "Windows"
+
+    def test_processes_from_previous_version_are_killed_during_upgrade(self):
+        from time import time
+        from psutil import Process
+        self.install_package()
+
+        # start process
+        timeout = 3600
+        t0 = time()
+        pid = execute_async([path.join(self.targetdir, "bin", "sleep.exe"), str(timeout)])
+        process = Process(pid.get._pid())
+        self.assertTrue(process.is_running())
+        self.assertFalse(pid.is_finished())
+
+        # upgrade
+        delete_existing_builds()
+        do_an_empty_commit()
+        devenv_build()
+        create_package()
+        self.install_package(with_custom_actions)
+
+        # assert
+        self.assertFalse(process.is_running())
+        self.assertTrue(pid.is_finished())
+        self.assertEquals(pid.get_returncode(), 1)
+        self.assertLess(time(), t0 + timeout)
+
 
 class Posix(Base):
     pass
