@@ -193,8 +193,8 @@ class Wix(object):
                       'PromptToContinue': 'yes',
                       'RebootPrompt': 'no',
                       'Target': name,
-                      'TerminateProcess': 0,
-                      'Timeout': 1}
+                      'TerminateProcess': '0',
+                      'Timeout': '1'}
         element = self.new_element("CloseApplication", attributes, self.product)
         return element
 
