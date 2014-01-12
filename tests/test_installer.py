@@ -184,7 +184,7 @@ class MsiTestCase(Base, MsiInstaller):
         do_an_empty_commit()
         devenv_build()
         create_package()
-        self.install_package(with_custom_actions)
+        self.install_package()
 
         # assert
         self.assertFalse(process.is_running())
