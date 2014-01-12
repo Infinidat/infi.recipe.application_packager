@@ -29,7 +29,9 @@ def create_console_scripts():
     from infi.projector.helper.utils import open_buildout_configfile
     for name in CONSOLE_SCRIPTS:
         with open_buildout_configfile(filepath="buildout.cfg", write_on_exit=True) as buildout:
-            scripts = buildout.get("pack", "scripts").split()
+            scripts = buildout.get("pack", "scripts").split() \
+                      if buildout.has_section("pack") and buildout.has_option("pack", "scripts") \
+                      else ''
             scripts.append(name)
             buildout.set("pack", "scripts", "\n".join(scripts))
         execute_assert_success([os.path.join('bin', 'projector'),
