@@ -23,6 +23,10 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'startmenu-shortcuts': [],
                   }
 
+PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
+                                     "infi.recipe.console_scripts",
+                                     "infi.recipe.close_application"]
+
 class PackagingRecipe(object):
     def __init__(self, buildout, name, options):
         super(PackagingRecipe, self).__init__()
@@ -95,7 +99,7 @@ class PackagingRecipe(object):
         return self._get_recipe_atribute("minimal-packages")
 
     def get_eggs_for_production(self):
-        return self._get_recipe_atribute("eggs")
+        return "\n".join([self._get_recipe_atribute("eggs").strip()] + PYTHON_PACKAGES_USED_BY_PACKAGING)
 
     def get_console_scripts_for_production(self):
         return self._get_recipe_atribute("scripts")

@@ -13,6 +13,7 @@ logger = getLogger(__name__)
 BYPASS_CUSTOM_ACTION_PROPERTY = "NO_CUSTOM_ACTIONS"
 CONDITION_DURING_INSTALL_OR_REPAIR = 'NOT Installed OR MaintenanceMode="Modify"'
 CONDITION_DURING_UNINSTALL_NOT_UPGRADE = 'REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE'
+CONDITION_DURING_UNINSTALL_DURING_UPGRADE_OR_NOT = 'REMOVE="ALL"'
 DowngradeErrorMessage = 'A later version of [ProductName] is already installed. Setup will now exit.'
 LAUNCH_CONDITION__WINDOWS_2008_AND_R2_ONLY = \
     "(Not Version9X) And (Not VersionNT=400) And (Not VersionNT=500) And (Not VersionNT=501) And" + \
@@ -194,10 +195,19 @@ class Recipe(PackagingRecipe):
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
                                                                   silent_launcher_file_id=silent_launcher_file_id)
 
+    def _append_close_application_action(self, wix, bootstrap_id, silent_launcher_file_id):
+        commandline = r'"[INSTALLDIR]bin\buildout.exe" install debug-logging stop-application'
+        condition = CONDITION_DURING_UNINSTALL_DURING_UPGRADE_OR_NOT
+        action = wix.add_deferred_in_system_context_custom_action('close_application', commandline,
+                                                                  after='InstallInitialize',
+                                                                  condition=condition,
+                                                                  silent_launcher_file_id=silent_launcher_file_id)
+
     def _append_custom_actions(self, wix, silent_launcher_file_id):
         os_removedirs_eggs_id = self._append_os_removedirs_eggs(wix, silent_launcher_file_id)
         bootstrap_id = self._append_bootstrap_custom_action(wix, os_removedirs_eggs_id, silent_launcher_file_id)
         self._append_buildout_custom_action(wix, bootstrap_id, silent_launcher_file_id)
+        self._append_close_application_action(wix, bootstrap_id, silent_launcher_file_id)
         wix.new_element("Property", {"Id": BYPASS_CUSTOM_ACTION_PROPERTY, "Value":"0"}, wix.product)
 
     def _add_launch_conditions(self, wix):
@@ -237,15 +247,18 @@ class Recipe(PackagingRecipe):
 
     def _add_project_entry_points(self, wix, silent_launcher_file_id):
         for key, value in {'post_install': {'after': 'custom_action_buildout',
+                                            'before': None,
                                             'condition': CONDITION_DURING_INSTALL_OR_REPAIR},
                            'pre_uninstall': {'after': 'InstallInitialize',
+                                             'before': 'custom_action_close_application',
                                              'condition': CONDITION_DURING_UNINSTALL_NOT_UPGRADE}, }.items():
             script_name = self.get_script_name(key)
             if script_name in ['', None]:
                 continue
             args = self.get_script_args(key)
             commandline = r'"[INSTALLDIR]\bin\{}.exe" {}'.format(script_name, args)
-            wix.add_deferred_in_system_context_custom_action(script_name, commandline, after=value['after'],
+            wix.add_deferred_in_system_context_custom_action(script_name, commandline,
+                                                             after=value['after'], before=value['before'],
                                                              condition=value['condition'],
                                                              silent_launcher_file_id=silent_launcher_file_id)
 
