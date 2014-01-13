@@ -29,4 +29,10 @@ def sample(argv=argv):
     raw_input('sample, hit enter to exit')
 
 def sleep(argv=argv):
-    time.sleep(int(argv[-1]))
+    t0 = time.time()
+    timeout = int(argv[-1])
+    try:
+        time.sleep(timeout)
+    except KeyboardInterrupt:  # windows installer does this
+        timeout = abs(timeout - (time.time() - t0))
+        time.sleep(timeout)
