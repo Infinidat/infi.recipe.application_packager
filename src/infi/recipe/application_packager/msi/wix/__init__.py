@@ -183,21 +183,6 @@ class Wix(object):
                             (sequence.text or '')
         return action
 
-    def add_close_application(self, name):
-        name += '.exe' if not name.endswith(".exe") else ''
-        attributes = {'Id': self.new_id('close_application_{}'.format(name)),
-                      'Description': '{} is running and needs to be closed'.format(name.replace('.exe', '')),
-                      'ElevatedCloseMessage': 'yes',
-                      'ElevatedEndSessionMessage': 'yes',
-                      'EndSessionMessage': 'yes',
-                      'PromptToContinue': 'yes',
-                      'RebootPrompt': 'no',
-                      'Target': name,
-                      'TerminateProcess': '1',
-                      'Timeout': '1'}
-        element = self.new_element("{http://schemas.microsoft.com/wix/UtilExtension}CloseApplication", attributes, self.product)
-        return element
-
     def get_shortcuts_component(self):
         if self._shortcuts_component is None:
             self._shortcuts_component = self._new_shortcuts_component()
@@ -314,7 +299,6 @@ class Wix(object):
         from os import path
         candle = path.join(wix_basedir, "candle.exe")
         light = path.join(wix_basedir, "light.exe")
-        execute_assert_success([candle, '-ext', 'WixUIExtension', '-ext', 'WixUtilExtension',
-                                input_file, '-arch', self._architecture])
-        execute_assert_success([light, '-sval', '-ext', 'WixUIExtension', '-ext', 'WixUtilExtension', '-cultures:en-us',
+        execute_assert_success([candle, input_file, '-arch', self._architecture])
+        execute_assert_success([light, '-sval', '-ext', 'WixUIExtension', '-cultures:en-us',
                                'product.wixobj', '-o', output_file])
