@@ -182,7 +182,8 @@ class Recipe(PackagingRecipe):
 
     def _append_bootstrap_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
         commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" bootstrap.py ' + \
-                      r'--download-base=.cache\dist --setup-source=.cache\dist\ez_setup.py'
+                      r'--download-base="[INSTALLDIR].cache\dist" ' + \
+                      r'--setup-source="[INSTALLDIR].cache\dist\ez_setup.py'
         action = wix.add_deferred_in_system_context_custom_action('bootstrap', commandline,
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
@@ -190,13 +191,14 @@ class Recipe(PackagingRecipe):
         return action.get('Id')
 
     def _append_buildout_custom_action(self, wix, bootstrap_id, silent_launcher_file_id):
-        action = wix.add_deferred_in_system_context_custom_action('buildout', r'"[INSTALLDIR]bin\buildout.exe"',
+        commandline = r'"[INSTALLDIR]bin\buildout.exe" -c "[INSTALLDIR]buildout.cfg"'
+        action = wix.add_deferred_in_system_context_custom_action('buildout', commandline,
                                                                   after=bootstrap_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
                                                                   silent_launcher_file_id=silent_launcher_file_id)
 
     def _append_close_application_action(self, wix, bootstrap_id, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]bin\buildout.exe" install debug-logging stop-application'
+        commandline = r'"[INSTALLDIR]bin\buildout.exe" -c "[INSTALLDIR]buildout.cfg" install debug-logging stop-application'
         condition = CONDITION_DURING_UNINSTALL_DURING_UPGRADE_OR_NOT
         action = wix.add_deferred_in_system_context_custom_action('close_application', commandline,
                                                                   after='InstallInitialize',
