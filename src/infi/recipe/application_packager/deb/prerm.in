@@ -37,6 +37,8 @@ if test "$$1" == "upgrade"; then
     execute bin/buildout install debug-logging close-application
     RC=$$?
     assert_rc
+    exit 0
+fi
 
 if test "$$1" != "remove"; then
     exit 0
