@@ -173,6 +173,7 @@ class Base(unittest.TestCase):
         from time import time, sleep
         from psutil import Process
         self.install_package()
+        cleanup_buildout_logs()
 
         # start process
         timeout = 3600
@@ -192,6 +193,7 @@ class Base(unittest.TestCase):
         self.install_package()
 
         # assert
+        cleanup_buildout_logs()
         self.assertFalse(process.is_running())
         self.assertTrue(pid.is_finished())
         self.assertLess(time(), t0 + timeout)
