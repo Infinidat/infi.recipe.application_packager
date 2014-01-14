@@ -153,6 +153,11 @@ if test -n "%{pre_uninstall_script_name}" -a -x "bin/%{pre_uninstall_script_name
     assert_rc
 fi
 
+# close application
+execute bin/buildout install debug-logging close-application
+RC=$$?
+assert_rc
+
 # remove links to binaries from /usr/bin
 execute cd bin
 for script in *; do
