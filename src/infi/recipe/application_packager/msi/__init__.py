@@ -249,7 +249,7 @@ class Recipe(PackagingRecipe):
         for key, value in {'post_install': {'after': 'custom_action_buildout',
                                             'before': None,
                                             'condition': CONDITION_DURING_INSTALL_OR_REPAIR},
-                           'pre_uninstall': {'after': 'InstallInitialize',
+                           'pre_uninstall': {'after': None,
                                              'before': 'custom_action_close_application',
                                              'condition': CONDITION_DURING_UNINSTALL_NOT_UPGRADE}, }.items():
             script_name = self.get_script_name(key)
