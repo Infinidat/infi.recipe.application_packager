@@ -198,7 +198,7 @@ class Recipe(PackagingRecipe):
                                                                   silent_launcher_file_id=silent_launcher_file_id)
 
     def _append_close_application_action(self, wix, bootstrap_id, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]bin\buildout.exe" -c "[INSTALLDIR]buildout.cfg" install debug-logging stop-application'
+        commandline = r'"[INSTALLDIR]bin\buildout.exe" -c "[INSTALLDIR]buildout.cfg" install debug-logging close-application'
         condition = CONDITION_DURING_UNINSTALL_DURING_UPGRADE_OR_NOT
         action = wix.add_deferred_in_system_context_custom_action('close_application', commandline,
                                                                   after='InstallInitialize',
