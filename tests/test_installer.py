@@ -1,4 +1,5 @@
 import infi.unittest as unittest
+import infi.recipe.buildout_logging as buildout_logging
 import os
 import glob
 import logging
@@ -22,6 +23,25 @@ def delete_existing_builds():
         if path.endswith('python') or path.endswith('buildout') or path.endswith("scripts"):
             continue
         shutil.rmtree(path)
+
+def get_buildout_logs():
+    return glob.glob(os.path.join(buildout_logging.LogFileHandler.get_logs_directory(), 'buildout.*'))
+
+def delete_buildout_logs():
+    for filepath in get_buildout_logs():
+        try:
+            os.remove(filepath)
+        except:
+            pass
+
+def print_buildout_logs():
+    for filepath in get_buildout_logs():
+        with open(filepath) as fd:
+            print fd.read()
+
+def cleanup_buildout_logs():
+    print_buildout_logs()
+    delete_buildout_logs()
 
 CONSOLE_SCRIPTS = ["hello", "sample", "post_install", "pre_uninstall", "sleep"]
 
@@ -68,6 +88,7 @@ class Base(unittest.TestCase):
     def setUpClass(cls):
         if not cls.should_run():
             raise unittest.SkipTest("Skipping")
+        delete_buildout_logs()
         with chdir(TESTCASE_DIR):
             delete_existing_builds()
             create_console_scripts()
@@ -75,6 +96,7 @@ class Base(unittest.TestCase):
 
     def setUp(self):
         super(Base, self).setUp()
+        self.addCleanup(cleanup_buildout_logs)
         self._chdir_context = chdir(TESTCASE_DIR).__enter__()
         self.assertTrue(self.is_package_exists())
         self._clean_remainings_of_previous_installations()
