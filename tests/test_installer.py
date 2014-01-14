@@ -12,6 +12,7 @@ TEST_BUIILDOUT = os.path.join(TESTCASE_DIR, 'buildout.cfg')
 PACKAGE_NAME = 'infi.recipe.application_packager'
 PREFIX = '/opt/infinidat/application-packager'
 INSTALLDIR = r"C:\Program Files\Infinidat\Application Packager"
+EXTENSION = '.exe' if os.name == 'nt' else ''
 
 def delete_existing_builds():
     items = glob.glob(os.path.join(TESTCASE_DIR, 'parts', '*'))
@@ -146,24 +147,6 @@ class Base(unittest.TestCase):
         self.uninstall_package(with_custom_actions)
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
-    @classmethod
-    def platform_specific_cleanup(cls):
-        raise NotImplementedError()
-
-class MsiTestCase(Base, MsiInstaller):
-    def __init__(self, *args, **kwargs):
-        Base.__init__(self, *args, **kwargs)
-        MsiInstaller.__init__(self, TEST_BUIILDOUT)
-
-    @classmethod
-    def platform_specific_cleanup(cls):
-        if os.path.exists(INSTALLDIR):
-            shutil.rmtree(INSTALLDIR)
-
-    @classmethod
-    def should_run(cls):
-        return platform.system() == "Windows"
-
     def test_processes_from_previous_version_are_killed_during_upgrade(self):
         from time import time, sleep
         from psutil import Process
@@ -172,7 +155,7 @@ class MsiTestCase(Base, MsiInstaller):
         # start process
         timeout = 3600
         t0 = time()
-        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep.exe"), str(timeout)])
+        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
         # we need to give the process time to start, checking it didn't return 1 because of an error
         sleep(10)
         process = Process(pid.get_pid())
@@ -192,9 +175,29 @@ class MsiTestCase(Base, MsiInstaller):
         self.assertEquals(pid.get_returncode(), 1)
         self.assertLess(time(), t0 + timeout)
 
+    @classmethod
+    def platform_specific_cleanup(cls):
+        raise NotImplementedError()
+
+
+class MsiTestCase(Base, MsiInstaller):
+    def __init__(self, *args, **kwargs):
+        Base.__init__(self, *args, **kwargs)
+        MsiInstaller.__init__(self, TEST_BUIILDOUT)
+
+    @classmethod
+    def platform_specific_cleanup(cls):
+        if os.path.exists(INSTALLDIR):
+            shutil.rmtree(INSTALLDIR)
+
+    @classmethod
+    def should_run(cls):
+        return platform.system() == "Windows"
+
 
 class Posix(Base):
     pass
+
 
 class RpmTestCase(Posix, RpmInstaller):
     def __init__(self, *args, **kwargs):
@@ -210,6 +213,7 @@ class RpmTestCase(Posix, RpmInstaller):
     @classmethod
     def should_run(cls):
         return platform.system() == "Linux" and platform.linux_distribution()[0].lower().startswith('red')
+
 
 class DebTestCase(Posix, DebInstaller):
     def __init__(self, *args, **kwargs):
