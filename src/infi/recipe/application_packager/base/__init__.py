@@ -246,7 +246,7 @@ class PackagingRecipe(object):
         if not self.should_shrink_cache_dist():
             return
         eggs = self.get_eggs_for_production().split() or ([self.get_python_module_name()] + PYTHON_PACKAGES_USED_BY_PACKAGING)
-        dependencies = set.union(*[get_dependencies(name) for name in eggs])
+        dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
         distributions = get_distributions_from_dependencies(dependencies)
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
             basename = path.basename(filepath).lower()
