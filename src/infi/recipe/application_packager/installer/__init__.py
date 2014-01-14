@@ -179,7 +179,7 @@ class MsiInstaller(Installer):
                 execute_assert_success(args)
             finally:
                 with open(logfile) as fd:
-                    print logfile.read()
+                    print fd.read()
 
     def uninstall_package(self, with_custom_actions=True):
         logfile = self.get_package() + '.uninstall.log'
@@ -194,7 +194,7 @@ class MsiInstaller(Installer):
             execute_assert_success(args)
         finally:
             with open(logfile) as fd:
-                print logfile.read()
+                print fd.read()
 
 
 class RpmInstaller(Installer):
