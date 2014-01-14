@@ -33,7 +33,8 @@ class CompilerTestCase(unittest.TestCase):
                     get_archive_path("lxml-3.2.4.tar.gz"),
                     get_archive_path("PyYAML-3.10.zip"),
                     get_archive_path("pycrypto-2.6.1.tar.gz"),
-                    get_archive_path("async-0.6.1.tar.gz")]
+                    get_archive_path("async-0.6.1.tar.gz"),
+                    get_archive_path("psutil-1.2.1.tar.gz")]
         actual = self.get_compiler().get_packages_to_install()
         self.assertEquals(set(actual), set(expected))
 

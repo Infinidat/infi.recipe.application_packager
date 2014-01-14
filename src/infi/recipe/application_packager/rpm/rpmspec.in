@@ -110,10 +110,6 @@ exit 0
 
 %preun
 
-if test -n "$$1" -a "$$1" != "0"; then
-    exit 0
-fi
-
 RC=0
 
 function assert_rc() {
@@ -145,6 +141,15 @@ fi
 # start
 execute pushd .
 execute cd %{prefix}
+
+# detect upgrade
+if test -n "$$1" -a "$$1" != "0"; then
+    # close application
+    execute bin/buildout install debug-logging close-application
+    RC=$$?
+    assert_rc
+    exit 0
+fi
 
 # execute application's pre-uninstall script
 if test -n "%{pre_uninstall_script_name}" -a -x "bin/%{pre_uninstall_script_name}"; then
