@@ -172,7 +172,6 @@ class Base(unittest.TestCase):
         # assert
         self.assertFalse(process.is_running())
         self.assertTrue(pid.is_finished())
-        self.assertEquals(pid.get_returncode(), 1)
         self.assertLess(time(), t0 + timeout)
 
     @classmethod
