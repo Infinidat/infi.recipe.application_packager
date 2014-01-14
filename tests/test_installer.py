@@ -171,7 +171,6 @@ class Base(unittest.TestCase):
 
     def test_processes_from_previous_version_are_killed_during_upgrade(self):
         from time import time, sleep
-        from psutil import Process
         self.install_package()
         cleanup_buildout_logs()
 
@@ -181,8 +180,6 @@ class Base(unittest.TestCase):
         pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
         # we need to give the process time to start, checking it didn't return 1 because of an error
         sleep(10)
-        process = Process(pid.get_pid())
-        self.assertTrue(process.is_running())
         self.assertFalse(pid.is_finished())
 
         # upgrade
@@ -194,7 +191,7 @@ class Base(unittest.TestCase):
 
         # assert
         cleanup_buildout_logs()
-        self.assertFalse(process.is_running())
+        pid.poll()
         self.assertTrue(pid.is_finished())
         self.assertLess(time(), t0 + timeout)
 
