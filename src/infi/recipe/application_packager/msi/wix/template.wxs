@@ -16,8 +16,8 @@
             </Directory>
         </Directory>
         <Feature Id='Everything' Title='Everything' Level='1' Display='hidden' Absent='disallow' AllowAdvertise='no' InstallDefault='local' TypicalDefault='install'/>
-        <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable"/>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
+        <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable"/>
         <InstallExecuteSequence/>
         <UIRef Id="WixUI_InstallDir_without_license_dialog"/>
    </Product>
