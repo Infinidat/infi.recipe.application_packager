@@ -13,7 +13,8 @@ logger = getLogger(__name__)
 BYPASS_CUSTOM_ACTION_PROPERTY = "NO_CUSTOM_ACTIONS"
 CONDITION_DURING_INSTALL_OR_REPAIR = 'NOT Installed OR MaintenanceMode="Modify"'
 CONDITION_DURING_UNINSTALL_NOT_UPGRADE = 'REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE'
-CONDITION_DURING_UNINSTALL_DURING_UPGRADE_OR_NOT = 'REMOVE="ALL"'
+CONDITION_DURING_UPGRADE = UPGRADINGPRODUCTCODE
+CONDITION_DURING_UPGRADE_AND_UNINSTALL = "() OR ()".format(CONDITION_DURING_UPGRADE, CONDITION_DURING_UNINSTALL_NOT_UPGRADE)
 DowngradeErrorMessage = 'A later version of [ProductName] is already installed. Setup will now exit.'
 LAUNCH_CONDITION__WINDOWS_2008_AND_R2_ONLY = \
     "(Not Version9X) And (Not VersionNT=400) And (Not VersionNT=500) And (Not VersionNT=501) And" + \
@@ -199,7 +200,7 @@ class Recipe(PackagingRecipe):
 
     def _append_close_application_action(self, wix, bootstrap_id, silent_launcher_file_id):
         commandline = r'"[INSTALLDIR]bin\buildout.exe" -c "[INSTALLDIR]buildout.cfg" install debug-logging close-application'
-        condition = CONDITION_DURING_UNINSTALL_DURING_UPGRADE_OR_NOT
+        condition = CONDITION_DURING_UPGRADE_AND_UNINSTALL
         action = wix.add_deferred_in_system_context_custom_action('close_application', commandline,
                                                                   after='InstallInitialize',
                                                                   condition=condition,
