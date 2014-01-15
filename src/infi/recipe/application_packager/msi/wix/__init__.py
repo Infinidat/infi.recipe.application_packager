@@ -164,7 +164,8 @@ class Wix(object):
     def add_deferred_in_system_context_custom_action(self, name, cmd_line, fail_on_error=True,
                                                       cwd_dir=r'"[INSTALLDIR]"',
                                                       after='PublishProduct', before=None, condition=None,
-                                                      silent_launcher_file_id=None):
+                                                      silent_launcher_file_id=None,
+                                                      text=None):
         attributes = {'Id': self.new_id('custom_action_{}'.format(name)),
                       'FileKey': silent_launcher_file_id,
                       'ExeCommand': '{} {}'.format(cwd_dir, cmd_line),
@@ -181,6 +182,8 @@ class Wix(object):
         if condition is not None:
             sequence.text = '({}) AND (NOT {}="1")'.format(condition, BYPASS_CUSTOM_ACTION_PROPERTY) + \
                             (sequence.text or '')
+        if text is not None:
+            self.new_element("ProgressText", {"Action": action.get('Id')}, self.ui).text = text
         return action
 
     def get_shortcuts_component(self):
@@ -253,6 +256,14 @@ class Wix(object):
     @property
     def product(self):
         return self._content[0]
+
+    @property
+    def fragment(self):
+        return self._content[1]
+
+    @property
+    def ui(self):
+        return self.fragment[0]
 
     @property
     def package(self):

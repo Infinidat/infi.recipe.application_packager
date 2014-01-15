@@ -178,7 +178,8 @@ class Recipe(PackagingRecipe):
         commandline = r'''"[INSTALLDIR]parts\python\bin\python.exe" "-c" "from shutil import rmtree; rmtree('[INSTALLDIR]eggs', True)"'''
         action = wix.add_deferred_in_system_context_custom_action('os_removedirs_eggs', commandline,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
-                                                                  silent_launcher_file_id=silent_launcher_file_id)
+                                                                  silent_launcher_file_id=silent_launcher_file_id,
+                                                                  text="Removing temporary files, this may take a few minutes")
         return action.get('Id')
 
     def _append_bootstrap_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
@@ -188,7 +189,9 @@ class Recipe(PackagingRecipe):
         action = wix.add_deferred_in_system_context_custom_action('bootstrap', commandline,
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
-                                                                  silent_launcher_file_id=silent_launcher_file_id)
+                                                                  silent_launcher_file_id=silent_launcher_file_id,
+                                                                  text="Bootstraping, this may take a few minutes")
+
         return action.get('Id')
 
     def _append_buildout_custom_action(self, wix, bootstrap_id, silent_launcher_file_id):
@@ -196,7 +199,9 @@ class Recipe(PackagingRecipe):
         action = wix.add_deferred_in_system_context_custom_action('buildout', commandline,
                                                                   after=bootstrap_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
-                                                                  silent_launcher_file_id=silent_launcher_file_id)
+                                                                  silent_launcher_file_id=silent_launcher_file_id,
+                                                                  text="Extracting dependencies, this may take a few minutes")
+
 
     def _append_close_application_action(self, wix, bootstrap_id, silent_launcher_file_id):
         commandline = r'"[INSTALLDIR]bin\buildout.exe" -c "[INSTALLDIR]buildout.cfg" install debug-logging close-application'
@@ -204,7 +209,8 @@ class Recipe(PackagingRecipe):
         action = wix.add_deferred_in_system_context_custom_action('close_application', commandline,
                                                                   after='InstallInitialize',
                                                                   condition=condition,
-                                                                  silent_launcher_file_id=silent_launcher_file_id)
+                                                                  silent_launcher_file_id=silent_launcher_file_id,
+                                                                  text="Closing open applications, this may take a few minutes")
 
     def _append_custom_actions(self, wix, silent_launcher_file_id):
         os_removedirs_eggs_id = self._append_os_removedirs_eggs(wix, silent_launcher_file_id)
