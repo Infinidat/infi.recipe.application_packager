@@ -168,19 +168,34 @@ class MsiInstaller(Installer):
         return self._get_installed_product_from_registry() is not None
 
     def install_package(self, with_custom_actions=True):
-        args = ['msiexec', '/i', self.get_package(), '/passive']
+        logfile = self.get_package() + '.install.log'
+        with open(logfile, 'w'):
+            pass
+        args = ['msiexec', '/i', self.get_package(), '/passive', '/l*vx', logfile]
         if not with_custom_actions:
             args.append("NO_CUSTOM_ACTIONS=1")
         with prevent_access_to_pypi_servers():
-            execute_assert_success(args)
+            try:
+                execute_assert_success(args)
+            finally:
+                with open(logfile) as fd:
+                    print fd.read()
 
     def uninstall_package(self, with_custom_actions=True):
+        logfile = self.get_package() + '.uninstall.log'
+        with open(logfile, 'w'):
+            pass
         properties = self._get_installed_product_from_registry()['InstallProperties'].values_store
         uninstall_string = properties['UninstallString'].to_python_object()
-        args = uninstall_string.split() + ['/passive']
+        args = uninstall_string.split() + ['/passive', '/l*vx', logfile]
         if not with_custom_actions:
             args.append("NO_CUSTOM_ACTIONS=1")
-        execute_assert_success(args)
+        try:
+            execute_assert_success(args)
+        finally:
+            with open(logfile) as fd:
+                print fd.read()
+
 
 class RpmInstaller(Installer):
     package_extension = 'rpm'

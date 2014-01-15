@@ -1,9 +1,5 @@
 #!/bin/bash
 
-if test "$$1" != "remove"; then
-    exit 0
-fi
-
 RC=0
 
 function assert_rc() {
@@ -36,12 +32,29 @@ fi
 execute pushd .
 cd $prefix
 
+if test "$$1" == "upgrade"; then
+    # close application
+    execute bin/buildout install debug-logging close-application
+    RC=$$?
+    assert_rc
+    exit 0
+fi
+
+if test "$$1" != "remove"; then
+    exit 0
+fi
+
 # execute application's pre-uninstall script
 if test -n "$pre_uninstall_script_name" -a -x "bin/$pre_uninstall_script_name"; then
     execute bin/$pre_uninstall_script_name $pre_uninstall_script_args
     RC=$$?
     assert_rc
 fi
+
+# close application
+execute bin/buildout install debug-logging close-application
+RC=$$?
+assert_rc
 
 # remove links to binaries from /usr/bin
 execute cd bin

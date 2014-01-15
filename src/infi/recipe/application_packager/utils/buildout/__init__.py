@@ -13,14 +13,22 @@ unzip = true
 newest = true
 download-cache = .cache
 develop = .
-parts = production-scripts production-gui-scripts
+parts = debug-logging production-scripts production-gui-scripts
 prefer-final = false
+log-level = DEBUG
+
+[debug-logging]
+recipe = infi.recipe.buildout_logging
 
 [production-scripts]
 recipe = infi.recipe.console_scripts
 
 [production-gui-scripts]
 recipe = infi.recipe.console_scripts:gui_scripts
+
+[close-application]
+recipe = infi.recipe.close_application
+
 """
 
 @contextmanager

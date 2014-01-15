@@ -1,4 +1,5 @@
 import infi.unittest as unittest
+import infi.recipe.buildout_logging as buildout_logging
 import os
 import glob
 import logging
@@ -12,6 +13,7 @@ TEST_BUIILDOUT = os.path.join(TESTCASE_DIR, 'buildout.cfg')
 PACKAGE_NAME = 'infi.recipe.application_packager'
 PREFIX = '/opt/infinidat/application-packager'
 INSTALLDIR = r"C:\Program Files\Infinidat\Application Packager"
+EXTENSION = '.exe' if os.name == 'nt' else ''
 
 def delete_existing_builds():
     items = glob.glob(os.path.join(TESTCASE_DIR, 'parts', '*'))
@@ -22,11 +24,37 @@ def delete_existing_builds():
             continue
         shutil.rmtree(path)
 
-CONSOLE_SCRIPTS = ["hello", "sample", "post_install", "pre_uninstall"]
+def get_buildout_logs():
+    return glob.glob(os.path.join(buildout_logging.LogFileHandler.get_logs_directory(), 'buildout.*'))
+
+def delete_buildout_logs():
+    for filepath in get_buildout_logs():
+        try:
+            os.remove(filepath)
+        except:
+            pass
+
+def print_buildout_logs():
+    for filepath in get_buildout_logs():
+        with open(filepath) as fd:
+            print fd.read()
+
+def cleanup_buildout_logs():
+    print_buildout_logs()
+    delete_buildout_logs()
+
+CONSOLE_SCRIPTS = ["hello", "sample", "post_install", "pre_uninstall", "sleep"]
 
 def create_console_scripts():
     from infi.execute import execute_assert_success
+    from infi.projector.helper.utils import open_buildout_configfile
     for name in CONSOLE_SCRIPTS:
+        with open_buildout_configfile(filepath="buildout.cfg", write_on_exit=True) as buildout:
+            scripts = buildout.get("pack", "scripts").split() \
+                      if buildout.has_section("pack") and buildout.has_option("pack", "scripts") \
+                      else []
+            scripts.append(name)
+            buildout.set("pack", "scripts", "\n".join(scripts))
         execute_assert_success([os.path.join('bin', 'projector'),
                                 "console-scripts", "add", name,
                                 "infi.recipe.application_packager.scripts:{0}".format(name),
@@ -36,7 +64,13 @@ def create_console_scripts():
 
 def create_package():
     from infi.execute import execute_assert_success
-    execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack'])
+    try:
+        execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack'])
+    finally:
+        wxs = os.path.join("parts", "product.wxs")
+        if os.name == 'nt' and os.path.exists(wxs):
+            with open(wxs) as fd:
+                print fd.read()
 
 def do_an_empty_commit():
     from gitpy import LocalRepository
@@ -47,7 +81,7 @@ def devenv_build():
     from infi.execute import execute_assert_success
     execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'setup.py', '__version__.py'])
 
-from infi.recipe.application_packager.utils.execute import execute_assert_success
+from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
 from infi.recipe.application_packager.utils import chdir
 from infi.recipe.application_packager.installer import Installer, MsiInstaller, DebInstaller, RpmInstaller
 
@@ -60,6 +94,7 @@ class Base(unittest.TestCase):
     def setUpClass(cls):
         if not cls.should_run():
             raise unittest.SkipTest("Skipping")
+        delete_buildout_logs()
         with chdir(TESTCASE_DIR):
             delete_existing_builds()
             create_console_scripts()
@@ -67,6 +102,7 @@ class Base(unittest.TestCase):
 
     def setUp(self):
         super(Base, self).setUp()
+        self.addCleanup(cleanup_buildout_logs)
         self._chdir_context = chdir(TESTCASE_DIR).__enter__()
         self.assertTrue(self.is_package_exists())
         self._clean_remainings_of_previous_installations()
@@ -125,7 +161,7 @@ class Base(unittest.TestCase):
         self.uninstall_package(with_custom_actions)
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
-    @unittest.parameters.iterate("with_custom_actions", [True, False])
+    @unittest.parameters.iterate("with_custom_actions", [True])
     def test_upgrade(self, with_custom_actions=True):
         self.assertFalse(self.is_product_installed())
         self.install_package(with_custom_actions)
@@ -139,9 +175,36 @@ class Base(unittest.TestCase):
         self.uninstall_package(with_custom_actions)
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
+    def test_processes_from_previous_version_are_killed_during_upgrade(self):
+        from time import time, sleep
+        self.install_package()
+        cleanup_buildout_logs()
+
+        # start process
+        timeout = 3600
+        t0 = time()
+        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
+        # we need to give the process time to start, checking it didn't return 1 because of an error
+        sleep(10)
+        self.assertFalse(pid.is_finished())
+
+        # upgrade
+        delete_existing_builds()
+        do_an_empty_commit()
+        devenv_build()
+        create_package()
+        self.install_package()
+
+        # assert
+        cleanup_buildout_logs()
+        pid.poll()
+        self.assertTrue(pid.is_finished())
+        self.assertLess(time(), t0 + timeout)
+
     @classmethod
     def platform_specific_cleanup(cls):
         raise NotImplementedError()
+
 
 class MsiTestCase(Base, MsiInstaller):
     def __init__(self, *args, **kwargs):
@@ -157,8 +220,10 @@ class MsiTestCase(Base, MsiInstaller):
     def should_run(cls):
         return platform.system() == "Windows"
 
+
 class Posix(Base):
     pass
+
 
 class RpmTestCase(Posix, RpmInstaller):
     def __init__(self, *args, **kwargs):
@@ -174,6 +239,7 @@ class RpmTestCase(Posix, RpmInstaller):
     @classmethod
     def should_run(cls):
         return platform.system() == "Linux" and platform.linux_distribution()[0].lower().startswith('red')
+
 
 class DebTestCase(Posix, DebInstaller):
     def __init__(self, *args, **kwargs):

@@ -23,6 +23,10 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'startmenu-shortcuts': [],
                   }
 
+PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
+                                     "infi.recipe.console_scripts",
+                                     "infi.recipe.close_application"]
+
 class PackagingRecipe(object):
     def __init__(self, buildout, name, options):
         super(PackagingRecipe, self).__init__()
@@ -95,7 +99,7 @@ class PackagingRecipe(object):
         return self._get_recipe_atribute("minimal-packages")
 
     def get_eggs_for_production(self):
-        return self._get_recipe_atribute("eggs")
+        return self._get_recipe_atribute("eggs").strip()
 
     def get_console_scripts_for_production(self):
         return self._get_recipe_atribute("scripts")
@@ -228,8 +232,10 @@ class PackagingRecipe(object):
     def write_buildout_configuration_file_for_production(self):
         from .. import utils, assertions
         method = utils.buildout.write_buildout_configuration_file_for_production
+        eggs = self.get_eggs_for_production() or self.get_python_module_name()
+        eggs = "\n".join(eggs.split() + PYTHON_PACKAGES_USED_BY_PACKAGING)
         return method(self.get_dependent_scripts(), self.get_minimal_packages(),
-                      self.get_eggs_for_production() or self.get_python_module_name(),
+                      eggs,
                       self.get_console_scripts_for_production(),
                       self.get_gui_scripts_for_production(),
                       self.get_require_administrative_privileges(),
@@ -242,7 +248,8 @@ class PackagingRecipe(object):
         if not self.should_shrink_cache_dist():
             return
         eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
-        dependencies = set.union(*[get_dependencies(name) for name in eggs])
+        eggs.extend(PYTHON_PACKAGES_USED_BY_PACKAGING)
+        dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
         distributions = get_distributions_from_dependencies(dependencies)
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
             basename = path.basename(filepath).lower()
