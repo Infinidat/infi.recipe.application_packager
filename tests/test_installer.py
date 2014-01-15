@@ -64,7 +64,13 @@ def create_console_scripts():
 
 def create_package():
     from infi.execute import execute_assert_success
-    execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack'])
+    try:
+        execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack'])
+    finally:
+        wxs = os.path.join("parts", "product.wxs")
+        if os.name == 'nt' and os.path.exists(wxs):
+            with open(wxs) as fd:
+                print fd.read()
 
 def do_an_empty_commit():
     from gitpy import LocalRepository
