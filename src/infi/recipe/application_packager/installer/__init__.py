@@ -187,7 +187,7 @@ class MsiInstaller(Installer):
             pass
         properties = self._get_installed_product_from_registry()['InstallProperties'].values_store
         uninstall_string = properties['UninstallString'].to_python_object()
-        args = uninstall_string.split() + ['/passive']
+        args = uninstall_string.split() + ['/passive', '/l*vx', logfile]
         if not with_custom_actions:
             args.append("NO_CUSTOM_ACTIONS=1")
         try:
