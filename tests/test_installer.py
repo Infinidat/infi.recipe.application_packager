@@ -161,7 +161,7 @@ class Base(unittest.TestCase):
         self.uninstall_package(with_custom_actions)
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
-    @unittest.parameters.iterate("with_custom_actions", [True, False])
+    @unittest.parameters.iterate("with_custom_actions", [True])
     def test_upgrade(self, with_custom_actions=True):
         self.assertFalse(self.is_product_installed())
         self.install_package(with_custom_actions)
