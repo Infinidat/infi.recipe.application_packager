@@ -190,7 +190,7 @@ class Recipe(PackagingRecipe):
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
                                                                   silent_launcher_file_id=silent_launcher_file_id,
-                                                                  text="Bootstraping, this may take a few minutes")
+                                                                  text="Bootstrapping, this may take a few minutes")
 
         return action.get('Id')
 
