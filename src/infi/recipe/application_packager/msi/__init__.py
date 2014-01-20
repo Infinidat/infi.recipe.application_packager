@@ -266,10 +266,12 @@ class Recipe(PackagingRecipe):
                 continue
             args = self.get_script_args(key)
             commandline = r'"[INSTALLDIR]\bin\{}.exe" {}'.format(script_name, args)
+            text = "Running {} actions, this may take a few minutes".format(key.replace('_', ' '))
             wix.add_deferred_in_system_context_custom_action(script_name, commandline,
                                                              after=value['after'], before=value['before'],
                                                              condition=value['condition'],
-                                                             silent_launcher_file_id=silent_launcher_file_id)
+                                                             silent_launcher_file_id=silent_launcher_file_id,
+                                                             text=text)
 
     def _add_shortcuts(self, wix):
         if not self.get_startmenu_shortcuts() or not self.get_shortcuts_icon():
