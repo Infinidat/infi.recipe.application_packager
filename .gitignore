@@ -55,3 +55,4 @@ tmp*
 src/infi/recipe/application_packager/__version__.py
 buildout.in
 post_install
+.cache
