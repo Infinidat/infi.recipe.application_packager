@@ -57,3 +57,4 @@ buildout.in
 post_install
 .cache
 eggs
+parts
