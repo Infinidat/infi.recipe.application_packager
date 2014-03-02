@@ -166,6 +166,17 @@ class PackagingRecipe(object):
     def get_install_prefix(self):
         return "/opt/{}/{}".format(self.get_company_name().lower(), self.get_project_name())
 
+    def _get_centos_dist_name(self):
+        from os import path
+        # RedHat hosts have /etc/centos-release file, but with RedHat... written inside
+        # python-2.7 thinks its centos just because this file exists
+        CENTOS_FILE = path.join(path.sep, "etc", "centos-release")
+        with open(CENTOS_FILE) as fd:
+            content = fd.read()
+        if content.startswith("Red"):
+            return "redhat"
+        return content.split()[0].lower()
+
     def get_os_string(self):
         from platform import architecture, system, dist
         from sys import maxsize
@@ -174,11 +185,14 @@ class PackagingRecipe(object):
         system_name = system().lower().replace('-', '').replace('_', '')
         dist_name, dist_version, dist_version_name = dist()
         dist_name = dist_name.lower()
+        is_centos = dist_name == 'centos'
         is_ubuntu = dist_name == 'ubuntu'
         dist_version_string = dist_version_name.lower() if is_ubuntu else dist_version.lower().split('.')[0]
         string_by_os = {
                         "Windows": '-'.join([system_name, arch_name]),
-                        "Linux": '-'.join([system_name, dist_name, dist_version_string, arch_name]),
+                        "Linux": '-'.join([system_name,
+                                           self._get_centos_dist_name() if is_centos else dist_name,
+                                           dist_version_string, arch_name]),
         }
         return string_by_os.get(system())
 
