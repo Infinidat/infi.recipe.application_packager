@@ -187,12 +187,12 @@ class PackagingRecipe(object):
         dist_name = dist_name.lower()
         is_centos = dist_name == 'centos'
         is_ubuntu = dist_name == 'ubuntu'
-        dist_version_string = dist_version_name.lower() if is_ubuntu else \
-                              self._get_centos_dist_name() if is_centos else \
-                              dist_version.lower().split('.')[0]
+        dist_version_string = dist_version_name.lower() if is_ubuntu else dist_version.lower().split('.')[0]
         string_by_os = {
                         "Windows": '-'.join([system_name, arch_name]),
-                        "Linux": '-'.join([system_name, dist_name, dist_version_string, arch_name]),
+                        "Linux": '-'.join([system_name,
+                                           self._get_centos_dist_name() if is_centos else dist_name,
+                                           dist_version_string, arch_name]),
         }
         return string_by_os.get(system())
 
