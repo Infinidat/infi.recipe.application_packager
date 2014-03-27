@@ -4,7 +4,7 @@ from logging import getLogger
 from ..base import PackagingRecipe, RECIPE_DEFAULTS
 from .. import utils
 from glob import glob
-from os import path, curdir, makedirs, listdir, remove
+from os import path, curdir, makedirs, listdir, remove, chdir
 from shutil import rmtree, copy
 from pkg_resources import resource_filename
 from infi.pyutils.contexts import contextmanager
@@ -16,7 +16,6 @@ LIBRARIES = "-lm -lz -lbz2 -ldb -lncurses -lpanel -lreadline -lcrypt -lnsl -lssl
 
 @contextmanager
 def chdir_context(dirpath):
-    from os import path, chdir
     global last_directory
     before = path.abspath(path.curdir)
     try:
