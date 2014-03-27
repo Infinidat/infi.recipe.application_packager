@@ -51,17 +51,20 @@ class Recipe(PackagingRecipe):
         extracted_files = archive.getnames()
         archive.close()
 
-    def get_include_dirs(self):
+    def get_isolated_python_directories(self, prefix):
+        directories = []
         buildout_directory = self.buildout.get('buildout').get('directory')
-        include_dir = path.join(buildout_directory, 'parts', 'python', 'include')
-        return [include_dir] + [dirpath for dirpath in glob(path.join(include_dir, "*"))
-                                if 'python2.7' not in dirpath and path.isdir(dirpath)]
+        for prefix_dirpath in glob(path.join(buildout_directory, 'parts', 'python', prefix + '*')):
+            directories.append(prefix_dirpath)
+            directories.extend([dirpath for dirpath in glob(path.join(prefix_dirpath, "*"))
+                                if 'python2.7' not in dirpath and path.isdir(dirpath)])
+        return directories
+
+    def get_include_dirs(self):
+        return self.get_isolated_python_directories("include")
 
     def get_library_dirs(self):
-        buildout_directory = self.buildout.get('buildout').get('directory')
-        lib_dir = path.join(buildout_directory, 'parts', 'python', 'lib')
-        return [lib_dir] + [dirpath for dirpath in glob(path.join(lib_dir, "*"))
-                            if 'python2.7' not in dirpath and path.isdir(dirpath)]
+        return self.get_isolated_python_directories("lib")
 
     def run_pystick(self, args):
         from pystick import pack
