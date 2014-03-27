@@ -7,25 +7,37 @@ from glob import glob
 from os import path, curdir, makedirs, listdir, remove
 from shutil import rmtree, copy
 from pkg_resources import resource_filename
+from infi.pyutils.contexts import contextmanager
 
 logger = getLogger(__name__)
 
 PYTHON_SOURCE = "ftp://python.infinidat.com/archives/Python-2.7.6.tgz"
 LIBRARIES = "-lm -lz -lbz2 -ldb -lncurses -lpanel -lreadline -lcrypt -lnsl -lssl -lcrypto -lutil -ldl"
 
+@contextmanager
+def chdir_context(dirpath):
+    from os import path, chdir
+    global last_directory
+    before = path.abspath(path.curdir)
+    try:
+        yield chdir(dirpath)
+    finally:
+        last_directory = dirpath
+        chdir(before)
+
 class Recipe(PackagingRecipe):
     def install(self):
         """:returns: a list of installed filepaths"""
         self.download_and_install_python_source()
-        self.build_pare_python()
-        self.generate_file_list()
-        # CFLAGS, LIBS, …
+        self.build_bare_python()
+        # self.generate_file_list()
+        # CFLAGS, LIBS,
         # List of pure-python files
         # List of C extensions
         # Bindings instructions
         return []
 
-    def download_python_source(self):
+    def download_and_install_python_source(self):
         # inspired from infi.recipe.python
         from zc.buildout.download import Download
         import tarfile
@@ -35,34 +47,47 @@ class Recipe(PackagingRecipe):
         downloader = Download(self.buildout.get('buildout'))
         source_filepath = downloader(source_url)[0]
         archive = tarfile.open(source_filepath, 'r:gz')
-        archive.extractall(extact_path)
+        archive.extractall(extract_path)
         extracted_files = archive.getnames()
         archive.close()
-        for filepath in [sep.join([self.extact_path, filename]) for filename in files]:
-            self.options.created(filepath)
 
     def get_include_dirs(self):
+        buildout_directory = self.buildout.get('buildout').get('directory')
         include_dir = path.join(buildout_directory, 'parts', 'python', 'include')
         return [include_dir] + [dirpath for dirpath in glob(path.join(include_dir, "*"))
                                 if 'python2.7' not in dirpath and path.isdir(dirpath)]
 
     def get_library_dirs(self):
+        buildout_directory = self.buildout.get('buildout').get('directory')
         lib_dir = path.join(buildout_directory, 'parts', 'python', 'lib')
         return [lib_dir] + [dirpath for dirpath in glob(path.join(lib_dir, "*"))
                             if 'python2.7' not in dirpath and path.isdir(dirpath)]
 
+    def run_pystick(self, args):
+        from pystick import pack
+        print ' '.join(repr(item) for item in args)
+        try:
+            with chdir_context('.'):
+                pack.main(args)
+        except SystemExit, error:
+            if error.code == 0:
+                return
+            with open(path.join('parts', 'bare_python', 'configure.log')) as fd:
+                print fd.read()
+            raise
+
     def build_bare_python(self):
-        from infi.execute import execute_assert_success
         source_url = self.options.get('python-source-url', PYTHON_SOURCE)
+        buildout_directory = self.buildout.get('buildout').get('directory')
         source_path = path.join(buildout_directory, 'parts', source_url.rsplit('/', 1)[-1].rsplit('.', 1)[0])
         build_path = path.join(buildout_directory, 'parts', 'bare_python')
-        include_path = " ".join(["-I{}".format(item) for item in sel.get_include_dirs()])
-        library_path = " ".join(["-L{}".format(item) for item in sel.get_library_dirs()])
+        include_path = " ".join(["-I{}".format(item) for item in self.get_include_dirs()])
+        library_path = " ".join(["-L{}".format(item) for item in self.get_library_dirs()])
         args = ["PYTHON_SOURCE_PATH={}".format(source_path), "BUILD_PATH={}".format(build_path),
-                "XFLAGS={-pthread -g {0} {1} {2}".format(include_path, library_path, LIBRARIES),
+                "XFLAGS=-pthread -g {0} {1} {2}".format(include_path, library_path, LIBRARIES),
                 "HAVE_CURSES=1", "HAVE_READLINE=1", "HAVE_LIBM=1", "HAVE_LIBZ=1", "HAVE_LIBCRYPT=1", "HAVE_OPENSSL=1",
                 "HAVE_LIBCRYPTO=1", "HAVE_LIBDL=1", "HAVE_LIBNSL=1"]
-        execute_assert_success(["bin/pack"] + args)
+        self.run_pystick(args)
 
     def get_dependencies_for_embedding(self):
         from ..utils import get_dependencies, get_distributions_from_dependencies
