@@ -91,7 +91,7 @@ class Recipe(PackagingRecipe):
         variable_file = self.write_variable_file()
         configure_log_file = path.join(build_path, 'configure.log')
         args = ["PYTHON_SOURCE_PATH={}".format(source_path), "BUILD_PATH={}".format(build_path),
-                "--VARS={}".format(variable_file)]
+                "--vars={}".format(variable_file)]
         self.run_pystick(args, [variable_file, configure_log_file])
 
     def write_variable_file(self):
