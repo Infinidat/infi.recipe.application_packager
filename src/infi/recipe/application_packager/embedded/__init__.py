@@ -95,13 +95,17 @@ class Recipe(PackagingRecipe):
         self.run_pystick(args, [variable_file, configure_log_file])
 
     def write_variable_file(self):
+        from platform import system
         from sysconfig import get_config_vars, get_config_var
         buildout_directory = self.buildout.get('buildout').get('directory')
         variable_filepath = path.join(buildout_directory, 'parts', 'bare_python.vargs')
+        xflags = ' '.join(['-pthread', get_config_var('CFLAGS'), get_config_var('LDFLAGS')])
+        if system() == 'Darwin':
+            xflags += ' -framework CoreFoundation -framework SystemConfiguration'
+        elif system() == 'Linux':
+            xflags += ' -lm'
         with open(variable_filepath, 'w') as fd:
-            for key, value in get_config_vars().items():
-                fd.write("{}={!r}\n".format(key, value))
-            fd.write("XFLAGS={!r}\n".format(' '.join([get_config_var('SHLIBS'), get_config_var('CFLAGS'), get_config_var('LDFLAGS')])))
+            fd.write("XFLAGS={!r}\n".format(xflags))
         return variable_filepath
 
     def get_dependencies_for_embedding(self):
