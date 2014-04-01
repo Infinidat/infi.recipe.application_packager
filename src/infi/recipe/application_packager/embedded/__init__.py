@@ -101,6 +101,7 @@ class Recipe(PackagingRecipe):
         with open(variable_filepath, 'w') as fd:
             for key, value in get_config_vars().items():
                 fd.write("{}={!r}\n".format(key, value))
+        fd.write("XFLAGS={!r}\n".format(get_config_vars('CFLAGS', '') + ' ' + get_config_vars('LDFLAGS', '')))
         return variable_filepath
 
     def get_dependencies_for_embedding(self):
