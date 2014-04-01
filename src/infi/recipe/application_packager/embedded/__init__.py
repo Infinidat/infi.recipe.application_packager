@@ -65,7 +65,7 @@ class Recipe(PackagingRecipe):
     def get_library_dirs(self):
         return self.get_isolated_python_directories("lib")
 
-    def run_pystick(self, args):
+    def run_pystick(self, args, log_files=list()):
         from pystick import pack
         print ' '.join(repr(item) for item in args)
         try:
@@ -74,8 +74,12 @@ class Recipe(PackagingRecipe):
         except SystemExit, error:
             if error.code == 0:
                 return
-            with open(path.join('parts', 'bare_python', 'configure.log')) as fd:
-                print fd.read()
+            for filepath in log_files:
+                print '-'*79
+                print filepath
+                print '+'*79
+                with open(filepath) as fd:
+                    print fd.read()
             raise
 
     def build_bare_python(self):
@@ -85,9 +89,10 @@ class Recipe(PackagingRecipe):
         source_path = path.join(buildout_directory, 'parts', source_url.rsplit('/', 1)[-1].rsplit('.', 1)[0])
         build_path = path.join(buildout_directory, 'parts', 'bare_python')
         variable_file = self.write_variable_file()
+        configure_log_file = path.join(build_path, 'configure.log')
         args = ["PYTHON_SOURCE_PATH={}".format(source_path), "BUILD_PATH={}".format(build_path),
                 "--VARS={}".format(variable_file)]
-        self.run_pystick(args)
+        self.run_pystick(args, [variable_file, configure_log_file])
 
     def write_variable_file(self):
         from sysconfig import get_config_vars
