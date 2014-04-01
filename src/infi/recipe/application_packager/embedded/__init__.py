@@ -4,7 +4,7 @@ from logging import getLogger
 from ..base import PackagingRecipe, RECIPE_DEFAULTS
 from .. import utils
 from glob import glob
-from os import path, curdir, makedirs, listdir, remove, chdir
+from os import path, curdir, makedirs, listdir, remove, chdir, symlink
 from shutil import rmtree, copy
 from pkg_resources import resource_filename
 from infi.pyutils.contexts import contextmanager
@@ -92,7 +92,7 @@ class Recipe(PackagingRecipe):
         configure_log_file = path.join(build_path, 'configure.log')
         args = ["PYTHON_SOURCE_PATH={}".format(source_path), "BUILD_PATH={}".format(build_path),
                 "--vars={}".format(variable_file)]
-        self.run_pystick(args, [variable_file, configure_log_file])
+        self.run_pystick(args, [])
 
     def write_variable_file(self):
         from platform import system
@@ -102,7 +102,13 @@ class Recipe(PackagingRecipe):
         xflags = ' '.join([get_config_var('CFLAGS'), get_config_var('LDFLAGS'),
                            get_config_var("SHLIBS"), get_config_var("SYSLIBS")])
         if system() == 'Darwin':
-            xflags += ' -framework SystemConfiguration'
+            build_path = path.join(buildout_directory, 'parts', 'bare_python')
+            libdir = path.join(buildout_directory, 'parts', 'python', 'lib')
+            makedirs(build_path)
+            symlink(libdir, path.join(build_path, 'lib'))
+            if not path.exists(path.join(buildout_directory, 'parts', 'lib')):
+                symlink(libdir, path.join(buildout_directory, 'parts', 'lib'))
+            xflags += ' -lintl -liconv'
         with open(variable_filepath, 'w') as fd:
             for key, value in get_config_vars().items():
                 fd.write("{}={!r}\n".format(key, value))
