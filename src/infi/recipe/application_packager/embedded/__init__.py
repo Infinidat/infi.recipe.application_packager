@@ -99,7 +99,10 @@ class Recipe(PackagingRecipe):
         from sysconfig import get_config_vars, get_config_var
         buildout_directory = self.buildout.get('buildout').get('directory')
         variable_filepath = path.join(buildout_directory, 'parts', 'bare_python.vargs')
-        xflags = ' '.join([get_config_var('CFLAGS'), get_config_var("SHLIBS"), get_config_var('LDFLAGS')])
+        xflags = ' '.join([get_config_var('CFLAGS'), get_config_var('LDFLAGS'),
+                           get_config_var("SHLIBS"), get_config_var("SYSLIBS")])
+        if system() == 'Darwin':
+            xflags += ' -framework SystemConfiguration'
         with open(variable_filepath, 'w') as fd:
             for key, value in get_config_vars().items():
                 fd.write("{}={!r}\n".format(key, value))
