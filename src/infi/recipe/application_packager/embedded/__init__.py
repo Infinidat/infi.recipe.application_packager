@@ -95,13 +95,13 @@ class Recipe(PackagingRecipe):
         self.run_pystick(args, [variable_file, configure_log_file])
 
     def write_variable_file(self):
-        from sysconfig import get_config_vars
+        from sysconfig import get_config_vars, get_config_var
         buildout_directory = self.buildout.get('buildout').get('directory')
         variable_filepath = path.join(buildout_directory, 'parts', 'bare_python.vargs')
         with open(variable_filepath, 'w') as fd:
             for key, value in get_config_vars().items():
                 fd.write("{}={!r}\n".format(key, value))
-        fd.write("XFLAGS={!r}\n".format(get_config_vars('CFLAGS', '') + ' ' + get_config_vars('LDFLAGS', '')))
+        fd.write("XFLAGS={!r}\n".format(get_config_var('CFLAGS') + ' ' + get_config_var('LDFLAGS')))
         return variable_filepath
 
     def get_dependencies_for_embedding(self):
