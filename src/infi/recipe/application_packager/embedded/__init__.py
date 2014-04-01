@@ -101,6 +101,7 @@ class Recipe(PackagingRecipe):
         with open(variable_filepath, 'w') as fd:
             for key, value in get_config_vars().items():
                 fd.write("{}={!r}\n".format(key, value))
+        return variable_filepath
 
     def get_dependencies_for_embedding(self):
         from ..utils import get_dependencies, get_distributions_from_dependencies
