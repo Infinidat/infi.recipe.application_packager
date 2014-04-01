@@ -101,10 +101,12 @@ class Recipe(PackagingRecipe):
         variable_filepath = path.join(buildout_directory, 'parts', 'bare_python.vargs')
         xflags = ' '.join(['-pthread', get_config_var('CFLAGS'), get_config_var('LDFLAGS')])
         if system() == 'Darwin':
-            xflags += ' -framework CoreFoundation -framework SystemConfiguration'
+            xflags += '-framework CoreFoundation'
         elif system() == 'Linux':
-            xflags += ' -lm'
+            xflags += ' -lm -ldl'
         with open(variable_filepath, 'w') as fd:
+            for key, value in get_config_vars().items():
+                fd.write("{}={!r}\n".format(key, value))
             fd.write("XFLAGS={!r}\n".format(xflags))
         return variable_filepath
 
