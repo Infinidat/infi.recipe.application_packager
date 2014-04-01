@@ -79,17 +79,23 @@ class Recipe(PackagingRecipe):
             raise
 
     def build_bare_python(self):
+        from os import environ
         source_url = self.options.get('python-source-url', PYTHON_SOURCE)
         buildout_directory = self.buildout.get('buildout').get('directory')
         source_path = path.join(buildout_directory, 'parts', source_url.rsplit('/', 1)[-1].rsplit('.', 1)[0])
         build_path = path.join(buildout_directory, 'parts', 'bare_python')
-        include_path = " ".join(["-I{}".format(item) for item in self.get_include_dirs()])
-        library_path = " ".join(["-L{}".format(item) for item in self.get_library_dirs()])
+        variable_file = self.write_variable_file()
         args = ["PYTHON_SOURCE_PATH={}".format(source_path), "BUILD_PATH={}".format(build_path),
-                "XFLAGS=-pthread -g {0} {1} {2}".format(include_path, library_path, LIBRARIES),
-                "HAVE_CURSES=1", "HAVE_READLINE=1", "HAVE_LIBM=1", "HAVE_LIBZ=1", "HAVE_LIBCRYPT=1", "HAVE_OPENSSL=1",
-                "HAVE_LIBCRYPTO=1", "HAVE_LIBDL=1", "HAVE_LIBNSL=1"]
+                "--VARS={}".format(variable_file)]
         self.run_pystick(args)
+
+    def write_variable_file(self):
+        from sysconfig import get_config_vars
+        buildout_directory = self.buildout.get('buildout').get('directory')
+        variable_filepath = path.join(buildout_directory, 'parts', 'bare_python.vargs')
+        with open(variable_filepath, 'w') as fd:
+            for key, value in get_config_vars().items():
+                fd.write("{}={!r}\n".format(key, value))
 
     def get_dependencies_for_embedding(self):
         from ..utils import get_dependencies, get_distributions_from_dependencies
