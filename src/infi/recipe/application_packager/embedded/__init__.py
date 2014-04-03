@@ -72,6 +72,7 @@ with mock.patch.object(setuptools, "setup", new=_setup):
             exec(fd.read())
 """
 
+
 @contextmanager
 def chdir_context(dirpath):
     global last_directory
@@ -81,6 +82,16 @@ def chdir_context(dirpath):
     finally:
         last_directory = dirpath
         chdir(before)
+
+
+def _build_setup_py(dirname):
+    from os import name
+    with chdir_context(dirname):
+        cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, 'setup.py', 'build'] if name != 'nt' else \
+              [PYTHON_SCRIPT, 'setup.py', 'build']
+        logger.info(' '.join(cmd))
+        execute_assert_success(cmd)
+
 
 class Recipe(PackagingRecipe):
     def install(self):
@@ -248,7 +259,6 @@ class Recipe(PackagingRecipe):
 
     def build_dependency(self, filepath):
         """:returns: base directory"""
-        from os import name
 
         def _unzip_egg(basename):
             dirname = basename.rsplit('-', 1)[0]
@@ -261,11 +271,7 @@ class Recipe(PackagingRecipe):
         def _extract_and_build_tgz(basename):
             dirname = basename.rsplit('.', 2)[0]
             execute_assert_success(['tar', 'zxf', basename])
-            with chdir_context(dirname):
-                cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, 'setup.py', 'build'] if name != 'nt' else \
-                      [PYTHON_SCRIPT, 'setup.py', 'build']
-                logger.info(' '.join(cmd))
-                execute_assert_success(cmd)
+            _build_setup_py(dirname)
             return dirname
 
         with chdir_context(path.join('.cache', 'dist')):
@@ -315,6 +321,7 @@ class Recipe(PackagingRecipe):
             files = self.scan_for_files(build_dir)
             python_files.extend(files['python_files'])
             c_extensions.extend(files['c_extensions'])
+        _build_setup_py(path.curdir)
         my_files = self.scan_for_files(path.curdir)
         python_files.extend(my_files['python_files'])
         c_extensions.extend(my_files['c_extensions'])
