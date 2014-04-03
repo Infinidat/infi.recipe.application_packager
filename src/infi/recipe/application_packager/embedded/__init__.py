@@ -227,7 +227,7 @@ class Recipe(PackagingRecipe):
             fd.write("XFLAGS={!r}\n".format(self.get_xflags()))
             for key, value in external_modules_dict.items():
                 fd.write("{}={!r}\n".format(key, value))
-                fd.write("STATIC_PYTHON_MODULES=1\n")
+                fd.write("STATIC_PYTHON_MODULES=1\nPIC_PYTHON_MODULES=1\n")
             for item in DEFINES:
                 fd.write("{}\n".format(item))
         return variable_filepath
