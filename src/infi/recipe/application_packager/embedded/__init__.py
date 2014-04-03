@@ -205,10 +205,11 @@ class Recipe(PackagingRecipe):
         static_libs.append('ncurses')
         static_libs_formatted = ' '.join(['-l{}'.format(item) for item in static_libs
                                           for item in static_libs if not item.endswith('_g')])
-        xflags = ' '.join([get_config_var('CFLAGS'),
-                           '-L{}'.format(static_dir), get_config_var('LDFLAGS'),
-                           get_config_var("SHLIBS"), get_config_var("SYSLIBS"),
-                           static_libs_formatted])
+        xflags = '-fPIC '  # FIXME forcing PIC here
+        xflags += ' '.join([get_config_var('CFLAGS'),
+                            '-L{}'.format(static_dir), get_config_var('LDFLAGS'),
+                            get_config_var("SHLIBS"), get_config_var("SYSLIBS"),
+                            static_libs_formatted])
         if system() == 'Darwin':
             xflags += ' -framework SystemConfiguration'
         elif system() == 'Linux':
