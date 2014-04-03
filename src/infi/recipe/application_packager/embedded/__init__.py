@@ -58,7 +58,12 @@ def _setup(name, package_dir={}, packages={}, ext_modules=[], py_modules=[], **k
     for ext_module in ext_modules:
         env = dict(CPPDEFINES=["{}={}".format(item[0], item[1]) for item in ext_module.define_macros])
         c_extensions.append(dict(name=ext_module.name,
-                                 sources=[os.path.abspath(source) for source in ext_module.sources],
+                                 sources=[os.path.abspath(source)
+                                          if os.path.exists(os.path.abspath(source)) else
+                                          os.path.abspath(source.replace('.pyx', '.cpp')) if
+                                          os.path.exists(os.path.abspath(source.replace('.pyx', '.cpp'))) else \
+                                          os.path.abspath(source.replace('.pyx', '.c'))
+                                          for source in ext_module.sources],
                                  roots=list(set([os.path.abspath(os.path.dirname(source)) for source in ext_module.sources])),
                                  depends=ext_module.depends, env=env))
     for py_module in py_modules:
