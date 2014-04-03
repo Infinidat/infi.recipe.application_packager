@@ -34,7 +34,7 @@ SETUP_INFO = dict(
         'zc.buildout': [
                         'default = ${project:name}.auto:Recipe',
                         'executable = ${project:name}.embedded:Executable',
-                        'shared_library = ${project:name}.embedded:SharedLibrary',
+                        'static_library = ${project:name}.embedded:StaticLibrary',
                         'msi = ${project:name}.msi:Recipe',
                         'rpm = ${project:name}.rpm:Recipe',
                         'deb = ${project:name}.deb:Recipe',
