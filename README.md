@@ -65,7 +65,8 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | msi-banner-nmp                        | msi         | None                                                 | Top banner                                                               |
 | msi-dialog-bmp                        | msi         | None                                                 | Background bitmap used on the welcome and completion dialogs             |
 | startmenu-shortcuts                   | msi         | []                                                   | ['shortcut_name' = 'executable_name', ...]                               |
-| python-source-url                     | exe/lib     | ftp://python.infinidat.com/archives/Python-2.7.6.tgz | tgz archive for Python
+| python-source-url                     | exe/lib     | ftp://python.infinidat.com/archives/Python-2.7.6.tgz | tgz archive for Python                                                   |
+| xflags                                | exe/lib     |                                                      | extra flags to pass (as a string) to pystick                             |
 
 Using the installers
 --------------------

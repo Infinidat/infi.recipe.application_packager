@@ -109,7 +109,8 @@ class Recipe(PackagingRecipe):
         return self.get_embedded_python_files()
 
     def get_embedded_python_files(self):
-        return [] # TODO
+        build_path = path.join(self.buildout_directory, 'parts', 'python.embedded')
+        return execute_assert_success(['find', build_path]).get_stdout().splitlines()
 
     @property
     @cached_method
@@ -350,11 +351,36 @@ class Recipe(PackagingRecipe):
 
 
 class Executable(Recipe):
-    def get_compile_flags(self):
-        raise NotImplementedError()
+    def install(self):
+        embedded_python_files = Recipe.install(self)
+        console_scripts = self.build_console_scripts()
+        return embedded_python_files + console_scripts
+
+    def build_console_scripts(self):
+        executables = []
+        for executable_name, value in self.get_console_scripts_for_production().items():
+            module_name, callable_name = value.split(':')
+            executables.append(self.build_console_script(executable, module_name, callable_name))
+        return executables
+
+    def get_all_console_script_entry_points(self):
+        return {} # TODO
+
+    def get_specific_console_script_names(self):
+        return [] # TODO
+
+    def get_console_scripts_for_production(self):
+        entry_points_dict = self.get_all_console_script_entry_points()
+        specific_script_names = self.get_specific_console_script_names()
+        if specific_script_names:
+            assert all(item in entry_points_dict for item in specific_script_names)
+            return {key: value for key, value in entry_points_dict.items()
+                    if key in specific_script_names}
+        return entry_points_dict
+
+    def build_console_script(self, executable, module_name, callable_name):
+        raise NotImplementedError() # TODO
 
 
 class StaticLibrary(Recipe):
-    def get_compile_flags(self):
-        raise NotImplementedError()
-
+    pass
