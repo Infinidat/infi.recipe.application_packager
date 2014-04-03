@@ -181,7 +181,10 @@ class Recipe(PackagingRecipe):
         from sysconfig import get_config_var
         from platform import system
         static_dir, static_libs = self.copy_static_libraries_from_isolated_python()
-        static_libs_formatted = ' '.join(['-l{}'.format(item) for item in static_libs])
+        static_libs.remove('ncurses')
+        static_libs.append('ncurses')
+        static_libs_formatted = ' '.join(['-l{}'.format(item) for item in static_libs
+                                          for item in static_libs if not item.endswith('_g')])
         xflags = ' '.join([get_config_var('CFLAGS'),
                            '-L{}'.format(static_dir), get_config_var('LDFLAGS'),
                            get_config_var("SHLIBS"), get_config_var("SYSLIBS"),
