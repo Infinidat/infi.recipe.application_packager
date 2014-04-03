@@ -31,6 +31,8 @@ def _scan(package, dirpath):
     for py in stdoutdata.splitlines():
         name = prefix + '.' + os.path.relpath(py, os.path.abspath(dirpath)).replace(".py", '').replace("__init__", '')
         name = name.replace(os.path.sep, '.').strip('.')
+        if ' ' in name:
+            continue
         python_files.append(dict(package="__init__.py" in py, source=os.path.abspath(py), name=name))
     return python_files
 
@@ -226,6 +228,8 @@ class Recipe(PackagingRecipe):
             for py in execute_assert_success(["find", dirpath, "-name", "*.py"]).get_stdout().splitlines():
                 name = py.replace(build_dir, '').replace(".py", '').replace("__init__", '')
                 name = name.strip(path.sep).replace(path.sep, '.')
+                if ' ' in name:
+                    continue
                 python_files.append(dict(package="__init__.py" in py, source=path.abspath(py), name=name))
         return dict(python_files=python_files, c_extensions=c_extensions)
 
