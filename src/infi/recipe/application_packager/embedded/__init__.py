@@ -44,7 +44,7 @@ def _scan(package, dirpath):
         python_files.append(dict(package="__init__.py" in py, source=os.path.abspath(py), name=name))
     return python_files
 
-def _setup(name, package_dir={}, packages={}, ext_modules=[], py_modules, **kwargs):
+def _setup(name, package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs):
     global _setup_called
     _setup_called = True
     python_files, c_extensions = [], []
