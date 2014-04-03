@@ -13,6 +13,10 @@ from infi.execute import execute_assert_success
 
 logger = getLogger(__name__)
 
+DEFINES = ["HAVE_CURSES=1", "HAVE_CURSES_PANEL=1", "HAVE_LIBBZ2=1", "HAVE_LIBCABINET=1", "HAVE_LIBCRYPT=1",
+           "HAVE_LIBDB=1", "HAVE_LIBEXPAT=1", "HAVE_LIBGDBM=1", "HAVE_LIBM=1", "HAVE_LIBNSL=1",
+           "HAVE_LIBRPCRT4=1", "HAVE_LIBSQLITE3=1", "HAVE_LIBTCL=0", "HAVE_LIBTK=0", "HAVE_LIBWS32_32=1",
+           "HAVE_LIBZ=1", "HAVE_OPENSSL=1", "HAVE_READLINE=1"]
 PYTHON_SOURCE = "ftp://python.infinidat.com/archives/Python-2.7.6.tgz"
 SETUP_PY_MOCK = """import setuptools
 import subprocess
@@ -196,6 +200,9 @@ class Recipe(PackagingRecipe):
             fd.write("XFLAGS={!r}\n".format(self.get_xflags()))
             for key, value in external_modules_dict.items():
                 fd.write("{}={!r}\n".format(key, value))
+                fd.write("STATIC_PYTHON_MODULES=1\n")
+            for item in DEFINES:
+                fd.write("{}\n".format(item))
         return variable_filepath
 
 
