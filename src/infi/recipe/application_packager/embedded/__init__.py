@@ -189,7 +189,7 @@ class Recipe(PackagingRecipe):
         if system() == 'Darwin':
             xflags += ' -framework SystemConfiguration'
         elif system() == 'Linux':
-            xflags += ' -lcrypt'
+            xflags += ' -lcrypt -ltinfo'
         return xflags
 
     def write_variable_file(self):
