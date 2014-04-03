@@ -272,7 +272,7 @@ class Recipe(PackagingRecipe):
             if not path.exists(dirname):
                 makedirs(dirname)
             with chdir_context(dirname):
-                execute_assert_success(['unzip', '-f', path.join(path.pardir, basename)])
+                execute_assert_success(['unzip', '-u', path.join(path.pardir, basename)])
             return dirname
 
         def _extract_and_build_tgz(basename):
@@ -287,7 +287,7 @@ class Recipe(PackagingRecipe):
             if basename.endswith('egg'):
                 return path.join('.cache', 'dist', _unzip_egg(basename))
             elif basename.endswith('zip'):
-                execute_assert_success(['unzip', '-f', basename])
+                execute_assert_success(['unzip', '-u', basename])
                 return path.join('.cache', 'dist', basename.rsplit('.', 1)[0])
             elif basename.endswith('gz'):
                 return path.join('.cache', 'dist', _extract_and_build_tgz(basename))
@@ -316,6 +316,11 @@ class Recipe(PackagingRecipe):
             if 'zc.' in filepath:
                 continue
             basename = path.basename(filepath).lower()
+            exclude_list = self.get_recipe_section().get('exclude_eggs', '').split()
+            exclude_matches = [x for x in exclude_list if basename.startswith(x)]
+            if exclude_matches:
+                logger.info("skipping {} because matched by exclude_eggs rule(s) {!r}".format(basename, exclude_matches))
+                continue
             if any([distname.lower() in basename and version.replace('-', '_') in basename.replace('-', '_')
                    for distname, version in distributions.items()]):
                 yield filepath
