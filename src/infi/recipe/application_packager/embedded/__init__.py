@@ -212,6 +212,7 @@ class Recipe(PackagingRecipe):
             xflags += ' -framework SystemConfiguration'
         elif system() == 'Linux':
             xflags += ' -lcrypt'
+        xflags += ' {}'.format(self.get_recipe_section.get('xflags', ''))
         return xflags
 
     def write_variable_file(self):
