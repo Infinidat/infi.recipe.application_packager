@@ -19,6 +19,9 @@ DEFINES = ["HAVE_CURSES=1", "HAVE_CURSES_PANEL=1", "HAVE_LIBBZ2=1", "HAVE_LIBCAB
            "HAVE_LIBZ=1", "HAVE_OPENSSL=1", "HAVE_READLINE=1",
            "WITH_PYTHON_MODULE_NIS=0"]
 PYTHON_SOURCE = "ftp://python.infinidat.com/archives/Python-2.7.6.tgz"
+PYTHON_SCRIPT = path.abspath(path.join(path.curdir, 'bin', 'python'))
+PYTHON_EXECUTABLE = path.abspath(path.join(path.curdir, 'parts', 'python', 'bin', 'python'))
+
 SETUP_PY_MOCK = """import setuptools
 import subprocess
 import distutils.core
@@ -217,15 +220,12 @@ class Recipe(PackagingRecipe):
         from json import loads
         python_files, c_extensions = [], []
         with chdir_context(build_dir):
-            root_dir = path.join(path.pardir, path.pardir, path.pardir)
-            python_script = path.join(root_dir, 'bin', 'python')
-            python_executable = path.join(root_dir, 'parts', 'python', 'bin', 'python')
             setup_py_mock = "_embed_recipe.py"
             setup_py_mock_json = "_embed_recipe.json"
             with open(setup_py_mock, 'w') as fd:
                 fd.write(SETUP_PY_MOCK)
-            cmd = [python_executable, python_script, setup_py_mock] if name != 'nt' else \
-                  [python_script, setup_py_mock]
+            cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, setup_py_mock] if name != 'nt' else \
+                  [PYTHON_SCRIPT, setup_py_mock]
             logger.info(' '.join(cmd))
             execute_assert_success(cmd)
             with open(setup_py_mock_json) as fd:
@@ -249,9 +249,6 @@ class Recipe(PackagingRecipe):
     def build_dependency(self, filepath):
         """:returns: base directory"""
         from os import name
-        root_dir = path.join(path.pardir, path.pardir, path.pardir)
-        python_script = path.join(root_dir, 'bin', 'python')
-        python_executable = path.join(root_dir, 'parts', 'python', 'bin', 'python')
 
         def _unzip_egg(basename):
             dirname = basename.rsplit('-', 1)[0]
@@ -265,8 +262,8 @@ class Recipe(PackagingRecipe):
             dirname = basename.rsplit('.', 2)[0]
             execute_assert_success(['tar', 'zxf', basename])
             with chdir_context(dirname):
-                cmd = [python_executable, python_script, 'setup.py', 'build'] if name != 'nt' else \
-                      [python_script, 'setup.py', 'build']
+                cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, 'setup.py', 'build'] if name != 'nt' else \
+                      [PYTHON_SCRIPT, 'setup.py', 'build']
                 logger.info(' '.join(cmd))
                 execute_assert_success(cmd)
             return dirname
@@ -318,6 +315,9 @@ class Recipe(PackagingRecipe):
             files = self.scan_for_files(build_dir)
             python_files.extend(files['python_files'])
             c_extensions.extend(files['c_extensions'])
+        my_files = self.scan_for_files(path.curdir)
+        python_files.extend(my_files['python_files'])
+        c_extensions.extend(my_files['c_extensions'])
         return python_files, c_extensions
 
     def get_external_modules_files(self):
