@@ -341,7 +341,7 @@ class Executable(Recipe):
         raise NotImplementedError()
 
 
-class StaticLibary(Recipe):
+class StaticLibrary(Recipe):
     def get_compile_flags(self):
         raise NotImplementedError()
 
