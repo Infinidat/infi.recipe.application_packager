@@ -1,0 +1,24 @@
+from setuptools import setup, find_packages, Extension
+
+setup(
+    name = 'hello.world',
+    version = '0.1',
+    install_requires = ['bar'],
+    namespace_packages = ['hello', 'world'],
+    packages = find_packages('src'),
+    package_dir = {'': 'src'},
+    package_data = {'': []},
+    include_package_data = True,
+    zip_safe = False,
+    entry_points = {},
+    py_modules = ['bar'],
+    ext_modules = [
+        Extension(
+            name='goodbye',
+            sources=['goodbye.c'],
+            define_macros=[("THIS", "1")],
+            include_dirs=["include"],
+            depends=["foo"]
+        ),
+    ]
+)

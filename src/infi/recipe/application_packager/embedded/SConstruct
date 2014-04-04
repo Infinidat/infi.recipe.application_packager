@@ -1,0 +1,6 @@
+env = Environment()
+env.MergeFlags({xflags!r})
+env.Program({source!r},
+            LIBPATH={libpath!r},
+            CPPPATH={cppath!r},
+            LIBS={libs!r})
