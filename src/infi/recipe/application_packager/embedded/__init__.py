@@ -217,7 +217,7 @@ class Executable(Recipe):
         def _index(lib):
             items = [name for name in STATIC_LIBS if name in lib] or [None]
             return STATIC_LIBS.index(items[0]) if items and items[0] in STATIC_LIBS else None
-        sorted_static_libs = sorted(static_libs, key=_index)
+        sorted_static_libs = sorted(static_libs, key=_index, reverse=True)
         libs.extend(static_libs)
         config = 'SConstruct'
         build_dir = path.join('build', 'executables', executable)
