@@ -14,6 +14,8 @@ from os import path
 logger = getLogger(__name__)
 MAIN = resource_string(__name__, 'main.c')
 SCONSTRUCT = resource_string(__name__, 'SConstruct')
+STATIC_LIBS = ('panel', 'form', 'menu', 'ncurses', 'sqlite3', 'crypto', 'ssl', 'event', 'ev',
+               'gdbm', 'db', 'gnutls', 'z', 'bz2', 'intl', 'iconv', 'readline')
 
 
 def pystick(args):
@@ -211,7 +213,12 @@ class Executable(Recipe):
         cpppath = [path.abspath(path.join(python_source_path, "Include")), self.embedded_python_build_dir]
         libs = [item for item in glob(path.join(self.embedded_python_build_dir, '*fpython*')) if
                 not item.endswith('.rsp')]
-        libs.extend(get_static_libraries(self.static_libdir))
+        static_libs = get_static_libraries(self.static_libdir)
+        def _index(lib):
+            items = [name for name in STATIC_LIBS if name in lib] or [None]
+            return STATIC_LIBS.index(items[0]) if items and items[0] in STATIC_LIBS else None
+        sorted_static_libs = sorted(static_libs, key=_index)
+        libs.extend(static_libs)
         config = 'SConstruct'
         build_dir = path.join('build', 'executables', executable)
         ensure_directory(path.join(build_dir, executable))
