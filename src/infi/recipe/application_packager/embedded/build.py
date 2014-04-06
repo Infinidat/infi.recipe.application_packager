@@ -24,6 +24,8 @@ def build_setup_py(dirname):
 def _unzip_egg(filepath):
     basename = path.basename(filepath)
     dirname = basename.rsplit('-', 1)[0]
+    if path.exists(dirname):
+        return dirname
     if not path.exists(dirname):
         makedirs(dirname)
     with open(filepath, 'rb') as fd:
@@ -34,11 +36,13 @@ def _unzip_egg(filepath):
 
 def _extract_and_build_tgz(filepath):
     import tarfile
+    basename = path.basename(filepath)
+    dirname = basename.rsplit('.', 2)[0]
+    if path.exists(dirname):
+        return dirname
     archive = tarfile.open(filepath, 'r:gz')
     archive.extractall()
     archive.close()
-    basename = path.basename(filepath)
-    dirname = basename.rsplit('.', 2)[0]
     build_setup_py(dirname)
     return dirname
 
@@ -63,22 +67,24 @@ def build_dependency(filepath):
             raise RuntimeError()
 
 
-def _scan_for_files_with_setup_py(build_dir):
+def scan_for_files_with_setup_py(build_dir, cleanup=False):
     from . import setup
     python_files, c_extensions = [], []
     with chdir_context(build_dir):
         setup_py_mock = "_embed_recipe.py"
         setup_py_mock_json = "_embed_recipe.json"
-        with open(setup_py_mock, 'w') as fd:
-            fd.write(SETUP_PY_MOCK)
-        cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, setup_py_mock] if name != 'nt' else \
-              [PYTHON_SCRIPT, setup_py_mock]
-        logger.info(' '.join(cmd))
-        execute_assert_success(cmd)
+        if not path.exists(setup_py_mock_json):
+            with open(setup_py_mock, 'w') as fd:
+                fd.write(SETUP_PY_MOCK)
+            cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, setup_py_mock] if name != 'nt' else \
+                  [PYTHON_SCRIPT, setup_py_mock]
+            logger.info(' '.join(cmd))
+            execute_assert_success(cmd)
         with open(setup_py_mock_json) as fd:
             files = loads(fd.read())
-        remove(setup_py_mock)
-        remove(setup_py_mock_json)
+        if cleanup:
+            remove(setup_py_mock)
+            remove(setup_py_mock_json)
         return files
 
 
@@ -102,5 +108,5 @@ def scan_for_files(build_dir):
     """:returns: dict of python_files, c_extenstions"""
     logger.info("scanning {}".format(build_dir))
     if path.exists(path.join(build_dir, 'setup.py')):
-        return _scan_for_files_with_setup_py(build_dir)
+        return scan_for_files_with_setup_py(build_dir)
     return _scan_egg_dir(build_dir)

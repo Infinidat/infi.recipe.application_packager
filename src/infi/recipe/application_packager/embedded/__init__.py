@@ -64,6 +64,9 @@ class Recipe(PackagingRecipe):
         run_in_another_process(pystick, args)
 
     def prepare_for_running_pystick(self):
+        if path.exists(self.pystick_variable_filepath):
+            logger.info("pystick file {!r} exists, skipping re-writing it")
+            return
         # before running pystick, we need to do some stuff
         self.copy_static_libraries_from_isolated_python()
         # dependnecies may have C extensions, we need to pass their sources to pystick
@@ -101,9 +104,9 @@ class Recipe(PackagingRecipe):
         return python_files, c_extensions
 
     def build_our_own_python_module(self):
-        from .build import build_setup_py, scan_for_files
+        from .build import build_setup_py, scan_for_files_with_setup_py
         build_setup_py(path.curdir)
-        my_files = scan_for_files(path.curdir)
+        my_files = scan_for_files_with_setup_py(path.curdir)
         return my_files['python_files'], my_files['c_extensions']
 
     def write_pystick_variable_file(self, python_files, c_extensions):
