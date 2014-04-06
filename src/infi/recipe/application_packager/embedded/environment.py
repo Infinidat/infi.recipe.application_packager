@@ -41,8 +41,9 @@ def write_pystick_variable_file(pystick_variable_filepath, python_files, c_exten
 
 def get_xflags(static_libdir, options):
     static_libs = get_names_from_static_libdir(static_libdir)
-    static_libs.remove('ncurses')
-    static_libs.append('ncurses')
+    if 'ncurses' in static_libs:
+        static_libs.remove('ncurses')
+        static_libs.append('ncurses')
     static_libs_formatted = ' '.join(['-l{}'.format(item) for item in static_libs])
     xflags = ' '.join([get_config_var('CFLAGS'),
                        '-L{}'.format(static_libdir), get_config_var('LDFLAGS'),
