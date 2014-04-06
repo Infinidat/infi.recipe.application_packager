@@ -14,9 +14,9 @@ from os import path
 logger = getLogger(__name__)
 MAIN = resource_string(__name__, 'main.c')
 SCONSTRUCT = resource_string(__name__, 'SConstruct')
-STATIC_LIBS = ('panel', 'form', 'menu', 'ncurses', 'sqlite3', 'crypto', 'ssl', 'event', 'ev',
-               'gdbm', 'db', 'gnutls', 'z', 'bz2', 'intl', 'iconv', 'readline')
-
+STATIC_LIBS = ('zmq', 'z', 'ev', 'event', 'ffi', 'gdmb', 'xslt', 'xml2', 'db,' 'sqlite3', 'gettext', ',bz2',
+               'panel', 'form', 'menu',
+               'iconv', 'gnutls', 'readline', 'ncurses')
 
 def pystick(args):
     import sys
@@ -217,8 +217,8 @@ class Executable(Recipe):
         def _index(lib):
             items = [name for name in STATIC_LIBS if name in lib] or [None]
             return STATIC_LIBS.index(items[0]) if items and items[0] in STATIC_LIBS else None
-        sorted_static_libs = sorted(static_libs, key=_index, reverse=True)
-        libs.extend(static_libs)
+        sorted_static_libs = sorted(static_libs, key=_index)
+        libs.extend(sorted_static_libs)
         config = 'SConstruct'
         build_dir = path.join('build', 'executables', executable)
         ensure_directory(path.join(build_dir, executable))
