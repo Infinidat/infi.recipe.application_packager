@@ -46,6 +46,7 @@ def get_xflags(static_libdir, options):
         static_libs.append('ncurses')
     static_libs_formatted = ' '.join(['-l{}'.format(item) for item in static_libs])
     xflags = ' '.join([get_config_var('CFLAGS') or '',
+                       get_config_var('CCSHARED') or '',
                        '-L{}'.format(static_libdir), get_config_var('LDFLAGS') or '',
                        get_config_var("SHLIBS") or '', get_config_var("SYSLIBS") or '',
                        static_libs_formatted])
