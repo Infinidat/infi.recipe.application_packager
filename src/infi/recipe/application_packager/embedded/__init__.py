@@ -82,7 +82,7 @@ class Recipe(PackagingRecipe):
         for src in glob(path.join(self.isolated_python_dirpath, 'lib*', '*.{}'.format(extension))):
             if src.rsplit('.', 1)[0].endswith("_g") or 'python2.7' in src:
                 continue
-            if path.basename(src).startswith('_') in src:
+            if path.basename(src).startswith('_'):
                 continue
             if system() == 'Windows' and 'pyexpat' in src:
                 continue

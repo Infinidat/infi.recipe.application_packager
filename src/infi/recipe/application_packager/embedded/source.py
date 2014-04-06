@@ -1,5 +1,6 @@
 import tarfile
 from os import path
+from glob import glob
 from logging import getLogger
 from zc.buildout.download import Download
 
@@ -29,6 +30,9 @@ def download(buildout, source_url):
 
 
 def extract(filepath, extract_path):
+    if glob(path.join(extract_path, 'Python*')):
+        logger.info("skipping extracting {}".format(filepath))
+        return
     archive = tarfile.open(filepath, 'r:gz')
     logger.info("extracting {}".format(filepath))
     archive.extractall(extract_path)
