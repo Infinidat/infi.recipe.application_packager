@@ -57,6 +57,9 @@ class Recipe(PackagingRecipe):
         return source.get_python_source(self.buildout, self.options)
 
     def build_embedded_python(self, python_source_path):
+        if glob(path.join(self.embedded_python_build_dir, '*fpython*')):
+            logger.debug("embedded python is already built, skipping it")
+            return
         self.prepare_for_running_pystick()
         args = ["PYTHON_SOURCE_PATH={}".format(python_source_path),
                 "BUILD_PATH={}".format(self.embedded_python_build_dir),
@@ -106,7 +109,7 @@ class Recipe(PackagingRecipe):
     def build_our_own_python_module(self):
         from .build import build_setup_py, scan_for_files_with_setup_py
         build_setup_py(path.curdir)
-        my_files = scan_for_files_with_setup_py(path.curdir)
+        my_files = scan_for_files_with_setup_py(path.curdir, True)
         return my_files['python_files'], my_files['c_extensions']
 
     def write_pystick_variable_file(self, python_files, c_extensions):
@@ -165,14 +168,15 @@ class Executable(Recipe):
     def install(self):
         """:returns: a list of installed filepaths"""
         with self.with_most_mortem():
-            self.build_embedded_python(self.prepare_sources())
-            console_scripts = self.build_console_scripts()
+            python_source_path = self.prepare_sources()
+            self.build_embedded_python(python_source_path)
+            console_scripts = self.build_console_scripts(python_source_path)
             return console_scripts
 
-    def build_console_scripts(self):
+    def build_console_scripts(self, python_source_path):
         executables = []
         for executable_name, (module_name, callable_name) in self.get_entry_points_for_production().items():
-            executables.append(self.build_console_script(executable_name, module_name, callable_name))
+            executables.append(self.build_console_script(executable_name, module_name, callable_name, python_source_path))
         return executables
 
     def get_all_entry_points_available_in_production(self):
@@ -201,15 +205,13 @@ class Executable(Recipe):
                     if key in specific_script_names}
         return entry_points_dict
 
-    def build_console_script(self, executable, module_name, callable_name):
-        from .environment import get_xflags, get_names_from_static_libdir
-        extension = dict(Windows='.exe').get(system(), '')
-        xflags = get_xflags(self.static_libdir, self.options)
-        libpath = [path.abspath(self.embedded_python_build_dir), self.static_libdir]
-        cppath = [path.abspath(path.join(self.isolated_python_dirpath, 'include', 'python2.7'))]
+    def build_console_script(self, executable, module_name, callable_name, python_source_path):
+        from .environment import get_xflags, get_static_libraries
         source = '{}.c'.format(executable)
-        libs = get_names_from_static_libdir(self.static_libdir)
-        libs.append('fpython27') # yes, without '.'
+        cpppath = [path.abspath(path.join(python_source_path, "Include")), self.embedded_python_build_dir]
+        libs = [item for item in glob(path.join(self.embedded_python_build_dir, '*fpython*')) if
+                not item.endswith('.rsp')]
+        libs.extend(get_static_libraries(self.static_libdir))
         config = 'SConstruct'
         build_dir = path.join('build', 'executables', executable)
         ensure_directory(path.join(build_dir, executable))
@@ -217,8 +219,9 @@ class Executable(Recipe):
             with open(source, 'w') as fd:
                 fd.write(MAIN.format(executable, module_name, callable_name))
             with open(config, 'w') as fd:
-                fd.write(SCONSTRUCT.format(xflags=xflags, source=source, libpath=libpath, cppath=cppath, libs=libs))
+                fd.write(SCONSTRUCT.format(source=source, cpppath=cpppath, libs=libs))
             run_in_another_process(scons, None)
+        extension = dict(Windows='.exe').get(system(), '')
         src = path.join(build_dir, executable  + extension)
         dst = path.join('dist', executable + extension)
         ensure_directory(dst)
@@ -238,7 +241,8 @@ class StaticLibrary(Recipe):
 
     def copy_libfullpython(self):
         library_name = self.get_python_module_name().split('.')[-1]
-        [src] = glob(path.join('build', 'embedded', '*fpython*'))
+        [src] = [item for item in glob(path.join('build', 'embedded', '*fpython*')) if
+                 not item.endswith('.rsp')]
         old_library_name = path.basename(src).split('.')[0].replace('lib', '')
         dst = path.join('dist', path.basename(src).replace(old_library_name, library_name))
         ensure_directory(dst)

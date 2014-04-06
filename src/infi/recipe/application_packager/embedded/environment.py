@@ -49,14 +49,15 @@ def get_xflags(static_libdir, options):
                        '-L{}'.format(static_libdir), get_config_var('LDFLAGS') or '',
                        get_config_var("SHLIBS") or '', get_config_var("SYSLIBS") or '',
                        static_libs_formatted])
-    system_specific_flags = dict(Linux=' -lcrypt', Darwin=' -framework SystemConfiguration')
+    system_specific_flags = dict(Linux=' -lpthread -lcrypt', Darwin=' -framework SystemConfiguration')
     project_specific_flags = ' {}'.format(options.get('xflags', ''))
     xflags += system_specific_flags.get(system(), '') + project_specific_flags
     return xflags
 
 
 def get_static_libraries(static_libdir):
-    return [item for item in glob(path.join(static_libdir, '*')) if 'python2.7' not in item]
+    return [item for item in glob(path.join(static_libdir, '*')) if
+            'python2.7' not in item and not item.endswith('.rsp')]
 
 
 def get_names_from_static_libdir(static_libdir):

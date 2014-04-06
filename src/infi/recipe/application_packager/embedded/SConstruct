@@ -1,6 +1,12 @@
 env = Environment()
-env.MergeFlags({xflags!r})
-env.Program({source!r},
-            LIBPATH={libpath!r},
-            CPPPATH={cppath!r},
-            LIBS={libs!r})
+
+if env['PLATFORM'] in ('posix', 'linux'):
+    env.Append(LINKFLAGS=['-static-libgcc'])
+if env['PLATFORM'] in ('darwin',):
+    env.Append(LINKFLAGS=['-framework', 'SystemConfiguration', '-framework', 'CoreFoundation'])
+
+libs = [File(item) for item in {libs!r}]
+if env['PLATFORM'] in ('posix', 'linux'):
+    libs.extend(['pthread', 'crypt', 'util', 'dl', 'm'])
+
+env.Program({source!r}, CPPPATH={cpppath!r}, LIBS=libs)
