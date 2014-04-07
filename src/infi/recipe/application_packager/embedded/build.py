@@ -37,6 +37,16 @@ def _unzip_egg(filepath):
     return dirname
 
 
+def _extract_and_build_zip(filepath):
+    basename = path.basename(filepath)
+    dirname = basename.rsplit('.', 1)[0]
+    with open(filepath, 'rb') as fd:
+        archive = ZipFile(fd, 'r')
+        archive.extractall()
+    build_setup_py(dirname)
+    return dirname
+
+
 def _extract_and_build_tgz(filepath):
     import tarfile
     basename = path.basename(filepath)
@@ -60,10 +70,7 @@ def build_dependency(filepath):
         if basename.endswith('egg'):
             return path.join(build_dir, _unzip_egg(filepath))
         elif basename.endswith('zip'):
-            with open(filepath, 'rb') as fd:
-                archive = ZipFile(fd, 'r')
-                archive.extractall()
-            return path.join(build_dir, basename.rsplit('.', 1)[0])
+            return path.join(build_dir, _extract_and_build_zip(filepath))
         elif basename.endswith('gz'):
             return path.join(build_dir, _extract_and_build_tgz(filepath))
         else:
