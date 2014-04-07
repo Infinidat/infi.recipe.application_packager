@@ -1,7 +1,7 @@
 from glob import glob
 from json import loads
 from zipfile import ZipFile
-from os import path, name, makedirs, remove
+from os import path, name, makedirs, remove, environ
 from pkg_resources import resource_string, ensure_directory
 from infi.execute import execute_assert_success
 from infi.recipe.application_packager.utils import chdir as chdir_context
@@ -15,10 +15,13 @@ PYTHON_EXECUTABLE = path.abspath(path.join(path.curdir, 'parts', 'python', 'bin'
 
 def build_setup_py(dirname):
     with chdir_context(dirname):
+        env = environ.copy()
+        env.update(PYTHONPATH=path.abspath(path.curdir))
         cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, 'setup.py', 'build'] if name != 'nt' else \
               [PYTHON_SCRIPT, 'setup.py', 'build']
         logger.info(' '.join(cmd))
-        execute_assert_success(cmd)
+        pid = execute_assert_success(cmd, env=env)
+        logger.debug(pid.get_stdout() + pid.get_stderr())
 
 
 def _unzip_egg(filepath):
@@ -76,10 +79,13 @@ def scan_for_files_with_setup_py(build_dir, cleanup=False):
         if not path.exists(setup_py_mock_json):
             with open(setup_py_mock, 'w') as fd:
                 fd.write(SETUP_PY_MOCK)
+            env = environ.copy()
+            env.update(PYTHONPATH=path.abspath(path.curdir))
             cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, setup_py_mock] if name != 'nt' else \
                   [PYTHON_SCRIPT, setup_py_mock]
             logger.info(' '.join(cmd))
-            execute_assert_success(cmd)
+            pid = execute_assert_success(cmd, env=env)
+            logger.debug(pid.get_stdout() + pid.get_stderr())
         with open(setup_py_mock_json) as fd:
             files = loads(fd.read())
         if cleanup:
