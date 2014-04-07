@@ -14,9 +14,6 @@ from os import path
 logger = getLogger(__name__)
 MAIN = resource_string(__name__, 'main.c')
 SCONSTRUCT = resource_string(__name__, 'SConstruct')
-STATIC_LIBS = ('zmq', 'z', 'ev', 'event', 'ffi', 'gdmb', 'xslt', 'xml2', 'db,' 'sqlite3', 'gettext', ',bz2',
-               'panel', 'form', 'menu',
-               'iconv', 'gnutls', 'readline', 'ncurses')
 
 def pystick(args):
     import sys
@@ -148,6 +145,12 @@ class Recipe(PackagingRecipe):
         distributions = get_distributions_from_dependencies(dependencies)
         return distributions
 
+    def is_this_a_precompiled_egg_on_windows(self, filepath):
+        return system() and filepath.endswith("win-amd64.egg") or filepath.endswith("win32.egg")
+
+    def download_source_instead_of_egg(self, filepath):
+        return filepath # TODO
+
     def iter_archives_for_embedding(self):
         distributions = self.get_dependencies_for_embedding()
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
@@ -163,6 +166,9 @@ class Recipe(PackagingRecipe):
                 continue
             if any([distname.lower() in basename and version.replace('-', '_') in basename.replace('-', '_')
                    for distname, version in distributions.items()]):
+                if self.is_this_a_precompiled_egg_on_windows(filepath):
+                    filepath = download_source_instead_of_egg(filepath)
+                    pass
                 yield path.abspath(filepath)
 
 
@@ -208,17 +214,12 @@ class Executable(Recipe):
         return entry_points_dict
 
     def build_console_script(self, executable, module_name, callable_name, python_source_path):
-        from .environment import get_xflags, get_static_libraries
+        from .environment import get_xflags, get_sorted_static_libraries
         source = '{}.c'.format(executable)
         cpppath = [path.abspath(path.join(python_source_path, "Include")), self.embedded_python_build_dir]
         libs = [item for item in glob(path.join(self.embedded_python_build_dir, '*fpython*')) if
                 not item.endswith('.rsp')]
-        static_libs = get_static_libraries(self.static_libdir)
-        def _index(lib):
-            items = [name for name in STATIC_LIBS if name in lib] or [None]
-            return STATIC_LIBS.index(items[0]) if items and items[0] in STATIC_LIBS else None
-        sorted_static_libs = sorted(static_libs, key=_index)
-        libs.extend(sorted_static_libs)
+        libs.extend(get_sorted_static_libraries(self.static_libdir))
         config = 'SConstruct'
         build_dir = path.join('build', 'executables', executable)
         ensure_directory(path.join(build_dir, executable))

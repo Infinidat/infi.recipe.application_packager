@@ -14,6 +14,8 @@ DEFINES = ["HAVE_CURSES=1", "HAVE_CURSES_PANEL=1", "HAVE_LIBBZ2=1", "HAVE_LIBCAB
            "HAVE_LIBRPCRT4=1", "HAVE_LIBSQLITE3=1", "HAVE_LIBTCL=0", "HAVE_LIBTK=0", "HAVE_LIBWS32_32=1",
            "HAVE_LIBZ=1", "HAVE_OPENSSL=1", "HAVE_READLINE=1",
            "WITH_PYTHON_MODULE_NIS=0"]
+STATIC_LIBS = ['zmq', 'ev', 'event', 'ffi', 'gdmb', 'xslt', 'xml2', 'db,' 'sqlite3', 'gettext', ',bz2',
+               'panel', 'form', 'menu', 'iconv', 'gnutls', 'readline', 'ncurses', 'z']
 
 
 def _write_json_files(base_directory, python_files, c_extensions):
@@ -40,7 +42,7 @@ def write_pystick_variable_file(pystick_variable_filepath, python_files, c_exten
 
 
 def get_xflags(static_libdir, options):
-    static_libs = get_names_from_static_libdir(static_libdir)
+    static_libs = get_names_from_sorted_static_libdir(static_libdir)
     if 'ncurses' in static_libs:
         static_libs.remove('ncurses')
         static_libs.append('ncurses')
@@ -61,5 +63,18 @@ def get_static_libraries(static_libdir):
             'python2.7' not in item and not item.endswith('.rsp')]
 
 
+def get_sorted_static_libraries(static_libdir):
+    static_libs = get_static_libraries(static_libdir)
+    def _index(lib):
+        items = [name for name in STATIC_LIBS if name in lib] or [None]
+        return STATIC_LIBS.index(items[0]) if items and items[0] in STATIC_LIBS else None
+    sorted_static_libs = sorted(static_libs, key=_index)
+    return sorted_static_libs
+
+
 def get_names_from_static_libdir(static_libdir):
     return [path.basename(item.rsplit('.', 1)[0])[3:] for item in get_static_libraries(static_libdir)]
+
+
+def get_names_from_sorted_static_libdir(static_libdir):
+    return [path.basename(item.rsplit('.', 1)[0])[3:] for item in get_sorted_static_libraries(static_libdir)]

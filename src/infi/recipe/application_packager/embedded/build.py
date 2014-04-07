@@ -17,8 +17,8 @@ def build_setup_py(dirname):
     with chdir_context(dirname):
         env = environ.copy()
         env.update(PYTHONPATH=path.abspath(path.curdir))
-        cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, 'setup.py', 'build'] if name != 'nt' else \
-              [PYTHON_SCRIPT, 'setup.py', 'build']
+        cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, 'setup.py', 'build', '--build-temp=.'] if name != 'nt' else \
+              [PYTHON_SCRIPT, 'setup.py', 'build', '--build-temp=.']
         logger.info(' '.join(cmd))
         pid = execute_assert_success(cmd, env=env)
         logger.debug(pid.get_stdout() + pid.get_stderr())
