@@ -85,7 +85,6 @@ def download_distribute(destination_dir):
     with chdir(destination_dir):
         urlretrieve(distribute_url, distribute_filepath)
 
-
 def download_setuptools(destination_dir):
     from urllib import urlretrieve
     distribute_url = _get_package_url("setuptools")
@@ -94,6 +93,13 @@ def download_setuptools(destination_dir):
         urlretrieve(distribute_url, distribute_filepath)
     write_ez_setup_py(destination_dir)
 
+def download_package_source(package_name, destination_dir):
+    from urllib import urlretrieve
+    url = _get_package_url(package_name)
+    filepath = url.split('/')[-1]
+    with chdir(destination_dir):
+        urlretrieve(url, filepath)
+    return filepath
 
 def get_dependencies(name):
     from pkg_resources import get_distribution

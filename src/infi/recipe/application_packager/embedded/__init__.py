@@ -149,7 +149,9 @@ class Recipe(PackagingRecipe):
         return system() and filepath.endswith("win-amd64.egg") or filepath.endswith("win32.egg")
 
     def download_source_instead_of_egg(self, filepath):
-        return filepath # TODO
+        # pyreadline-2.0-py2.7-win-amd64.egg
+        package_name, release_version = path.basename(filepath).split('-py').split('-')
+        return utils.download_package_source(package_name, self.get_download_cache_dist())
 
     def iter_archives_for_embedding(self):
         distributions = self.get_dependencies_for_embedding()

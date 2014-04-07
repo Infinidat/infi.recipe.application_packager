@@ -14,8 +14,13 @@ DEFINES = ["HAVE_CURSES=1", "HAVE_CURSES_PANEL=1", "HAVE_LIBBZ2=1", "HAVE_LIBCAB
            "HAVE_LIBRPCRT4=1", "HAVE_LIBSQLITE3=1", "HAVE_LIBTCL=0", "HAVE_LIBTK=0", "HAVE_LIBWS32_32=1",
            "HAVE_LIBZ=1", "HAVE_OPENSSL=1", "HAVE_READLINE=1",
            "WITH_PYTHON_MODULE_NIS=0"]
-STATIC_LIBS = ['zmq', 'ev', 'event', 'ffi', 'gdmb', 'xslt', 'xml2', 'db,' 'sqlite3', 'gettext', ',bz2',
-               'panel', 'form', 'menu', 'iconv', 'gnutls', 'readline', 'ncurses', 'z']
+ISOLATED_PYTHON_LIBS = ['z', 'ncurses', 'readline', 'ssl', 'libgpg-error', 'gcrypt', 'tasn1', 'gmp', 'nettle',
+                        'gettext', 'iconv', 'gnutls', 'bz2', 'sqlite3', 'db', 'xml2', 'xslt', 'ffi', 'gdbm', 'sasl',
+                        'event', 'ev', 'zmq', 'ldap']
+# osx parts = zlib ncurses readline openssl openssh libgpg-error libgcrypt libtasn1 gmp nettle gettext          libgnutls bzip2 sqlite3 db libxml2 libxslt libffi gdbm cyrus-sasl libevent libev zeromq openldap graphviz python
+# std parts = zlib ncurses readline openssl openssh libgpg-error libgcrypt                     gettext libiconv libgnutls bzip2 sqlite3 db libxml2 libxslt libffi gdbm cyrus-sasl libevent libev zeromq openldap graphviz python
+
+STATIC_LIBS = reversed(ISOLATED_PYTHON_LIBS)
 
 
 def _write_json_files(base_directory, python_files, c_extensions):
@@ -43,16 +48,13 @@ def write_pystick_variable_file(pystick_variable_filepath, python_files, c_exten
 
 def get_xflags(static_libdir, options):
     static_libs = get_names_from_sorted_static_libdir(static_libdir)
-    if 'ncurses' in static_libs:
-        static_libs.remove('ncurses')
-        static_libs.append('ncurses')
     static_libs_formatted = ' '.join(['-l{}'.format(item) for item in static_libs])
     xflags = ' '.join([get_config_var('CFLAGS') or '',
                        get_config_var('CCSHARED') or '',
                        '-L{}'.format(static_libdir), get_config_var('LDFLAGS') or '',
                        get_config_var("SHLIBS") or '', get_config_var("SYSLIBS") or '',
                        static_libs_formatted])
-    system_specific_flags = dict(Linux=' -lpthread -lcrypt', Darwin=' -framework SystemConfiguration')
+    system_specific_flags = dict(Linux=' -lpthread -lcrypt', Darwin=' -liconv -framework SystemConfiguration')
     project_specific_flags = ' {}'.format(options.get('xflags', ''))
     xflags += system_specific_flags.get(system(), '') + project_specific_flags
     return xflags

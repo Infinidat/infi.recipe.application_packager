@@ -3,7 +3,7 @@ env = Environment()
 if env['PLATFORM'] in ('posix', 'linux'):
     env.Append(LINKFLAGS=['-static-libgcc'])
 if env['PLATFORM'] in ('darwin',):
-    env.Append(LINKFLAGS=['-framework', 'SystemConfiguration', '-framework', 'CoreFoundation'])
+    env.Append(LINKFLAGS=['-liconv', '-framework', 'SystemConfiguration', '-framework', 'CoreFoundation'])
 
 libs = [File(item) for item in {libs!r}]
 if env['PLATFORM'] in ('posix', 'linux'):
