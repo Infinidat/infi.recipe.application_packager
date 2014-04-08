@@ -62,7 +62,7 @@ class Recipe(PackagingRecipe):
         self.prepare_for_running_pystick()
         args = ["PYTHON_SOURCE_PATH={}".format(python_source_path),
                 "BUILD_PATH={}".format(self.embedded_python_build_dir),
-                "--vars={}".format(self.pystick_variable_filepath)]
+                "--defaultenv={}".format(self.pystick_variable_filepath)]
         run_in_another_process(pystick, args)
 
     def prepare_for_running_pystick(self):
@@ -112,15 +112,16 @@ class Recipe(PackagingRecipe):
         return my_files['python_files'], my_files['c_extensions']
 
     def write_pystick_variable_file(self, python_files, c_extensions):
-        from .environment import write_pystick_variable_file, get_xflags, get_static_libraries
-        xflags = get_xflags(self.static_libdir, self.options)
+        from .environment import write_pystick_variable_file, get_static_libraries, get_construction_variables
+        construction_varilables = get_construction_variables(self.static_libdir, self.options)
         precompiled_static_libs = get_static_libraries(self.static_libdir)
-        write_pystick_variable_file(self.pystick_variable_filepath, python_files, c_extensions,
-                                    xflags, precompiled_static_libs)
+        write_pystick_variable_file(self.pystick_variable_filepath,
+                                    python_files, c_extensions,
+                                    construction_varilables, precompiled_static_libs)
 
     @property
     def pystick_variable_filepath(self):
-        return path.join(self.embedded_python_build_dir, 'variables.py')
+        return path.join(self.embedded_python_build_dir, 'variables.scons')
 
     @property
     def buildout_directory(self):
@@ -216,7 +217,7 @@ class Executable(Recipe):
         return entry_points_dict
 
     def build_console_script(self, executable, module_name, callable_name, python_source_path):
-        from .environment import get_xflags, get_sorted_static_libraries
+        from .environment import get_sorted_static_libraries
         source = '{}.c'.format(executable)
         cpppath = [path.abspath(path.join(python_source_path, "Include")), self.embedded_python_build_dir]
         libs = [item for item in glob(path.join(self.embedded_python_build_dir, '*fpython*')) if

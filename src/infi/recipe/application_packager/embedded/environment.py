@@ -9,11 +9,11 @@ from glob import glob
 from os import path
 
 
-DEFINES = ["HAVE_CURSES=1", "HAVE_CURSES_PANEL=1", "HAVE_LIBBZ2=1", "HAVE_LIBCABINET=1", "HAVE_LIBCRYPT=1",
-           "HAVE_LIBDB=1", "HAVE_LIBGDBM=1", "HAVE_LIBM=1", "HAVE_LIBNSL=1",
-           "HAVE_LIBRPCRT4=1", "HAVE_LIBSQLITE3=1", "HAVE_LIBTCL=0", "HAVE_LIBTK=0", "HAVE_LIBWS32_32=1",
-           "HAVE_LIBZ=1", "HAVE_OPENSSL=1", "HAVE_READLINE=1",
-           "WITH_PYTHON_MODULE_NIS=0"]
+DEFINES = dict(HAVE_CURSES=True, HAVE_CURSES_PANEL=True, HAVE_LIBBZ2=True, HAVE_LIBCABINET=True, HAVE_LIBCRYPT=True,
+               HAVE_LIBDB=True, HAVE_LIBGDBM=True, HAVE_LIBM=True, HAVE_LIBNSL=True,
+               HAVE_LIBRPCRT4=True, HAVE_LIBSQLITE3=True, HAVE_LIBTCL=False, HAVE_LIBTK=False, HAVE_LIBWS32_32=True,
+               HAVE_LIBZ=True, HAVE_OPENSSL=True, HAVE_READLINE=True,
+               WITH_PYTHON_MODULE_NIS=False)
 ISOLATED_PYTHON_LIBS = ['z', 'ncurses', 'readline', 'ssl', 'libgpg-error', 'gcrypt', 'tasn1', 'gmp', 'nettle',
                         'gettext', 'iconv', 'gnutls', 'bz2', 'sqlite3', 'db', 'xml2', 'xslt', 'ffi', 'gdbm', 'sasl',
                         'event', 'ev', 'zmq', 'ldap']
@@ -33,31 +33,109 @@ def _write_json_files(base_directory, python_files, c_extensions):
     return dict(EXTERNAL_PY_MODULES_FILE=python_modules_file, EXTERNAL_C_MODULES_FILE=c_modules_file)
 
 
-def write_pystick_variable_file(pystick_variable_filepath, python_files, c_extensions, xflags, precompiled_static_libs):
+def write_pystick_variable_file(pystick_variable_filepath, python_files, c_extensions, construction_variables, precompiled_static_libs):
+    from pprint import pformat
     ensure_directory(pystick_variable_filepath)
     json_reference_dict = _write_json_files(path.dirname(pystick_variable_filepath), python_files, c_extensions)
+    variables = dict(construction_variables)
+    variables.update(json_reference_dict)
     with open(pystick_variable_filepath, 'w') as fd:
-        fd.write("STATIC_PYTHON_MODULES=1\n")
-        fd.write("PRECOMPILED_STATIC_LIBS={!r}\n".format(precompiled_static_libs))
-        fd.write("XFLAGS={!r}\n".format(xflags))
-        for key, value in json_reference_dict.items():
-            fd.write("{}={!r}\n".format(key, value))
-        for item in DEFINES:
-            fd.write("{}\n".format(item))
+        fd.write("env = DefaultEnvironment(\n**{}\n)\n".format(pformat(variables, indent=4)))
 
 
-def get_xflags(static_libdir, options):
+def get_construction_variables__windows(static_libdir, options):
+    # 32bit
+    # APPVER = 5.02
+    # CPU = i386
+    # TARGETOS = WINNT
+    # FrameworkVersion = v2.0.50727
+    # OS = Windows_NT
+    # RegKeyPath = HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\SxS\VC7
+    # VSRegKeyPath = HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\SxS\VS7
+    # SystemDrive = C:
+    # WinDir = ${:SystemDrive}\WINDOWS
+    # ProgramFiles = ${:SystemDrive}\Program Files
+    # ORIGINALPATH = ${:WinDir}\system32;${:WinDir};${:WinDir}\System32\Wbem;${:ProgramFiles}\Git\cmd;${:ProgramFiles}\Git\bin;C:\Python27
+
+    # FrameworkDir = ${:WinDir}\Microsoft.NET\Framework
+    # FxTools = ${:FrameworkDir}\v3.5;${:FrameworkDir}\v2.0.50727
+    # WindowsSdkDir = ${:ProgramFiles}\Microsoft SDKs\Windows\v7.0
+    # VSINSTALLDIR = ${:ProgramFiles}\Microsoft Visual Studio 9.0
+    # VCRoot = ${:VSINSTALLDIR}\VC
+    # VCINSTALLDIR = ${:VCRoot}
+    # VC90CRT = ${:VCRoot}\redist\x86\Microsoft.VC90.CRT
+    # INCLUDE = ${:VCRoot}\Include;${:WindowsSdkDir}\Include;${:WindowsSdkDir}\Include\gl;${:VCRoot}\ATLMFC\INCLUDE;
+    # MSSdk = ${:WindowsSdkDir}
+    # NODEBUG = 1
+    # SdkSetupDir = ${:WindowsSdkDir}\Setup
+    # SdkTools = ${:WindowsSdkDir}\Bin
+    # DevEnvDir = ${:VSINSTALLDIR}\Common7\IDE
+    # INCLUDE = ${:VCRoot}\ATLMFC\INCLUDE;${:VCRoot}\INCLUDE;${:WindowsSdkDir}\include;${:PREFIX}\include
+    # ATLMFC_LIB = ${:VCRoot}\ATLMFC\LIB
+    # VSLIB = ${:VCRoot}\LIB
+    # SDKLIB = ${:WindowsSdkDir}\lib
+    # SDKBIN = ${:WindowsSdkDir}\bin
+    # LIB = ${:ATLMFC_LIB};${:VSLIB};${:SDKLIB};${:PREFIX}\lib
+    # LIBPATH = ${:FrameworkDir};${:FrameworkDir}\v2.0.50727;${:ATLMFC_LIB};${:VSLIB}
+    # Recipe = hexagonit.recipe.cmmi
+    # VSBIN = ${:VCRoot}\BIN
+    # PosixHomeDir=${:SystemDrive}\Cygwin\home\Administrator
+    # GitDir = ${:PosixHomeDir}\git
+    # GitBinDir = ${:GitDir}\bin
+    # PythonDir = ${:PosixHomeDir}\python\bin
+    # PythonBinDir = ${:PythonDir}\bin
+    # PATH = ${:DevEnvDir};${:VSBIN};${:VSINSTALLDIR}\Common7\Tools;${:VSINSTALLDIR}\Common7\Tools\bin;${:FrameworkDir};${:FrameworkDir}\Microsoft .NET Framework 3.5 (Pre-Release Version);${:FrameworkDir}\v2.0.50727;${:VCRoot}\VCPackages;${:SDKBIN};${:WinDir}\system32;${:WinDir};${:WinDir}\System32\Wbem;${:GitDir}\cmd;${:GitBinDir};${:PythonBinDir}
+    # PREFIX = ${options:prefix}
+    # IIPREFIX = ${options:prefix}
+    # PerlExe = ${:SystemDrive}\Perl\bin\perl.exe
+
+    # 64bit
+    # FrameworkDir = ${:WinDir}\Microsoft.NET\Framework64
+    # VSINSTALLDIR = ${:ProgramFiles64}\Microsoft Visual Studio 9.0
+    # ProgramFiles64 = ${:SystemDrive}\Program Files (x86)
+    # VSBIN = ${:VCRoot}\BIN\amd64
+    # ATLMFC_LIB = ${:VCRoot}\ATLMFC\LIB\amd64
+    # VSLIB = ${:VCRoot}\LIB\amd64
+    # VC90CRT = ${:VCRoot}\redist\amd64\Microsoft.VC90.CRT
+    # SDKLIB = ${:WindowsSdkDir}\lib\x64
+    # SDKLIB32 = ${:WindowsSdkDir}\lib
+    # SDKBIN = ${:WindowsSdkDir}\bin\x64
+    # PerlExe = ${:SystemDrive}\Perl64\bin\perl.exe
+    pass
+
+
+def get_construction_variables__linux(static_libdir, static_libs_formatted, project_specific_flags):
+    from sysconfig import get_config_vars
+    from .scons_construction_variables import SCONS_VARIABLE_NAMES
+    variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
+    variables.pop("LIBS", None)
+    variables.update(DEFINES)
+    variables.update(STATIC_PYTHON_MODULES=1)
+    variables.update(
+        LINKFLAGS=' '.join(['-L'+static_libdir, static_libs_formatted, '-lpthread -lcrypt',
+                           get_config_var('LIBS') or '']),
+    )
+    return variables
+
+
+def get_construction_variables__osx(static_libdir, static_libs_formatted, project_specific_flags):
+    osx_specific_link_flags = '-liconv -framework SystemConfiguration'
+    variables = get_construction_variables__linux(static_libdir, static_libs_formatted, project_specific_flags)
+    variables.update(LINKFLAGS=variables['LINKFLAGS'].replace('-lpthread -lcrypt', osx_specific_link_flags))
+    return variables
+
+
+def get_construction_variables(static_libdir, options):
     static_libs = get_names_from_sorted_static_libdir(static_libdir)
     static_libs_formatted = ' '.join(['-l{}'.format(item) for item in static_libs])
-    xflags = ' '.join([get_config_var('CFLAGS') or '',
-                       get_config_var('CCSHARED') or '',
-                       '-L{}'.format(static_libdir), get_config_var('LDFLAGS') or '',
-                       get_config_var("SHLIBS") or '', get_config_var("SYSLIBS") or '',
-                       static_libs_formatted])
-    system_specific_flags = dict(Linux=' -lpthread -lcrypt', Darwin=' -liconv -framework SystemConfiguration')
     project_specific_flags = ' {}'.format(options.get('xflags', ''))
-    xflags += system_specific_flags.get(system(), '') + project_specific_flags
-    return xflags
+
+    # if system() == "Windows":
+        # return get_construction_variables__windows()
+    if system() == "Linux":
+        return get_construction_variables__linux(static_libdir, static_libs_formatted, project_specific_flags)
+    if system() == "Darwin":
+        return get_construction_variables__osx(static_libdir, static_libs_formatted, project_specific_flags)
 
 
 def get_static_libraries(static_libdir):

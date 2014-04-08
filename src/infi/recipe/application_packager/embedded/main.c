@@ -4,7 +4,7 @@ int
 main(int argc, char **argv)
 {{
     int sts;
-
+    Py_FrozenFlag = 1;  // disable warnings from Python's getpath.c
     _PyRandom_Init();
     PySys_ResetWarnOptions();
     _PyOS_ResetGetOpt();
