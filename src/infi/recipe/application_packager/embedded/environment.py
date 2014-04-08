@@ -113,7 +113,9 @@ def get_construction_variables__linux(static_libdir, static_libs_formatted, proj
     variables.update(STATIC_PYTHON_MODULES=1)
     variables.update(
         LINKFLAGS=' '.join(['-L'+static_libdir, static_libs_formatted, '-lpthread -lcrypt',
-                           get_config_var('LIBS') or '']),
+                           get_config_var('LIBS') or '',  # provides lphtread, ld, lutil
+                           get_config_var('SYSLIBS') or '',  # provides lm
+                           ]),
     )
     return variables
 

@@ -4,31 +4,11 @@ from glob import glob
 from os import path, makedirs
 
 
-EXPECTED_PYSTICK_ENVIRONMENT_FILE_CONTENTS = """STATIC_PYTHON_MODULES=1
-PRECOMPILED_STATIC_LIBS=[]
-XFLAGS='xflags'
-EXTERNAL_PY_MODULES_FILE='./python_files.json'
-EXTERNAL_C_MODULES_FILE='./c_modules.json'
-HAVE_CURSES=1
-HAVE_CURSES_PANEL=1
-HAVE_LIBBZ2=1
-HAVE_LIBCABINET=1
-HAVE_LIBCRYPT=1
-HAVE_LIBDB=1
-HAVE_LIBGDBM=1
-HAVE_LIBM=1
-HAVE_LIBNSL=1
-HAVE_LIBRPCRT4=1
-HAVE_LIBSQLITE3=1
-HAVE_LIBTCL=0
-HAVE_LIBTK=0
-HAVE_LIBWS32_32=1
-HAVE_LIBZ=1
-HAVE_OPENSSL=1
-HAVE_READLINE=1
-WITH_PYTHON_MODULE_NIS=0
+EXPECTED_PYSTICK_ENVIRONMENT_FILE_CONTENTS = """env = DefaultEnvironment(
+**{   'EXTERNAL_C_MODULES_FILE': './c_modules.json',
+    'EXTERNAL_PY_MODULES_FILE': './python_files.json'}
+)
 """
-
 
 from . import build
 
@@ -77,20 +57,11 @@ class UnitTestCase(unittest.TestCase):
         self.assertEquals(actual, [path.join('foo')])
         glob.assert_called_with(path.join('a', '*'))
 
-    def test_get_xflags(self):
-        from . import environment
-        with patch.object(environment, 'get_names_from_static_libdir') as get_names_from_static_libdir:
-            get_names_from_static_libdir.return_value = ['ncurses', 'foo', 'bar']
-            with patch.object(environment, 'system') as system:
-                system.return_value = 'NonExistingOS'
-                actual = environment.get_xflags('a', dict(xflags='foo'))
-        self.assertNotEquals(actual, '')
-
     def test_write_pystick_variable_file(self):
         from . import environment
         from ..utils import temporary_directory_context
         with temporary_directory_context():
-            environment.write_pystick_variable_file(path.join(path.curdir, 'pystick_variable_filepath'), [], [], 'xflags', [])
+            environment.write_pystick_variable_file(path.join(path.curdir, 'pystick_variable_filepath'), [], [], {}, [])
             with open('pystick_variable_filepath') as fd:
                 actual = fd.read()
         self.assertEquals(actual, EXPECTED_PYSTICK_ENVIRONMENT_FILE_CONTENTS)
@@ -118,12 +89,10 @@ class MockedRecipeTestCase(unittest.TestCase):
         with temporary_directory_context():
             with patch.object(embedded.Executable, "prepare_sources"):
                 with patch.object(embedded.Executable, "build_our_own_python_module") as build_our_own_python_module:
-                    with patch.object(environment, "get_xflags") as get_xflags:
-                        with patch.object(embedded, "run_in_another_process"):
-                            get_xflags.return_value = ''
-                            build_our_own_python_module.return_value = [], []
-                            recipe = embedded.Executable(buildout, 'name', options)
-                            recipe.install()
+                    with patch.object(embedded, "run_in_another_process"):
+                        build_our_own_python_module.return_value = [], []
+                        recipe = embedded.Executable(buildout, 'name', options)
+                        recipe.install()
 
     def test_static_library(self):
         from infi.recipe.application_packager import embedded
@@ -137,13 +106,11 @@ class MockedRecipeTestCase(unittest.TestCase):
         with temporary_directory_context():
             with patch.object(embedded.StaticLibrary, "prepare_sources"):
                 with patch.object(embedded.StaticLibrary, "build_our_own_python_module") as build_our_own_python_module:
-                    with patch.object(environment, "get_xflags") as get_xflags:
-                        with patch.object(embedded, "run_in_another_process"):
-                            with patch.object(embedded.StaticLibrary, "copy_libfullpython"):
-                                get_xflags.return_value = ''
-                                build_our_own_python_module.return_value = [], []
-                                recipe = embedded.StaticLibrary(buildout, 'name', options)
-                                recipe.install()
+                    with patch.object(embedded, "run_in_another_process"):
+                        with patch.object(embedded.StaticLibrary, "copy_libfullpython"):
+                            build_our_own_python_module.return_value = [], []
+                            recipe = embedded.StaticLibrary(buildout, 'name', options)
+                            recipe.install()
 
 
 def prepare_package_mock():
