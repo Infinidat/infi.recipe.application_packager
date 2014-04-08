@@ -1,6 +1,7 @@
 # TODO pystick expects some files, describe here what is expects for reference
 
 
+from .scons_construction_variables import SCONS_VARIABLE_NAMES
 from sysconfig import get_config_var, get_config_vars
 from pkg_resources import ensure_directory
 from platform import system
@@ -13,7 +14,7 @@ DEFINES = dict(HAVE_CURSES=True, HAVE_CURSES_PANEL=True, HAVE_LIBBZ2=True, HAVE_
                HAVE_LIBDB=True, HAVE_LIBGDBM=True, HAVE_LIBM=True, HAVE_LIBNSL=True,
                HAVE_LIBRPCRT4=True, HAVE_LIBSQLITE3=True, HAVE_LIBTCL=False, HAVE_LIBTK=False, HAVE_LIBWS32_32=True,
                HAVE_LIBZ=True, HAVE_OPENSSL=True, HAVE_READLINE=True,
-               WITH_PYTHON_MODULE_NIS=False)
+               WITH_PYTHON_MODULE_NIS=False, STATIC_PYTHON_MODULES=1)
 ISOLATED_PYTHON_LIBS = ['z', 'ncurses', 'readline', 'ssl', 'libgpg-error', 'gcrypt', 'tasn1', 'gmp', 'nettle',
                         'gettext', 'iconv', 'gnutls', 'bz2', 'sqlite3', 'db', 'xml2', 'xslt', 'ffi', 'gdbm', 'sasl',
                         'event', 'ev', 'zmq', 'ldap']
@@ -105,25 +106,30 @@ def get_construction_variables__windows(static_libdir, options):
 
 
 def get_construction_variables__linux(static_libdir, static_libs_formatted, project_specific_flags):
-    from sysconfig import get_config_vars
-    from .scons_construction_variables import SCONS_VARIABLE_NAMES
     variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
     variables.pop("LIBS", None)
     variables.update(DEFINES)
-    variables.update(STATIC_PYTHON_MODULES=1)
     variables.update(
         LINKFLAGS=' '.join(['-L'+static_libdir, static_libs_formatted, '-lpthread -lcrypt',
-                           get_config_var('LIBS') or '',  # provides lphtread, ld, lutil
-                           get_config_var('SYSLIBS') or '',  # provides lm
+                            get_config_var('LIBS') or '',  # provides -lphtread, -ld, -lutil
+                            get_config_var('SYSLIBS') or '',  # provides -lm
                            ]),
+        CC=' '.join([variables['CC'],
+                     get_config_var('CCSHARED') # provides -fPIC
+                    ]),
     )
     return variables
 
 
 def get_construction_variables__osx(static_libdir, static_libs_formatted, project_specific_flags):
-    osx_specific_link_flags = '-liconv -framework SystemConfiguration'
-    variables = get_construction_variables__linux(static_libdir, static_libs_formatted, project_specific_flags)
-    variables.update(LINKFLAGS=variables['LINKFLAGS'].replace('-lpthread -lcrypt', osx_specific_link_flags))
+    variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
+    variables.pop("LIBS", None)
+    variables.update(DEFINES)
+    variables.update(
+        LINKFLAGS=' '.join(['-L'+static_libdir, static_libs_formatted, '-liconv -framework SystemConfiguration',
+                            get_config_var('LIBS') or '',  # provides -ld -framework CoreFoundation
+                           ]),
+    )
     return variables
 
 
