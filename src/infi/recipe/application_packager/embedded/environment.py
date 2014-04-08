@@ -35,7 +35,7 @@ ISOLATED_PYTHON_LIBS = ['z',
 # osx parts = zlib ncurses readline openssl openssh libgpg-error libgcrypt libtasn1 gmp nettle gettext          libgnutls bzip2 sqlite3 db libxml2 libxslt libffi gdbm cyrus-sasl libevent libev zeromq openldap graphviz python
 # std parts = zlib ncurses readline openssl openssh libgpg-error libgcrypt                     gettext libiconv libgnutls bzip2 sqlite3 db libxml2 libxslt libffi gdbm cyrus-sasl libevent libev zeromq openldap graphviz python
 
-STATIC_LIBS = reversed(ISOLATED_PYTHON_LIBS)
+STATIC_LIBS = list(reversed(ISOLATED_PYTHON_LIBS))
 
 
 def _write_json_files(base_directory, python_files, c_extensions):

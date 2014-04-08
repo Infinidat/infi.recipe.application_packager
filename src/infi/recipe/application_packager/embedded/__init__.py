@@ -4,7 +4,6 @@ from infi.recipe.application_packager.utils import chdir as chdir_context
 from infi.recipe.application_packager.base import PackagingRecipe
 from pkg_resources import resource_string, ensure_directory
 from infi.execute import execute_assert_success
-from infi.pyutils.lazy import cached_method
 from logging import getLogger
 from platform import system
 from shutil import copy
