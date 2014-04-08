@@ -547,4 +547,3 @@ SCONS_VARIABLE_NAMES = [
    "ZIPFLAGS", # General options passed to the zip utility.
    "ZIPROOT", # An optional zip root directory (default empty). The filenames stored in the zip file will be relative to this directory, if given. Otherwise the filenames are relative to the current directory of the command. For instance:
 ]
-

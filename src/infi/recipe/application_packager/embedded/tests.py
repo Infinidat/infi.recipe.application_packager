@@ -49,19 +49,11 @@ class UnitTestCase(unittest.TestCase):
         self.assertEquals(actual, [path.join('a', 'libfoo.a')])
         glob.assert_called_with(path.join('a', '*'))
 
-    def test_get_names_from_static_libdir(self):
-        from . import environment
-        with patch.object(environment, 'glob') as glob:
-            glob.return_value = [path.join('a', 'libfoo.a'), path.join('a', 'libpython2.7.a')]
-            actual = environment.get_names_from_static_libdir('a')
-        self.assertEquals(actual, [path.join('foo')])
-        glob.assert_called_with(path.join('a', '*'))
-
     def test_write_pystick_variable_file(self):
         from . import environment
         from ..utils import temporary_directory_context
         with temporary_directory_context():
-            environment.write_pystick_variable_file(path.join(path.curdir, 'pystick_variable_filepath'), [], [], {}, [])
+            environment.write_pystick_variable_file(path.join(path.curdir, 'pystick_variable_filepath'), [], [], {})
             with open('pystick_variable_filepath') as fd:
                 actual = fd.read()
         self.assertEquals(actual, EXPECTED_PYSTICK_ENVIRONMENT_FILE_CONTENTS)

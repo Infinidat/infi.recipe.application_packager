@@ -114,10 +114,9 @@ class Recipe(PackagingRecipe):
     def write_pystick_variable_file(self, python_files, c_extensions):
         from .environment import write_pystick_variable_file, get_static_libraries, get_construction_variables
         construction_varilables = get_construction_variables(self.static_libdir, self.options)
-        precompiled_static_libs = get_static_libraries(self.static_libdir)
         write_pystick_variable_file(self.pystick_variable_filepath,
                                     python_files, c_extensions,
-                                    construction_varilables, precompiled_static_libs)
+                                    construction_varilables)
 
     @property
     def pystick_variable_filepath(self):
@@ -217,26 +216,30 @@ class Executable(Recipe):
         return entry_points_dict
 
     def build_console_script(self, executable, module_name, callable_name, python_source_path):
-        from .environment import get_sorted_static_libraries
+        from .environment import write_pystick_variable_file, get_sorted_static_libraries, get_construction_variables
+        from pprint import pformat
+        construction_varilables = get_construction_variables(self.static_libdir, self.options)
         source = '{}.c'.format(executable)
-        cpppath = [path.abspath(path.join(python_source_path, "Include")), self.embedded_python_build_dir]
-        libs = [item for item in glob(path.join(self.embedded_python_build_dir, '*fpython*')) if
-                not item.endswith('.rsp')]
-        libs.extend(get_sorted_static_libraries(self.static_libdir))
-        config = 'SConstruct'
+        construction_varilables['LIBPATH'].insert(0, self.embedded_python_build_dir)
+        construction_varilables['LIBS'].insert(0, 'fpython27')
+        construction_varilables['CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
+        construction_varilables['CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
+
         build_dir = path.join('build', 'executables', executable)
         ensure_directory(path.join(build_dir, executable))
         with chdir_context(build_dir):
             with open(source, 'w') as fd:
                 fd.write(MAIN.format(executable, module_name, callable_name))
-            with open(config, 'w') as fd:
-                fd.write(SCONSTRUCT.format(source=source, cpppath=cpppath, libs=libs))
+            with open('SConstruct', 'w') as fd:
+                fd.write(SCONSTRUCT.format(source=source, variables=pformat(construction_varilables, indent=4)))
             run_in_another_process(scons, None)
+
         extension = dict(Windows='.exe').get(system(), '')
         src = path.join(build_dir, executable  + extension)
         dst = path.join('dist', executable + extension)
         ensure_directory(dst)
         copy(src, dst)
+
         return dst
 
     def update(self):

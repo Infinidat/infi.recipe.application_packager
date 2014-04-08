@@ -38,16 +38,22 @@ def _setup(name, package_dir={}, packages={}, ext_modules=[], py_modules=[], **k
                    CPPPATH=[os.path.abspath(item) for item in ext_module.include_dirs],
                    LINKFLAGS=ext_module.extra_link_args)
         absolute_sources = [os.path.abspath(source) for source in ext_module.sources]
+        absoloute_dependencies = [os.path.abspath(dependency) for dependency in ext_module.depends]
+        absolute_roots = list(set([os.path.abspath(os.path.dirname(source)) for source in ext_module.sources]))
         fixed_sources = [item.replace('.pyx', '.cpp') if os.path.exists(item.replace('.pyx', '.cpp')) else item
                          for item in absolute_sources]
+        absoloute_dependencies_to_compile = [dependency for dependency in absoloute_dependencies if
+                                             dependency.endswith('.c') and not dependency in fixed_sources and
+                                             any(root in dependency for root in absolute_roots)]
         c_extensions.append(dict(name=ext_module.name,
-                                 sources=fixed_sources,
-                                 roots=list(set([os.path.abspath(os.path.dirname(source)) for source in ext_module.sources])),
+                                 sources=list(fixed_sources),
+                                 # sources=absoloute_dependencies_to_compile + list(fixed_sources),
+                                 roots=absolute_roots,
                                  depends=ext_module.depends, env=env))
     for py_module in py_modules:
         python_files.append(dict(package=False, source=os.path.abspath(py_module + '.py'), name=py_module))
     with open("_embed_recipe.json", 'w') as fd:
-        fd.write(json.dumps(dict(python_files=python_files, c_extensions=c_extensions)))
+        fd.write(json.dumps(dict(python_files=python_files, c_extensions=c_extensions), indent=4))
 
 
 def main():
