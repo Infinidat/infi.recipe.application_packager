@@ -71,10 +71,15 @@ def _apply_project_specific_on_top_of_platform_defaults(variables, project_speci
             variables[key] += variables[key] + tuple(added_value, )
         else:
             variables[key] = added_value
-        return variables
+    return variables
 
 
-def get_construction_variables__windows(static_libdir, options):
+def is_64bit():
+    from sys import maxsize
+    return maxsize > 2 ** 32
+
+
+def get_construction_variables__windows(static_libdir, static_libs):
     # 32bit
     # APPVER = 5.02
     # CPU = i386
@@ -132,7 +137,17 @@ def get_construction_variables__windows(static_libdir, options):
     # SDKLIB32 = ${:WindowsSdkDir}\lib
     # SDKBIN = ${:WindowsSdkDir}\bin\x64
     # PerlExe = ${:SystemDrive}\Perl64\bin\perl.exe
-    return dict()
+    variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
+    variables.update(DEFINES)
+    variables.update(
+        LIBPATH=[static_libdir],
+        LIBS=static_libs,
+    )
+
+    X64 = dict(AS=r'"C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\amd64\ml64.exe"')
+    X86 = dict()
+    variables.update(**(X64 if is_64bit() else X86))
+    return variables
 
 
 def get_construction_variables__linux(static_libdir, static_libs):
@@ -199,3 +214,4 @@ def get_sorted_static_libraries(static_libdir):
         if path.exists(filepath):
             files.append(filepath)
     return files
+
