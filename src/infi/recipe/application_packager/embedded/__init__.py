@@ -32,7 +32,11 @@ def scons(args=None):
 def run_in_another_process(target, args):
     # scons uses a lot of global variables, makes it impossible to run two difference
     # scons files under the same processes
+    from .environment import is_64bit
+    from os import name, environ
     from multiprocessing import Process
+    if name == 'nt':
+        environ['PROCESSOR_ARCHITECTURE'] = "AMD64" if is_64bit() else "x86"
     process = Process(target=target, args=(args,))
     process.start()
     process.join()

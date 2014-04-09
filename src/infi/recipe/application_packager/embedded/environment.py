@@ -90,75 +90,17 @@ def is_64bit():
 
 
 def get_construction_variables__windows(static_libdir, static_libs):
-    # 32bit
-    # APPVER = 5.02
-    # CPU = i386
-    # TARGETOS = WINNT
-    # FrameworkVersion = v2.0.50727
-    # OS = Windows_NT
-    # RegKeyPath = HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\SxS\VC7
-    # VSRegKeyPath = HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\SxS\VS7
-    # SystemDrive = C:
-    # WinDir = ${:SystemDrive}\WINDOWS
-    # ProgramFiles = ${:SystemDrive}\Program Files
-    # ORIGINALPATH = ${:WinDir}\system32;${:WinDir};${:WinDir}\System32\Wbem;${:ProgramFiles}\Git\cmd;${:ProgramFiles}\Git\bin;C:\Python27
-
-    # FrameworkDir = ${:WinDir}\Microsoft.NET\Framework
-    # FxTools = ${:FrameworkDir}\v3.5;${:FrameworkDir}\v2.0.50727
-    # WindowsSdkDir = ${:ProgramFiles}\Microsoft SDKs\Windows\v7.0
-    # VSINSTALLDIR = ${:ProgramFiles}\Microsoft Visual Studio 9.0
-    # VCRoot = ${:VSINSTALLDIR}\VC
-    # VCINSTALLDIR = ${:VCRoot}
-    # VC90CRT = ${:VCRoot}\redist\x86\Microsoft.VC90.CRT
-    # INCLUDE = ${:VCRoot}\Include;${:WindowsSdkDir}\Include;${:WindowsSdkDir}\Include\gl;${:VCRoot}\ATLMFC\INCLUDE;
-    # MSSdk = ${:WindowsSdkDir}
-    # NODEBUG = 1
-    # SdkSetupDir = ${:WindowsSdkDir}\Setup
-    # SdkTools = ${:WindowsSdkDir}\Bin
-    # DevEnvDir = ${:VSINSTALLDIR}\Common7\IDE
-    # INCLUDE = ${:VCRoot}\ATLMFC\INCLUDE;${:VCRoot}\INCLUDE;${:WindowsSdkDir}\include;${:PREFIX}\include
-    # ATLMFC_LIB = ${:VCRoot}\ATLMFC\LIB
-    # VSLIB = ${:VCRoot}\LIB
-    # SDKLIB = ${:WindowsSdkDir}\lib
-    # SDKBIN = ${:WindowsSdkDir}\bin
-    # LIB = ${:ATLMFC_LIB};${:VSLIB};${:SDKLIB};${:PREFIX}\lib
-    # LIBPATH = ${:FrameworkDir};${:FrameworkDir}\v2.0.50727;${:ATLMFC_LIB};${:VSLIB}
-    # Recipe = hexagonit.recipe.cmmi
-    # VSBIN = ${:VCRoot}\BIN
-    # PosixHomeDir=${:SystemDrive}\Cygwin\home\Administrator
-    # GitDir = ${:PosixHomeDir}\git
-    # GitBinDir = ${:GitDir}\bin
-    # PythonDir = ${:PosixHomeDir}\python\bin
-    # PythonBinDir = ${:PythonDir}\bin
-    # PATH = ${:DevEnvDir};${:VSBIN};${:VSINSTALLDIR}\Common7\Tools;${:VSINSTALLDIR}\Common7\Tools\bin;${:FrameworkDir};${:FrameworkDir}\Microsoft .NET Framework 3.5 (Pre-Release Version);${:FrameworkDir}\v2.0.50727;${:VCRoot}\VCPackages;${:SDKBIN};${:WinDir}\system32;${:WinDir};${:WinDir}\System32\Wbem;${:GitDir}\cmd;${:GitBinDir};${:PythonBinDir}
-    # PREFIX = ${options:prefix}
-    # IIPREFIX = ${options:prefix}
-    # PerlExe = ${:SystemDrive}\Perl\bin\perl.exe
-
-    # 64bit
-    # FrameworkDir = ${:WinDir}\Microsoft.NET\Framework64
-    # VSINSTALLDIR = ${:ProgramFiles64}\Microsoft Visual Studio 9.0
-    # ProgramFiles64 = ${:SystemDrive}\Program Files (x86)
-    # VSBIN = ${:VCRoot}\BIN\amd64
-    # ATLMFC_LIB = ${:VCRoot}\ATLMFC\LIB\amd64
-    # VSLIB = ${:VCRoot}\LIB\amd64
-    # VC90CRT = ${:VCRoot}\redist\amd64\Microsoft.VC90.CRT
-    # SDKLIB = ${:WindowsSdkDir}\lib\x64
-    # SDKLIB32 = ${:WindowsSdkDir}\lib
-    # SDKBIN = ${:WindowsSdkDir}\bin\x64
-    # PerlExe = ${:SystemDrive}\Perl64\bin\perl.exe
-    variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
+    from . import win32, win64
+    environment_variables = win64.env if is_64bit() else win32.env
+    variables = {key: value for key, value in environment_variables.items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
     variables.update(WINDOWS_DEFINES_UPDATE)
     variables.update(
+        MSVC_USE_SCRIPT=False,
         LIBPATH=[static_libdir],
         LIBS=static_libs,
         CPPFLAGS=['/I{}'.format(path.abspath(path.join('parts', 'python', 'include')))],
     )
-
-    X64 = dict(AS=r'"C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\amd64\ml64.exe"')
-    X86 = dict()
-    variables.update(**(X64 if is_64bit() else X86))
     return variables
 
 
