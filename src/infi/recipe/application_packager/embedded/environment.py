@@ -7,14 +7,16 @@ from pkg_resources import ensure_directory
 from platform import system
 from json import dumps
 from glob import glob
-from os import path
-
+from os import path, name as os_name
 
 DEFINES = dict(HAVE_CURSES=True, HAVE_CURSES_PANEL=True, HAVE_LIBBZ2=True, HAVE_LIBCABINET=True, HAVE_LIBCRYPT=True,
                HAVE_LIBDB=True, HAVE_LIBGDBM=True, HAVE_LIBM=True, HAVE_LIBNSL=True,
                HAVE_LIBRPCRT4=True, HAVE_LIBSQLITE3=True, HAVE_LIBTCL=False, HAVE_LIBTK=False, HAVE_LIBWS32_32=True,
                HAVE_LIBZ=True, HAVE_OPENSSL=True, HAVE_READLINE=True,
                WITH_PYTHON_MODULE_NIS=False, STATIC_PYTHON_MODULES=1)
+WINDOWS_DEFINES_UPDATE = dict(HAVE_CURSES=False, HAVE_CURSES_PANEL=False, HAVE_LIBGDBM=False, HAVE_LIBNDBM=False,
+                              HAVE_LIBDB=False, HAVE_READLINE=False, HAVE_LIBCRYPT=False)
+
 ISOLATED_PYTHON_LIBS = ['z',
                         'ncurses', 'form', 'panel', # all provided by ncurses
                         'readline', 'history', # all provided by readline
@@ -27,15 +29,23 @@ ISOLATED_PYTHON_LIBS = ['z',
                         'bz2', 'sqlite3', 'db',
                         'xml2', 'xslt', 'exslt',
                         'ffi', 'gdbm', 'sasl2',
-                        'event',
-                        'event_core', 'event_extra', # all provided by libevent
+                        'event', 'event_core', 'event_extra', # all provided by libevent
                         'ev', 'zmq',
                         'ldap', 'ldap_r', 'lber', # all oprvided by openldap
                         ]
+WINDWS_ISOLATED_PYTHON_LIBS = ['zlib', 'zdll',
+                               'ssleay32', 'libeay32', # all provided by openssl
+                               'gettextlib', 'uniname', 'asprintf', 'grt', 'intl', # all provided by gettext
+                               'iconv', 'charset',
+                               'gnutls', 'xssl', # all provided by gnutls
+                               'bz2', 'sqlite3',
+                               'libxml2', 'libxslt', 'libexslt',
+                               'libevent', 'libevent_core', 'libevent_extra', # all provided by libevent
+                               ]
 # osx parts = zlib ncurses readline openssl openssh libgpg-error libgcrypt libtasn1 gmp nettle gettext          libgnutls bzip2 sqlite3 db libxml2 libxslt libffi gdbm cyrus-sasl libevent libev zeromq openldap graphviz python
 # std parts = zlib ncurses readline openssl openssh libgpg-error libgcrypt                     gettext libiconv libgnutls bzip2 sqlite3 db libxml2 libxslt libffi gdbm cyrus-sasl libevent libev zeromq openldap graphviz python
 
-STATIC_LIBS = list(reversed(ISOLATED_PYTHON_LIBS))
+STATIC_LIBS = list(reversed(WINDWS_ISOLATED_PYTHON_LIBS if os_name == 'nt' else ISOLATED_PYTHON_LIBS))
 
 
 def _write_json_files(base_directory, python_files, c_extensions):
@@ -139,6 +149,7 @@ def get_construction_variables__windows(static_libdir, static_libs):
     # PerlExe = ${:SystemDrive}\Perl64\bin\perl.exe
     variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
+    variables.update(WINDOWS_DEFINES_UPDATE)
     variables.update(
         LIBPATH=[static_libdir],
         LIBS=static_libs,
