@@ -142,6 +142,7 @@ def get_construction_variables__windows(static_libdir, static_libs):
     variables.update(
         LIBPATH=[static_libdir],
         LIBS=static_libs,
+        CPPFLAGS=['/I{}'.format(path.abspath(path.join('parts', 'python', 'include')))],
     )
 
     X64 = dict(AS=r'"C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\amd64\ml64.exe"')
