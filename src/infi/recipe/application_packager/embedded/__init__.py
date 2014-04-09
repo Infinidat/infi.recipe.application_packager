@@ -149,8 +149,11 @@ class Recipe(PackagingRecipe):
 
     def download_source_instead_of_egg(self, filepath):
         # pyreadline-2.0-py2.7-win-amd64.egg
-        package_name, release_version = path.basename(filepath).split('-py').split('-')
-        return utils.download_package_source(package_name, self.get_download_cache_dist())
+        from .. import utils
+        package_name, release_version = path.basename(filepath).split('-py')[0].split('-')
+        dirpath = self.get_download_cache_dist()
+        basename = utils.download_package_source(package_name, dirpath)
+        return path.join(dirpath, basename)
 
     def iter_archives_for_embedding(self):
         distributions = self.get_dependencies_for_embedding()
@@ -168,7 +171,7 @@ class Recipe(PackagingRecipe):
             if any([distname.lower() in basename and version.replace('-', '_') in basename.replace('-', '_')
                    for distname, version in distributions.items()]):
                 if self.is_this_a_precompiled_egg_on_windows(filepath):
-                    filepath = download_source_instead_of_egg(filepath)
+                    filepath = self.download_source_instead_of_egg(filepath)
                     pass
                 yield path.abspath(filepath)
 

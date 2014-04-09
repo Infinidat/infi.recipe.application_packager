@@ -58,18 +58,20 @@ def write_pystick_variable_file(pystick_variable_filepath, python_files, c_exten
         fd.write("env = DefaultEnvironment(\n**{}\n)\n".format(pformat(variables, indent=4)))
 
 
-def _apply_project_specific_on_top_of_platform_defaults(construction_variables, project_specific_flags):
+def _apply_project_specific_on_top_of_platform_defaults(variables, project_specific_flags):
     for key, added_value in project_specific_flags.items():
+        if added_value is None:
+            continue
         value = variables.get(key)
         if isinstance(value, basestring):
-            construction_variables[key] = " ".join(value, added_value)
+            variables[key] = " ".join(value, added_value)
         elif isinstance(value, list):
-            construction_variables[key].append(added_value)
+            variables[key].append(added_value)
         elif isinstance(value, tuple):
-            construction_variables[key] += construction_variables[key] + tuple(added_value, )
+            variables[key] += variables[key] + tuple(added_value, )
         else:
-            construction_variables[key] = added_value
-        return construction_variables
+            variables[key] = added_value
+        return variables
 
 
 def get_construction_variables__windows(static_libdir, options):
@@ -130,7 +132,7 @@ def get_construction_variables__windows(static_libdir, options):
     # SDKLIB32 = ${:WindowsSdkDir}\lib
     # SDKBIN = ${:WindowsSdkDir}\bin\x64
     # PerlExe = ${:SystemDrive}\Perl64\bin\perl.exe
-    pass
+    return dict()
 
 
 def get_construction_variables__linux(static_libdir, static_libs):
@@ -161,15 +163,16 @@ def get_construction_variables__osx(static_libdir, static_libs):
 def get_construction_variables(static_libdir, options):
     static_libs = get_names_of_static_libraries_for_linking(static_libdir)
     project_specific_flags = dict(
-                                  LINKFLAGS=options.get('LINKFLAGS', ''),
-                                  LIBS=options.get('LIBS', ''),
+                                  LINKFLAGS=options.get('LINKFLAGS', None),
+                                  LIBS=options.get('LIBS', None),
                                   )
-    # if system() == "Windows":
-        # return get_construction_variables__windows()
     if system() == "Linux":
         variables = get_construction_variables__linux(static_libdir, static_libs)
     if system() == "Darwin":
         variables = get_construction_variables__osx(static_libdir, static_libs)
+    elif system() == "Windows":
+        variables = get_construction_variables__windows(static_libdir, static_libs)
+
     final_variables = _apply_project_specific_on_top_of_platform_defaults(variables, project_specific_flags)
     return final_variables
 
