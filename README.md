@@ -84,7 +84,8 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | startmenu-shortcuts                   | msi                                       | []                                                   | ['shortcut_name' = 'executable_name', ...]                               |
 | rpm-dependencies                      | rpm                                       |                                                      | List of redhat packages to be required prior installing your package     |
 | python-source-url                     | executable, static_library                | ftp://python.infinidat.com/archives/Python-2.7.6.tgz | tgz archive for Python                                                   |
-| xflags                                | executable, static_library                |                                                      | extra flags to pass (as a string) to pystick                             |
+| LINKFLAGS                             | executable, static_library                |                                                      | extra flags to pass (as a string) to pystick                             |
+| LIBS                                  | executable, static_library                |                                                      | extra flags to pass (as a string) to pystick                             |
 
 Using the installers
 --------------------
