@@ -1,7 +1,7 @@
 # TODO pystick expects some files, describe here what is expects for reference
 
 
-from .scons_construction_variables import SCONS_VARIABLE_NAMES
+from .scons_variables import SCONS_VARIABLE_NAMES
 from sysconfig import get_config_var, get_config_vars
 from pkg_resources import ensure_directory
 from platform import system
@@ -58,16 +58,6 @@ def _write_json_files(base_directory, python_files, c_extensions):
     return dict(EXTERNAL_PY_MODULES_FILE=python_modules_file, EXTERNAL_C_MODULES_FILE=c_modules_file)
 
 
-def write_pystick_variable_file(pystick_variable_filepath, python_files, c_extensions, construction_variables):
-    from pprint import pformat
-    ensure_directory(pystick_variable_filepath)
-    json_reference_dict = _write_json_files(path.dirname(pystick_variable_filepath), python_files, c_extensions)
-    variables = dict(construction_variables)
-    variables.update(json_reference_dict)
-    with open(pystick_variable_filepath, 'w') as fd:
-        fd.write("env = DefaultEnvironment(\n**{}\n)\n".format(pformat(variables, indent=4)))
-
-
 def _apply_project_specific_on_top_of_platform_defaults(variables, project_specific_flags):
     for key, added_value in project_specific_flags.items():
         if added_value is None:
@@ -89,7 +79,28 @@ def is_64bit():
     return maxsize > 2 ** 32
 
 
-def get_construction_variables__windows(static_libdir, static_libs):
+def write_pystick_variable_file(pystick_variable_filepath, python_files, c_extensions, scons_variables):
+    from pprint import pformat
+    ensure_directory(pystick_variable_filepath)
+    json_reference_dict = _write_json_files(path.dirname(pystick_variable_filepath), python_files, c_extensions)
+    variables = dict(scons_variables)
+    variables.update(json_reference_dict)
+    with open(pystick_variable_filepath, 'w') as fd:
+        fd.write("env = DefaultEnvironment(\n**{}\n)\n".format(pformat(variables, indent=4)))
+
+
+def get_scons_variables__windows(static_libdir, static_libs):
+    # SCons attempts to locate the Visual Studio 'vcvars' batch file from the registry
+    # We had some problems with this on 64bit hosts with Visual Studio 2008:
+    # * SCons wants to link the 64bit binaries with 'ml' and not 'ml64'
+    # * We run SCons over Cygwin OpenSSH, and under Cygwin, SCons doesn't locate the batch file
+    #   This has something to do with the registry redirection for 32bit processes, but we didn't investigate further
+    # So what we did is running SCons over Remote Desktop on hosts with Visual Studio installed in the default paths
+    # and copied the generated environemt from SCons into this recipe
+    # So if you have Visual Studio installed into the default location(s), you'll be fine
+    # If we'll need to support more environments, we'll give the user control to choose:
+    # * Use the default SCons lookup behaviour
+    # * Define in the recipe the path for 'vcvars'
     from . import win32, win64
     environment_variables = win64.env if is_64bit() else win32.env
     variables = {key: value for key, value in environment_variables.items() if key in SCONS_VARIABLE_NAMES}
@@ -104,7 +115,7 @@ def get_construction_variables__windows(static_libdir, static_libs):
     return variables
 
 
-def get_construction_variables__linux(static_libdir, static_libs):
+def get_scons_variables__linux(static_libdir, static_libs):
     variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
     variables.update(
@@ -117,7 +128,7 @@ def get_construction_variables__linux(static_libdir, static_libs):
     return variables
 
 
-def get_construction_variables__osx(static_libdir, static_libs):
+def get_scons_variables__osx(static_libdir, static_libs):
     variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
     variables.update(
@@ -129,24 +140,27 @@ def get_construction_variables__osx(static_libdir, static_libs):
     return variables
 
 
-def get_construction_variables(static_libdir, options):
+def get_scons_variables(static_libdir, options):
     static_libs = get_names_of_static_libraries_for_linking(static_libdir)
     project_specific_flags = dict(
                                   LINKFLAGS=options.get('LINKFLAGS', None),
                                   LIBS=options.get('LIBS', None),
                                   )
     if system() == "Linux":
-        variables = get_construction_variables__linux(static_libdir, static_libs)
+        variables = get_scons_variables__linux(static_libdir, static_libs)
     if system() == "Darwin":
-        variables = get_construction_variables__osx(static_libdir, static_libs)
+        variables = get_scons_variables__osx(static_libdir, static_libs)
     elif system() == "Windows":
-        variables = get_construction_variables__windows(static_libdir, static_libs)
+        variables = get_scons_variables__windows(static_libdir, static_libs)
 
     final_variables = _apply_project_specific_on_top_of_platform_defaults(variables, project_specific_flags)
     return final_variables
 
 
 def get_names_of_static_libraries_for_linking(static_libdir):
+    """
+    :returns: a list of names of libraries under static_libdir, sorted as linking-order in the isolated-python build
+    """
     names = []
     prefix, suffix  = ('', '.lib') if system() == "Windows" else ('lib', '.a')
     for name in STATIC_LIBS:
@@ -155,12 +169,10 @@ def get_names_of_static_libraries_for_linking(static_libdir):
     return names
 
 
-def get_static_libraries(static_libdir):
-    return [item for item in glob(path.join(static_libdir, '*')) if
-            'python2.7' not in item and not item.endswith('.rsp')]
-
-
 def get_sorted_static_libraries(static_libdir):
+    """
+    :returns: a list of filepaths under static_libdir, sorted as linking-order in the isolated-python build
+    """
     files = []
     prefix, suffix  = ('', '.lib') if system() == "Windows" else ('lib', '.a')
     for name in STATIC_LIBS:
@@ -168,4 +180,3 @@ def get_sorted_static_libraries(static_libdir):
         if path.exists(filepath):
             files.append(filepath)
     return files
-

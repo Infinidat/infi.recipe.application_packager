@@ -14,6 +14,10 @@ PYTHON_EXECUTABLE = path.abspath(path.join(path.curdir, 'parts', 'python', 'bin'
 
 
 def build_setup_py(dirname):
+    # we want to really build the package by running setup.py
+    # so any code generation would take place (for example, Cython to C code)
+    # we specify the curent directory as the build-temp directory so all the generated sources
+    # will be in the same directory as the other python code
     with chdir_context(dirname):
         env = environ.copy()
         env.update(PYTHONPATH=path.abspath(path.curdir))
@@ -68,6 +72,10 @@ def build_dependency(filepath):
         basename = path.basename(filepath)
         logger.info("building {}".format(basename))
         if basename.endswith('egg'):
+            # we assume that all the egg sources are pure-python and don't contain binaries
+            # people obviosuly don't upload binary eggs for POSIX systems to PyPI
+            # but on Windows they do, and therefore we already downloaded their source districutions
+            # in a previous step in the build process of the recipe
             return path.join(build_dir, _unzip_egg(filepath))
         elif basename.endswith('zip'):
             return path.join(build_dir, _extract_and_build_zip(filepath))

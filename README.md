@@ -47,6 +47,13 @@ In order create an application with proper packaging, you'll need more than just
 
 At the end, OS packages will be available under the `parts` directory, and single-file executables and static libraries will be placed under `dist`.
 
+To debug exceptions, add 'pdb = true' to the recipe. The results are stored under the follwing directories:
+* `parts`. stores the deb, msi and rpm intermediate files and final packages
+* `build/Python-<x.y.z>`. the Python source
+* `build/static`. this this where we copy to all the static libraries from the isolated python that will link the static python with
+* `build/dependencies`. this is where all the dependencies are being built
+* `build/embedded`. we the embedded python and the static library are being built
+* `bild/executables`. where we build the final console executables
 
 ### Recipe configuration options
 
@@ -54,7 +61,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 
 | Key                                   | Applied to                                | Default value                                        | Description                                                              |
 | ------------------------------------- | ----------------------------------------- | --------------------------------------------------   | ------------------------------------------------------------------------ |
-| pdb                                   | executable, deb, msi, rpm, static_library | false                                                | enter pdb if exception is raise                                          |
+| pdb                                   | executable, deb, msi, rpm, static_library | false                                                | enter pdb if exception is raise for post mortem                          |
 | dependent-scripts                     | executable, deb, msi, rpm                 | false                                                |                                                                          |
 | eggs                                  | executable, deb, msi, rpm                 | \<project name>                                      |                                                                          |
 | scripts                               | executable, deb, msi, rpm                 | \<empty list>                                        |                                                                          |

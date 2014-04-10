@@ -14,14 +14,14 @@ from . import build
 
 class UnitTestCase(unittest.TestCase):
     def test_get_python_source(self):
-        from . import source
+        from . import python_source
         buildout_section = {'directory': '.'}
         buildout = dict({'isolated-python': {'version': 'v2.7.6'},
                                 'buildout': buildout_section})
         options = dict(dict())
-        with patch.object(source, "Download") as Download:
+        with patch.object(python_source, "Download") as Download:
             with patch("tarfile.open") as tarfile_open:
-                actual = source.get_python_source(buildout, options)
+                actual = python_source.get_python_source(buildout, options)
         source_url = "http://python.infinidat.com/archives/Python-2.7.6.tgz"
         args = Download(buildout_section)(source_url)[0], 'r:gz'
         tarfile_open.assert_called_with(*args)
@@ -40,14 +40,6 @@ class UnitTestCase(unittest.TestCase):
                 data = load(fd)
         self.assertEquals(sorted(data['python_files']), sorted(expected_data['python_files']))
         self.assertEquals(sorted(data['c_extensions']), sorted(expected_data['c_extensions']))
-
-    def test_get_static_libraries(self):
-        from . import environment
-        with patch.object(environment, 'glob') as glob:
-            glob.return_value = [path.join('a', 'libfoo.a'), path.join('a', 'libpython2.7.a')]
-            actual = environment.get_static_libraries('a')
-        self.assertEquals(actual, [path.join('a', 'libfoo.a')])
-        glob.assert_called_with(path.join('a', '*'))
 
     def test_write_pystick_variable_file(self):
         from . import environment

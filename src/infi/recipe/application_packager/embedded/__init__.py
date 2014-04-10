@@ -36,6 +36,8 @@ def run_in_another_process(target, args):
     from os import name, environ
     from multiprocessing import Process
     if name == 'nt':
+        # although we bypass the MSVC batch script detection and specific the target architecture,
+        # this is still needed for SCons to run
         environ['PROCESSOR_ARCHITECTURE'] = "AMD64" if is_64bit() else "x86"
     process = Process(target=target, args=(args,))
     process.start()
@@ -50,13 +52,13 @@ class Recipe(PackagingRecipe):
         downloads Python source, setuptools and zc.build prepare_sources to .cache/dist
         :returns: path of extracted Python source
         """
-        from . import source
+        from . import python_source
         from .. import utils
         assert path.exists(self.isolated_python_dirpath)
         utils.download_buildout(self.get_download_cache_dist())
         utils.download_distribute(self.get_download_cache_dist())
         utils.download_setuptools(self.get_download_cache_dist())
-        return source.get_python_source(self.buildout, self.options)
+        return python_source.get_python_source(self.buildout, self.options)
 
     def build_embedded_python(self, python_source_path):
         if glob(path.join(self.embedded_python_build_dir, '*fpython*')):
@@ -115,8 +117,8 @@ class Recipe(PackagingRecipe):
         return my_files['python_files'], my_files['c_extensions']
 
     def write_pystick_variable_file(self, python_files, c_extensions):
-        from .environment import write_pystick_variable_file, get_static_libraries, get_construction_variables
-        construction_varilables = get_construction_variables(self.static_libdir, self.options)
+        from .environment import write_pystick_variable_file, get_scons_variables
+        construction_varilables = get_scons_variables(self.static_libdir, self.options)
         write_pystick_variable_file(self.pystick_variable_filepath,
                                     python_files, c_extensions,
                                     construction_varilables)
@@ -196,6 +198,12 @@ class Executable(Recipe):
         return executables
 
     def get_all_entry_points_available_in_production(self):
+        """
+        returns a dict of all the 'console_scripts' entry points from:
+        * all the packages mentioned in the 'egg's propety
+        * all the scripts declared in the packaged setup.py script
+        :returns: a script_name: (module_name, callable_name) dictionary
+        """
         from pkg_resources import iter_entry_points
         packages_in_production = self.get_dependencies_for_embedding().keys() + [self.get_python_module_name()]
         return {item.name: (item.module_name, item.attrs[0])
@@ -209,6 +217,15 @@ class Executable(Recipe):
                 item.strip()]
 
     def get_entry_points_for_production(self):
+        """
+        returns a dictionary of all the console script we need to create an executable for
+        this method implements the same behavior as infi.recipe.console_scripts for generating scripts:
+        * console scripts are searched in the following packages:
+        ** in all the packages defined in the 'eggs' property, which by default contains ${project:name}
+        * by default, all the console-script entry points that are found by the logic above. unless:
+        ** the recipe has a 'scripts' property, and in this case only the script names mentioned in it are generated
+        :returns: a script_name: (module_name, callable_name) dictionary
+        """
         include_dependent_scripts = self.get_dependent_scripts() == 'true'
         package_name = self.get_python_module_name()
         entry_points_dict = {key: value for key, value in self.get_all_entry_points_available_in_production().items()
@@ -222,30 +239,46 @@ class Executable(Recipe):
         return entry_points_dict
 
     def build_console_script(self, executable, module_name, callable_name, python_source_path):
-        from .environment import write_pystick_variable_file, get_sorted_static_libraries, get_construction_variables
-        from pprint import pformat
-        construction_varilables = get_construction_variables(self.static_libdir, self.options)
-        source = '{}.c'.format(executable)
-        construction_varilables['LIBPATH'].insert(0, self.embedded_python_build_dir)
-        construction_varilables['LIBS'].insert(0, 'fpython27')
-        construction_varilables['CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
-        construction_varilables['CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
+        def generate_executable_c_code():
+            source_filename = '{}.c'.format(executable)
+            with open(source_filename, 'w') as fd:
+                fd.write(MAIN.format(executable, module_name, callable_name))
+            return source_filename
+
+        def generate_buildsystem_for_the_executable(source_filename):
+            # we need to use the same build environment we used to build the embedded python interpreter
+            # and add some stuff on top of it
+            from .environment import write_pystick_variable_file, get_sorted_static_libraries, get_scons_variables
+            from pprint import pformat
+            variables = get_scons_variables(self.static_libdir, self.options)
+            # linkking with fpython
+            variables['LIBPATH'].insert(0, self.embedded_python_build_dir)
+            variables['LIBS'].insert(0, 'fpython27')
+            # our generated C code for main uses headers from the Python source code
+            variables['CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
+            variables['CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
+            with open('SConstruct', 'w') as fd:
+                fd.write(SCONSTRUCT.format(source=source, variables=pformat(variables, indent=4)))
+
+        def compile_code_and_link_with_static_library():
+            run_in_another_process(scons, None)
+
+        def copy_executable_to_dist():
+            extension = dict(Windows='.exe').get(system(), '')
+            src = path.join(build_dir, executable  + extension)
+            dst = path.join('dist', executable + extension)
+            ensure_directory(dst)
+            copy(src, dst)
+            return dst
 
         build_dir = path.join('build', 'executables', executable)
         ensure_directory(path.join(build_dir, executable))
         with chdir_context(build_dir):
-            with open(source, 'w') as fd:
-                fd.write(MAIN.format(executable, module_name, callable_name))
-            with open('SConstruct', 'w') as fd:
-                fd.write(SCONSTRUCT.format(source=source, variables=pformat(construction_varilables, indent=4)))
+            source_filename = generate_executable_c_code()
+            generate_buildsystem_for_the_executable(source_filename)
+            compile_code_and_link_with_static_library()
             run_in_another_process(scons, None)
-
-        extension = dict(Windows='.exe').get(system(), '')
-        src = path.join(build_dir, executable  + extension)
-        dst = path.join('dist', executable + extension)
-        ensure_directory(dst)
-        copy(src, dst)
-
+        dst = copy_executable_to_dist()
         return dst
 
     def update(self):
@@ -260,6 +293,8 @@ class StaticLibrary(Recipe):
             return [self.copy_libfullpython()]
 
     def copy_libfullpython(self):
+        # libfpython already includes all the added python moduels and c extensions, no need to compile anyting
+        # we just copy the modules to dist/ with a proper name
         library_name = self.get_python_module_name().split('.')[-1]
         [src] = [item for item in glob(path.join('build', 'embedded', '*fpython*')) if
                  not item.endswith('.rsp')]
