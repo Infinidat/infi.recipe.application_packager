@@ -52,6 +52,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | install-on-windows-server-2008-r2     | true                                               |                                                                          |
 | install-on-windows-server-2008        | true                                               |                                                                          |
 | install-on-windows-server-2003        | false                                              |                                                                          |
+| install-on-windows-8.1                | false                                              |                                                                          |
 | install-on-windows-8                  | false                                              |                                                                          |
 | install-on-windows-7                  | false                                              |                                                                          |
 | install-on-windows-vista              | false                                              |                                                                          |
