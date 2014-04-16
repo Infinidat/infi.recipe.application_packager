@@ -66,16 +66,22 @@ execute pushd .
 execute cd %{prefix}
 
 # delete old eggs
+echo -en "\rRemoving temporary files, this may take a few minutes"
 rm -rf eggs
+echo -en "\r"
 
 # bootstrap
+echo -en "Bootstraping, this may take a few minutes"
 execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/ez_setup.py
 RC=$$?
+echo -en "\r"
 assert_rc
 
 # buildout
+echo -en "Bootstraping, this may take a few minutes"
 execute bin/buildout
 RC=$$?
+echo -en "\r"
 assert_rc
 
 # link binaries to /usr/bin
@@ -90,8 +96,10 @@ for script in *; do
     if test -n "%{pre_uninstall_script_name}" -a "$$script" == "%{pre_uninstall_script_name}"; then
         continue;
     fi
+    echo -en "Bootstraping, this may take a few minutes"
     execute ln -s -f %{prefix}/bin/$$script %{_bindir}/$$script
     RC=$$?
+    echo -en "\r"
     assert_rc
 done
 cd ..
