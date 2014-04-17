@@ -258,7 +258,7 @@ class Executable(Recipe):
             variables['CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
             variables['CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
             with open('SConstruct', 'w') as fd:
-                fd.write(SCONSTRUCT.format(source=source, variables=pformat(variables, indent=4)))
+                fd.write(SCONSTRUCT.format(source=source_filename, variables=pformat(variables, indent=4)))
 
         def compile_code_and_link_with_static_library():
             run_in_another_process(scons, None)

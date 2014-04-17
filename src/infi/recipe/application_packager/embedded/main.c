@@ -1,7 +1,6 @@
 #include "Python.h"
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {{
     int sts;
     Py_FrozenFlag = 1;  // disable warnings from Python's getpath.c

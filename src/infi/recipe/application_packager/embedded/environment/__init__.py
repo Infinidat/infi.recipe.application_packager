@@ -110,7 +110,7 @@ def get_scons_variables__windows(static_libdir, static_libs):
         MSVC_USE_SCRIPT=False,
         LIBPATH=[static_libdir],
         LIBS=static_libs,
-        CPPFLAGS=['/I{}'.format(path.abspath(path.join('parts', 'python', 'include')))],
+        CPPFLAGS='/I{}'.format(path.abspath(path.join('parts', 'python', 'include')))
     )
     return variables
 
