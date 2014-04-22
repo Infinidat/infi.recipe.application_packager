@@ -33,7 +33,7 @@ ISOLATED_PYTHON_LIBS = ['z',
                         'ev', 'zmq',
                         'ldap', 'ldap_r', 'lber', # all oprvided by openldap
                         ]
-WINDWS_ISOLATED_PYTHON_LIBS = ['zlib', 'zdll',
+WINDWS_ISOLATED_PYTHON_LIBS = ['zlib',
                                'ssleay32', 'libeay32', # all provided by openssl
                                'gettextlib', 'uniname', 'asprintf', 'grt', 'intl', # all provided by gettext
                                'iconv', 'charset',
