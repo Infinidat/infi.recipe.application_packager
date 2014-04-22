@@ -241,7 +241,7 @@ class Executable(Recipe):
     def build_console_script(self, executable, module_name, callable_name, python_source_path):
         def generate_executable_c_code():
             source_filename = '{}.c'.format(executable)
-            with open(source_filename, 'w') as fd:
+            with open(source_filename, 'wb') as fd:
                 fd.write(MAIN.format(executable, module_name, callable_name))
             return source_filename
 
