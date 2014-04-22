@@ -38,7 +38,7 @@ WINDWS_ISOLATED_PYTHON_LIBS = ['zlib',
                                'gettextlib', 'uniname', 'asprintf', 'grt', 'intl', # all provided by gettext
                                'iconv', 'charset',
                                'gnutls', 'xssl', # all provided by gnutls
-                               'libbz2', 'sqlite3',
+                               'libbz2', 'sqlite3ts',
                                'libxml2', 'libxslt', 'libexslt',
                                'libevent', 'libevent_core', 'libevent_extra', # all provided by libevent
                                ]
