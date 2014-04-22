@@ -3,7 +3,7 @@
 
 from .scons_variables import SCONS_VARIABLE_NAMES
 from sysconfig import get_config_var, get_config_vars
-from pkg_resources import ensure_directory
+from pkg_resources import ensure_directory, resource_filename
 from platform import system
 from json import dumps
 from glob import glob
@@ -16,7 +16,7 @@ DEFINES = dict(HAVE_CURSES=True, HAVE_CURSES_PANEL=True, HAVE_LIBBZ2=True, HAVE_
                WITH_PYTHON_MODULE_NIS=False, STATIC_PYTHON_MODULES=1)
 WINDOWS_DEFINES_UPDATE = dict(HAVE_CURSES=False, HAVE_CURSES_PANEL=False, HAVE_LIBGDBM=False, HAVE_LIBNDBM=False,
                               HAVE_LIBDB=False, HAVE_READLINE=False, HAVE_LIBCRYPT=False)
-
+WINDOWS_NATIVE_LIBS = ['shell32', 'user32', 'advapi32', 'ole32', 'oleaut32']
 ISOLATED_PYTHON_LIBS = ['z',
                         'ncurses', 'form', 'panel', # all provided by ncurses
                         'readline', 'history', # all provided by readline
@@ -103,14 +103,16 @@ def get_scons_variables__windows(static_libdir, static_libs):
     # * Define in the recipe the path for 'vcvars'
     from . import win32, win64
     environment_variables = win64.env if is_64bit() else win32.env
+    manifest = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
     variables = {key: value for key, value in environment_variables.items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
     variables.update(WINDOWS_DEFINES_UPDATE)
     variables.update(
         MSVC_USE_SCRIPT=False,
         LIBPATH=[static_libdir],
-        LIBS=static_libs,
-        CPPFLAGS='/I{}'.format(path.abspath(path.join('parts', 'python', 'include')))
+        LIBS=WINDOWS_NATIVE_LIBS + static_libs,
+        CPPFLAGS='/I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
+        LINKCOM=[variables['LINKCOM'], 'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'.format(manifest)],
     )
     return variables
 
