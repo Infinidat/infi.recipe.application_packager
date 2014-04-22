@@ -85,8 +85,13 @@ def write_pystick_variable_file(pystick_variable_filepath, python_files, c_exten
     json_reference_dict = _write_json_files(path.dirname(pystick_variable_filepath), python_files, c_extensions)
     variables = dict(scons_variables)
     variables.update(json_reference_dict)
+    manifest = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
+    manifest_embedded = 'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'.format(manifest)
+
     with open(pystick_variable_filepath, 'w') as fd:
-        fd.write("env = DefaultEnvironment(\n**{}\n)\n".format(pformat(variables, indent=4)))
+        fd.write("env = DefaultEnvironment(\n**{}\n)\n{}\n".format(pformat(variables, indent=4),
+                                                                   "LINKCOM=[env['LINKCOM'], {}".format(manifest_embedded)
+                                                                   if os_name == 'nt' else ''))
 
 
 def get_scons_variables__windows(static_libdir, static_libs):
@@ -103,7 +108,6 @@ def get_scons_variables__windows(static_libdir, static_libs):
     # * Define in the recipe the path for 'vcvars'
     from . import win32, win64
     environment_variables = win64.env if is_64bit() else win32.env
-    manifest = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
     variables = {key: value for key, value in environment_variables.items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
     variables.update(WINDOWS_DEFINES_UPDATE)
@@ -112,7 +116,6 @@ def get_scons_variables__windows(static_libdir, static_libs):
         LIBPATH=[static_libdir],
         LIBS=WINDOWS_NATIVE_LIBS + static_libs,
         CPPFLAGS='/I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
-        LINKCOM=[variables['LINKCOM'], 'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'.format(manifest)],
     )
     return variables
 

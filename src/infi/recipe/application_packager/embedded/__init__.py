@@ -2,13 +2,13 @@ __import__("pkg_resources").declare_namespace(__name__)
 
 from infi.recipe.application_packager.utils import chdir as chdir_context
 from infi.recipe.application_packager.base import PackagingRecipe
-from pkg_resources import resource_string, ensure_directory
+from pkg_resources import resource_string, ensure_directory, resource_filename
 from infi.execute import execute_assert_success
 from logging import getLogger
 from platform import system
 from shutil import copy
 from glob import glob
-from os import path
+from os import path, name as os_name
 
 logger = getLogger(__name__)
 MAIN = resource_string(__name__, 'main.c')
@@ -249,6 +249,7 @@ class Executable(Recipe):
             # we need to use the same build environment we used to build the embedded python interpreter
             # and add some stuff on top of it
             from .environment import write_pystick_variable_file, get_sorted_static_libraries, get_scons_variables
+            from .environment import is_64bit
             from pprint import pformat
             variables = get_scons_variables(self.static_libdir, self.options)
             # linkking with fpython
@@ -257,8 +258,12 @@ class Executable(Recipe):
             # our generated C code for main uses headers from the Python source code
             variables['CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
             variables['CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
+            manifest = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
+            manifest_embedded = 'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'.format(manifest)
+
             with open('SConstruct', 'w') as fd:
-                fd.write(SCONSTRUCT.format(source=source_filename, variables=pformat(variables, indent=4)))
+                fd.write(SCONSTRUCT.format(source=source_filename, variables=pformat(variables, indent=4),
+                                           manifest=manifest_embedded if os_name == 'nt' else ''))
 
         def compile_code_and_link_with_static_library():
             run_in_another_process(scons, None)
