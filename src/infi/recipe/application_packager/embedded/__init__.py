@@ -11,7 +11,7 @@ from glob import glob
 from os import path, name as os_name
 
 logger = getLogger(__name__)
-MAIN = resource_string(__name__, 'main.c').replace('\n', '\r\n' if os_name == 'nt' else '\n')
+MAIN = resource_string(__name__, 'main.c')
 SCONSTRUCT = resource_string(__name__, 'SConstruct')
 
 def pystick(args):
