@@ -259,11 +259,12 @@ class Executable(Recipe):
             variables['CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
             variables['CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
             manifest = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
-            manifest_embedded = 'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'.format(manifest)
+            manifest_embedded = "'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'".format(manifest)
 
             with open('SConstruct', 'w') as fd:
                 fd.write(SCONSTRUCT.format(source=source_filename, variables=pformat(variables, indent=4),
-                                           manifest=manifest_embedded if os_name == 'nt' else ''))
+                                           manifest="LINKCOM=[env['LINKCOM'], {}".format(manifest_embedded)
+                                           if os_name == 'nt' else ''))
 
         def compile_code_and_link_with_static_library():
             run_in_another_process(scons, None)
