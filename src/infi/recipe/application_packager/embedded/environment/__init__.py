@@ -16,7 +16,7 @@ DEFINES = dict(HAVE_CURSES=True, HAVE_CURSES_PANEL=True, HAVE_LIBBZ2=True, HAVE_
                WITH_PYTHON_MODULE_NIS=False, STATIC_PYTHON_MODULES=1)
 WINDOWS_DEFINES_UPDATE = dict(HAVE_CURSES=False, HAVE_CURSES_PANEL=False, HAVE_LIBGDBM=False, HAVE_LIBNDBM=False,
                               HAVE_LIBDB=False, HAVE_READLINE=False, HAVE_LIBCRYPT=False)
-WINDOWS_NATIVE_LIBS = ['shell32', 'user32', 'advapi32', 'ole32', 'oleaut32']
+WINDOWS_NATIVE_LIBS = ['shell32', 'user32', 'advapi32', 'ole32', 'oleaut32', 'gdi32']
 ISOLATED_PYTHON_LIBS = ['z',
                         'ncurses', 'form', 'panel', # all provided by ncurses
                         'readline', 'history', # all provided by readline
