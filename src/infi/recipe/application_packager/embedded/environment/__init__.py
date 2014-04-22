@@ -90,7 +90,7 @@ def write_pystick_variable_file(pystick_variable_filepath, python_files, c_exten
 
     with open(pystick_variable_filepath, 'w') as fd:
         fd.write("env = DefaultEnvironment(\n**{}\n)\n{}\n".format(pformat(variables, indent=4),
-                                                                   "LINKCOM=[env['LINKCOM'], {}".format(manifest_embedded)
+                                                                   "LINKCOM=[env['LINKCOM'], {}]".format(manifest_embedded)
                                                                    if os_name == 'nt' else ''))
 
 

@@ -263,7 +263,7 @@ class Executable(Recipe):
 
             with open('SConstruct', 'w') as fd:
                 fd.write(SCONSTRUCT.format(source=source_filename, variables=pformat(variables, indent=4),
-                                           manifest="LINKCOM=[env['LINKCOM'], {}".format(manifest_embedded)
+                                           manifest="LINKCOM=[env['LINKCOM'], {}]".format(manifest_embedded)
                                            if os_name == 'nt' else ''))
 
         def compile_code_and_link_with_static_library():
