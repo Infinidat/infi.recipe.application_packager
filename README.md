@@ -94,6 +94,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | LINKFLAGS                             | executable, static_library                |                                                      | extra flags to pass (as a string) to pystick                             |
 | LIBS                                  | executable, static_library                |                                                      | extra flags to pass (as a string) to pystick                             |
 | always-build                          | executable, static_library                |                                                      | always build from scratch, even when artifacts exist on disk             |
+| exclude-eggs                          | executable, static_library                | []                                                   | eggs not to include in the build                                         |
 
 Using the installers
 --------------------

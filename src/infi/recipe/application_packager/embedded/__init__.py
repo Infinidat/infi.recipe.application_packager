@@ -172,7 +172,7 @@ class Recipe(PackagingRecipe):
             if 'zc.' in filepath:
                 continue
             basename = path.basename(filepath).lower()
-            exclude_list = self.get_recipe_section().get('exclude_eggs', '').split()
+            exclude_list = self.get_recipe_section().get('exclude-eggs', '').split()
             exclude_matches = [x for x in exclude_list if basename.startswith(x)]
             if exclude_matches:
                 logger.info("skipping {} because matched by exclude_eggs rule(s) {!r}".format(basename, exclude_matches))
