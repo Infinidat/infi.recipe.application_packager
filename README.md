@@ -93,6 +93,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | python-source-url                     | executable, static_library                | ftp://python.infinidat.com/archives/Python-2.7.6.tgz | tgz archive for Python                                                   |
 | LINKFLAGS                             | executable, static_library                |                                                      | extra flags to pass (as a string) to pystick                             |
 | LIBS                                  | executable, static_library                |                                                      | extra flags to pass (as a string) to pystick                             |
+| always-build                          | executable, static_library                |                                                      | always build from scratch, even when artifacts exist on disk             |
 
 Using the installers
 --------------------

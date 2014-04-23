@@ -47,6 +47,9 @@ def run_in_another_process(target, args):
 
 
 class Recipe(PackagingRecipe):
+    def should_always_build(self):
+        return self.get_recipe_section().get('always-build', 'false') == 'true'
+
     def prepare_sources(self):
         """
         downloads Python source, setuptools and zc.build prepare_sources to .cache/dist
@@ -61,7 +64,7 @@ class Recipe(PackagingRecipe):
         return python_source.get_python_source(self.buildout, self.options)
 
     def build_embedded_python(self, python_source_path):
-        if glob(path.join(self.embedded_python_build_dir, '*fpython*')):
+        if glob(path.join(self.embedded_python_build_dir, '*fpython*')) and not self.should_always_build():
             logger.debug("embedded python is already built, skipping it")
             return
         self.prepare_for_running_pystick()
@@ -71,7 +74,7 @@ class Recipe(PackagingRecipe):
         run_in_another_process(pystick, args)
 
     def prepare_for_running_pystick(self):
-        if path.exists(self.pystick_variable_filepath):
+        if path.exists(self.pystick_variable_filepath) and not self.should_always_build():
             logger.info("pystick file {!r} exists, skipping re-writing it")
             return
         # before running pystick, we need to do some stuff
