@@ -49,7 +49,6 @@ class Recipe(PackagingRecipe):
         self.signtool = self.get_signtool()
         self.write_buildout_configuration_file_for_production()
         utils.download_buildout(self.get_download_cache_dist())
-        utils.download_distribute(self.get_download_cache_dist())
         utils.download_setuptools(self.get_download_cache_dist())
         silent_launcher = self.get_silent_launcher()
         if self.should_sign_files():
