@@ -59,7 +59,6 @@ class Recipe(PackagingRecipe):
         from .. import utils
         assert path.exists(self.isolated_python_dirpath)
         utils.download_buildout(self.get_download_cache_dist())
-        utils.download_distribute(self.get_download_cache_dist())
         utils.download_setuptools(self.get_download_cache_dist())
         return python_source.get_python_source(self.buildout, self.options)
 
