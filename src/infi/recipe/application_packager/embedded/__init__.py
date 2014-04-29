@@ -260,6 +260,7 @@ class Executable(Recipe):
             # our generated C code for main uses headers from the Python source code
             variables['CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
             variables['CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
+            variables['CPPDEFINES'] = ["Py_BUILD_CORE"]
             manifest = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
             manifest_embedded = "'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'".format(manifest)
 
