@@ -23,24 +23,24 @@ ISOLATED_PYTHON_LIBS = ['z',
                         'ssl', 'crypto', # all provided by openssl
                         'gpg-error', 'gcrypt', 'tasn1', 'gmp',
                         'nettle', 'hogweed', # providef by nettle
-                        'gettext', 'asprintf', 'gettextpo', 'intl', # all provided by gettext
+                        'asprintf', 'gettextpo', 'intl', # all provided by gettext
                         'iconv',
-                        'gnutls', 'xssl', # all provided by gnutls
+                        'gnutls', 'gnutls-extra', 'gnutls-openssl', 'gnutlsxx', # all provided by gnutls
                         'bz2', 'sqlite3', 'db',
                         'xml2', 'xslt', 'exslt',
                         'ffi', 'gdbm', 'sasl2',
-                        'event', 'event_core', 'event_extra', # all provided by libevent
+                        'event', # contains core and extra
                         'ev', 'zmq',
                         'ldap', 'ldap_r', 'lber', # all oprvided by openldap
                         ]
-WINDWS_ISOLATED_PYTHON_LIBS = ['zlib',
+WINDWS_ISOLATED_PYTHON_LIBS = ['zlib', 'libdb51'
                                'ssleay32', 'libeay32', # all provided by openssl
                                'asprintf', 'intl', # all provided by gettext
                                'iconv', 'charset',
                                'libbz2',
                                'sqlite3ts', 'tcl85ts', 'tk85ts'  # all required by sqlite3
                                'libxml2_a', 'libxslt_a', 'libexslt_a',
-                               'libevent', 'libevent_core', 'libevent_extras', # all provided by libevent
+                               'libevent', # contains libevent_core and libevent_extras
                                ]
 # osx parts = zlib ncurses readline openssl openssh libgpg-error libgcrypt libtasn1 gmp nettle gettext          libgnutls bzip2 sqlite3 db libxml2 libxslt libffi gdbm cyrus-sasl libevent libev zeromq openldap graphviz python
 # std parts = zlib ncurses readline openssl openssh libgpg-error libgcrypt                     gettext libiconv libgnutls bzip2 sqlite3 db libxml2 libxslt libffi gdbm cyrus-sasl libevent libev zeromq openldap graphviz python
