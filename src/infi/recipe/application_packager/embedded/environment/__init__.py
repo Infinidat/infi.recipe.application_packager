@@ -25,7 +25,7 @@ ISOLATED_PYTHON_LIBS = ['z',
                         'nettle', 'hogweed', # providef by nettle
                         'asprintf', 'gettextpo', 'intl', # all provided by gettext
                         'iconv',
-                        'gnutls', 'gnutls-extra', 'gnutls-openssl', 'gnutlsxx', # all provided by gnutls
+                        'gnutls', 'gnutls-extra', 'gnutls-openssl', 'gnutlsxx', 'gnutls-xssl', # all provided by gnutls
                         'bz2', 'sqlite3', 'db',
                         'xml2', 'xslt', 'exslt',
                         'ffi', 'gdbm', 'sasl2',
