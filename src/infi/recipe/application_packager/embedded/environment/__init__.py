@@ -35,13 +35,12 @@ ISOLATED_PYTHON_LIBS = ['z',
                         ]
 WINDWS_ISOLATED_PYTHON_LIBS = ['zlib',
                                'ssleay32', 'libeay32', # all provided by openssl
-                               'gettextlib', 'uniname', 'asprintf', 'grt', 'intl', # all provided by gettext
+                               'asprintf', 'intl', # all provided by gettext
                                'iconv', 'charset',
-                               'gnutls', 'xssl', # all provided by gnutls
                                'libbz2',
                                'sqlite3ts', 'tcl85ts', 'tk85ts'  # all required by sqlite3
-                               'libxml2', 'libxslt', 'libexslt',
-                               'libevent', 'libevent_core', 'libevent_extra', # all provided by libevent
+                               'libxml2_a', 'libxslt_a', 'libexslt_a',
+                               'libevent', 'libevent_core', 'libevent_extras', # all provided by libevent
                                ]
 # osx parts = zlib ncurses readline openssl openssh libgpg-error libgcrypt libtasn1 gmp nettle gettext          libgnutls bzip2 sqlite3 db libxml2 libxslt libffi gdbm cyrus-sasl libevent libev zeromq openldap graphviz python
 # std parts = zlib ncurses readline openssl openssh libgpg-error libgcrypt                     gettext libiconv libgnutls bzip2 sqlite3 db libxml2 libxslt libffi gdbm cyrus-sasl libevent libev zeromq openldap graphviz python
