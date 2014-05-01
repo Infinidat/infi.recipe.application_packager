@@ -1,3 +1,4 @@
+from infi.pyutils.contexts import contextmanager
 from zc.buildout.download import Download
 from logging import getLogger
 logger = getLogger(__name__)
@@ -271,3 +272,13 @@ class PackagingRecipe(object):
                    for distname, version in distributions.items()]):
                 continue
             remove(filepath)
+
+    @contextmanager
+    def with_most_mortem(self):
+        try:
+            yield
+        except:
+            if self.get_recipe_section().get('pdb', 'false') == 'true':
+                import pdb; pdb.post_mortem()
+            raise
+
