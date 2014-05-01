@@ -63,7 +63,8 @@ class Recipe(PackagingRecipe):
         return python_source.get_python_source(self.buildout, self.options)
 
     def build_embedded_python(self, python_source_path):
-        if glob(path.join(self.embedded_python_build_dir, '*fpython*')) and not self.should_always_build():
+        artifacts = [f for f in glob(path.join(self.embedded_python_build_dir, '*fpython*')) if not f.endswith('.rsp')]
+        if artifacts and not self.should_always_build():
             logger.debug("embedded python is already built, skipping it")
             return
         self.prepare_for_running_pystick()
