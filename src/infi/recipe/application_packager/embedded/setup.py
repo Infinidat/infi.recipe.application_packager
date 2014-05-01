@@ -36,7 +36,8 @@ def _setup(name, package_dir={}, packages={}, ext_modules=[], py_modules=[], **k
     for ext_module in ext_modules:
         env = dict(CPPDEFINES=["{}={}".format(item[0], item[1]) for item in ext_module.define_macros],
                    CPPPATH=[os.path.abspath(item) for item in ext_module.include_dirs],
-                   LINKFLAGS=ext_module.extra_link_args)
+                   LINKFLAGS=ext_module.extra_link_args,
+                   CCFLAGS=ext_module.extra_compile_flags)
         absolute_sources = [os.path.abspath(source) for source in ext_module.sources]
         absolute_roots = list(set([os.path.abspath(os.path.dirname(source)) for source in ext_module.sources]))
         fixed_sources = [item.replace('.pyx', '.cpp') if os.path.exists(item.replace('.pyx', '.cpp')) else item
