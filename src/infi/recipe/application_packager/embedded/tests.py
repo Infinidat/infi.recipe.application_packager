@@ -8,6 +8,7 @@ EXPECTED_PYSTICK_ENVIRONMENT_FILE_CONTENTS = """env = DefaultEnvironment(
 **{   'EXTERNAL_C_MODULES_FILE': './c_modules.json',
     'EXTERNAL_PY_MODULES_FILE': './python_files.json'}
 )
+
 """
 
 from . import build
@@ -39,7 +40,8 @@ class UnitTestCase(unittest.TestCase):
             with open('_embed_recipe.json') as fd:
                 data = load(fd)
         self.assertEquals(sorted(data['python_files']), sorted(expected_data['python_files']))
-        self.assertEquals(sorted(data['c_extensions']), sorted(expected_data['c_extensions']))
+        self.assertEquals(sorted([sorted(extension.items()) for extension in data['c_extensions']]),
+                          sorted([sorted(extension.items()) for extension in expected_data['c_extensions']]))
 
     def test_write_pystick_variable_file(self):
         from . import environment
@@ -121,7 +123,8 @@ def prepare_package_mock():
                      u'package': False,
                      u'source': path.abspath(path.join(path.curdir, 'bar.py'))}]
     c_extensions = [{u'depends': [u'foo'],
-                     u'env': {u'CPPDEFINES': [u'THIS=1'],
+                     u'env': {u'CCFLAGS': [],
+                              u'CPPDEFINES': [u'THIS=1'],
                               u'CPPPATH': [path.abspath(path.join(path.curdir, 'include'))],
                               u'LINKFLAGS': []},
                      u'name': u'goodbye',
