@@ -1,3 +1,4 @@
+from unittest raise SkipTest
 from infi import unittest
 from mock import patch
 from glob import glob
@@ -46,6 +47,9 @@ class UnitTestCase(unittest.TestCase):
     def test_write_pystick_variable_file(self):
         from . import environment
         from ..utils import temporary_directory_context
+        from os import name
+        if name == 'nt':
+            raise SkipTest("windows")
         with temporary_directory_context():
             environment.write_pystick_variable_file(path.join(path.curdir, 'pystick_variable_filepath'), [], [], {})
             with open('pystick_variable_filepath') as fd:
