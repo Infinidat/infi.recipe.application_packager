@@ -1,4 +1,4 @@
-from unittest raise SkipTest
+from unittest import SkipTest
 from infi import unittest
 from mock import patch
 from glob import glob
