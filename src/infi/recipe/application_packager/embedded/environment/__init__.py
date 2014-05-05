@@ -125,6 +125,7 @@ def get_scons_variables__linux(static_libdir, static_libs):
     variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
     variables.update(
+        CPPFLAGS='-I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
         LIBPATH=[static_libdir],
         LIBS=static_libs + ['pthread', 'crypt', 'dl', 'util', 'm'],
         CC=' '.join([variables['CC'],
@@ -139,6 +140,7 @@ def get_scons_variables__osx(static_libdir, static_libs):
     variables.update(DEFINES)
     variables.update(OSX_DEFINES_UPDATE)
     variables.update(
+        CPPFLAGS='-I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
         LIBPATH=[static_libdir],
         LIBS=static_libs + ['iconv', 'dl'],
         LINKFLAGS=' '.join(['-framework CoreFoundation -framework SystemConfiguration',
