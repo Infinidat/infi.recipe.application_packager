@@ -16,6 +16,7 @@ DEFINES = dict(HAVE_CURSES=True, HAVE_CURSES_PANEL=True, HAVE_LIBBZ2=True, HAVE_
                WITH_PYTHON_MODULE_NIS=False, STATIC_PYTHON_MODULES=1)
 WINDOWS_DEFINES_UPDATE = dict(HAVE_CURSES=False, HAVE_CURSES_PANEL=False, HAVE_LIBGDBM=False, HAVE_LIBNDBM=False,
                               HAVE_LIBDB=False, HAVE_READLINE=False, HAVE_LIBCRYPT=False)
+OSX_DEFINES_UPDATE = dict(HAVE_READLINE=False)
 WINDOWS_NATIVE_LIBS = ['shell32', 'user32', 'advapi32', 'ole32', 'oleaut32', 'gdi32', 'ws2_32']
 ISOLATED_PYTHON_LIBS = ['z',
                         'ncurses', 'form', 'panel', # all provided by ncurses
@@ -25,7 +26,7 @@ ISOLATED_PYTHON_LIBS = ['z',
                         'nettle', 'hogweed', # providef by nettle
                         'asprintf', 'gettextpo', 'intl', # all provided by gettext
                         'iconv',
-                        'gnutls', 'gnutls-extra', 'gnutls-openssl', 'gnutlsxx', 'gnutls-xssl', # all provided by gnutls
+                        'gnutls', 'gnutls-extra', 'gnutlsxx', 'gnutls-xssl', # all provided by gnutls
                         'bz2', 'sqlite3', 'db',
                         'xml2', 'xslt', 'exslt',
                         'ffi', 'gdbm', 'sasl2',
@@ -136,6 +137,7 @@ def get_scons_variables__linux(static_libdir, static_libs):
 def get_scons_variables__osx(static_libdir, static_libs):
     variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
+    variables.update(OSX_DEFINES_UPDATE)
     variables.update(
         LIBPATH=[static_libdir],
         LIBS=static_libs + ['iconv', 'dl'],
