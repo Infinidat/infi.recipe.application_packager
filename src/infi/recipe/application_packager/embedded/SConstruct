@@ -1,0 +1,7 @@
+env = DefaultEnvironment(
+     **{variables}
+)
+
+{manifest}
+
+env.Program({source!r})

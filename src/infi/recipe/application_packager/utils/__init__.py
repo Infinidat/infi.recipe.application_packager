@@ -44,11 +44,18 @@ def _get_install_package_verion(package_name):
 def get_pypi_index_url():
     from ConfigParser import ConfigParser, NoOptionError, NoSectionError
     from os import path
+    pydistutils_files = [path.expanduser(path.join("~", basename)) for basename in ['.pydistutils.cfg', 'pydistutils.cfg']]
     pydistutils = ConfigParser()
-    pydistutils.read([path.expanduser(path.join("~", basename)) for basename in ['.pydistutils.cfg', 'pydistutils.cfg']])
+    pydistutils.read(pydistutils_files)
     try:
         return pydistutils.get("easy_install", "index-url").strip("/")
     except (NoSectionError, NoOptionError):
+        for filepath in pydistutils_files:
+            if path.exists(filepath):
+                with open(filepath) as fd:
+                    logger.debug("{}: {!r}".format(filepath, fd.read()))
+            else:
+                logger.debug("{} does not exist".format(filepath))
         return "https://pypi.python.org/simple"
 
 def is_official_pypi(url):
@@ -85,7 +92,6 @@ def download_distribute(destination_dir):
     with chdir(destination_dir):
         urlretrieve(distribute_url, distribute_filepath)
 
-
 def download_setuptools(destination_dir):
     from urllib import urlretrieve
     distribute_url = _get_package_url("setuptools")
@@ -94,6 +100,13 @@ def download_setuptools(destination_dir):
         urlretrieve(distribute_url, distribute_filepath)
     write_ez_setup_py(destination_dir)
 
+def download_package_source(package_name, destination_dir):
+    from urllib import urlretrieve
+    url = _get_package_url(package_name)
+    filepath = url.split('/')[-1]
+    with chdir(destination_dir):
+        urlretrieve(url, filepath)
+    return filepath
 
 def get_dependencies(name):
     from pkg_resources import get_distribution

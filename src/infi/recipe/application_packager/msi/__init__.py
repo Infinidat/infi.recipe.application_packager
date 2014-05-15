@@ -45,21 +45,22 @@ SILENT_LAUNCHER = "silent_launcher-{}.exe"
 
 class Recipe(PackagingRecipe):
     def install(self):
-        self.delete_non_production_packages_from_cache_dist()
-        self.signtool = self.get_signtool()
-        self.write_buildout_configuration_file_for_production()
-        utils.download_buildout(self.get_download_cache_dist())
-        utils.download_setuptools(self.get_download_cache_dist())
-        silent_launcher = self.get_silent_launcher()
-        if self.should_sign_files():
-            self.sign_all_executables_in_project()
-            self.signtool.sign_file(silent_launcher)
-        package = self.build_package(silent_launcher)
-        logger.debug("Built {}".format(package))
-        if self.should_sign_files():
-            self.signtool.sign_file(package)
-            logger.debug("Signed {}".format(package))
-        return [package, ]
+        with self.with_most_mortem():
+            self.delete_non_production_packages_from_cache_dist()
+            self.signtool = self.get_signtool()
+            self.write_buildout_configuration_file_for_production()
+            utils.download_buildout(self.get_download_cache_dist())
+            utils.download_setuptools(self.get_download_cache_dist())
+            silent_launcher = self.get_silent_launcher()
+            if self.should_sign_files():
+                self.sign_all_executables_in_project()
+                self.signtool.sign_file(silent_launcher)
+            package = self.build_package(silent_launcher)
+            logger.debug("Built {}".format(package))
+            if self.should_sign_files():
+                self.signtool.sign_file(package)
+                logger.debug("Signed {}".format(package))
+            return [package, ]
 
     def get_silent_launcher(self):
         from tempfile import mkstemp
