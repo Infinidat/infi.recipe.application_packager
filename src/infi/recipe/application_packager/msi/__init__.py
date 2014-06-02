@@ -196,7 +196,7 @@ class Recipe(PackagingRecipe):
         return action.get('Id')
 
     def _append_buildout_custom_action(self, wix, bootstrap_id, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]bin\buildout.exe" -c "[INSTALLDIR]buildout.cfg"'
+        commandline = r'"[INSTALLDIR]bin\buildout.exe" -U -c "[INSTALLDIR]buildout.cfg"'
         action = wix.add_deferred_in_system_context_custom_action('buildout', commandline,
                                                                   after=bootstrap_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
@@ -205,7 +205,7 @@ class Recipe(PackagingRecipe):
 
 
     def _append_close_application_action(self, wix, bootstrap_id, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]bin\buildout.exe" -c "[INSTALLDIR]buildout.cfg" install debug-logging close-application'
+        commandline = r'"[INSTALLDIR]bin\buildout.exe" -U -c "[INSTALLDIR]buildout.cfg" install debug-logging close-application'
         condition = CONDITION_DURING_UPGRADE_AND_UNINSTALL
         action = wix.add_deferred_in_system_context_custom_action('close_application', commandline,
                                                                   after='InstallInitialize',

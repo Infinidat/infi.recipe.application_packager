@@ -79,7 +79,7 @@ assert_rc
 
 # buildout
 echo -en "Bootstraping, this may take a few minutes"
-execute bin/buildout
+execute bin/buildout -U
 RC=$$?
 echo -en "\r"
 assert_rc
@@ -153,7 +153,7 @@ execute cd %{prefix}
 # detect upgrade
 if test -n "$$1" -a "$$1" != "0"; then
     # close application
-    execute bin/buildout install debug-logging close-application
+    execute bin/buildout -U install debug-logging close-application
     RC=$$?
     assert_rc
     exit 0
@@ -167,7 +167,7 @@ if test -n "%{pre_uninstall_script_name}" -a -x "bin/%{pre_uninstall_script_name
 fi
 
 # close application
-execute bin/buildout install debug-logging close-application
+execute bin/buildout -U install debug-logging close-application
 RC=$$?
 assert_rc
 

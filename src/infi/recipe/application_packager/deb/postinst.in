@@ -45,7 +45,7 @@ RC=$$?
 assert_rc
 
 # buildout
-execute bin/buildout
+execute bin/buildout -U
 RC=$$?
 assert_rc
 
