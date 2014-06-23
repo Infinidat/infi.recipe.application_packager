@@ -154,6 +154,9 @@ def get_scons_variables(static_libdir, options):
     project_specific_flags = dict(
                                   LINKFLAGS=options.get('LINKFLAGS', None),
                                   LIBS=options.get('LIBS', None),
+                                  PATH=options.get('PATH', None),
+                                  LIBRARY_PATH=options.get('LIBRARY_PATH', None),
+                                  LD_LIBRARY_PATH=options.get('LD_LIBRARY_PATH', None),
                                   ) if system() != "Windows" else dict()
     if system() == "Linux":
         variables = get_scons_variables__linux(static_libdir, static_libs)
