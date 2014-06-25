@@ -65,7 +65,7 @@ def _apply_project_specific_on_top_of_platform_defaults(variables, project_speci
             continue
         value = variables.get(key)
         if isinstance(value, basestring):
-            variables[key] = " ".join(value, added_value)
+            variables[key] = " ".join([value, added_value])
         elif isinstance(value, list):
             variables[key].append(added_value)
         elif isinstance(value, tuple):
