@@ -154,6 +154,8 @@ def get_scons_variables(static_libdir, options):
     project_specific_flags = dict(
                                   LINKFLAGS=options.get('LINKFLAGS', None),
                                   LIBS=options.get('LIBS', None),
+                                  CC=options.get('CC', None),
+                                  CXX=options.get('CXX', None),
                                   PATH=options.get('PATH', None),
                                   LIBRARY_PATH=options.get('LIBRARY_PATH', None),
                                   LD_LIBRARY_PATH=options.get('LD_LIBRARY_PATH', None),
