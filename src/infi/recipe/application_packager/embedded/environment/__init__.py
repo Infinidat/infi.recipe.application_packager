@@ -64,8 +64,10 @@ def _apply_project_specific_on_top_of_platform_defaults(variables, project_speci
         if added_value is None:
             continue
         value = variables.get(key)
-        if isinstance(value, basestring):
-            variables[key] = " ".join(value, added_value)
+        if key in ("CC", "CXX",):
+            variables[key] = added_value
+        elif isinstance(value, basestring):
+            variables[key] = " ".join([value, added_value])
         elif isinstance(value, list):
             variables[key].append(added_value)
         elif isinstance(value, tuple):
@@ -154,6 +156,8 @@ def get_scons_variables(static_libdir, options):
     project_specific_flags = dict(
                                   LINKFLAGS=options.get('LINKFLAGS', None),
                                   LIBS=options.get('LIBS', None),
+                                  CC=options.get('CC', None),
+                                  CXX=options.get('CXX', None),
                                   PATH=options.get('PATH', None),
                                   LIBRARY_PATH=options.get('LIBRARY_PATH', None),
                                   LD_LIBRARY_PATH=options.get('LD_LIBRARY_PATH', None),
