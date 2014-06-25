@@ -64,7 +64,9 @@ def _apply_project_specific_on_top_of_platform_defaults(variables, project_speci
         if added_value is None:
             continue
         value = variables.get(key)
-        if isinstance(value, basestring):
+        if key in ("CC", "CXX",):
+            variables[key] = added_value
+        elif isinstance(value, basestring):
             variables[key] = " ".join([value, added_value])
         elif isinstance(value, list):
             variables[key].append(added_value)
