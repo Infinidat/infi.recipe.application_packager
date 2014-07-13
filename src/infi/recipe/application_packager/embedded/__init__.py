@@ -25,7 +25,7 @@ def pystick(args):
 def scons(args=None):
     import sys
     from SCons import Script
-    sys.argv = ['csons'] + (args or list())
+    sys.argv = ['scons'] + (args or list())
     Script.main()
 
 
