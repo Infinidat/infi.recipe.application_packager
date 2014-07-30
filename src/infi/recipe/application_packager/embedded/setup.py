@@ -50,6 +50,7 @@ def _setup(name, package_dir={}, packages={}, ext_modules=[], py_modules=[], **k
         python_files.append(dict(package=False, source=os.path.abspath(py_module + '.py'), name=py_module))
     with open("_embed_recipe.json", 'w') as fd:
         fd.write(json.dumps(dict(python_files=python_files, c_extensions=c_extensions), indent=4))
+    return mock.MagicMock()
 
 
 def main():
