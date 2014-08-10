@@ -24,7 +24,7 @@ class UnitTestCase(unittest.TestCase):
         with patch.object(python_source, "Download") as Download:
             with patch("tarfile.open") as tarfile_open:
                 actual = python_source.get_python_source(buildout, options)
-        source_url = "http://python.infinidat.com/archives/Python-2.7.6.tgz"
+        source_url = "http://python.infinidat.com/python/sources/Python-2.7.6.tgz"
         args = Download(buildout_section)(source_url)[0], 'r:gz'
         tarfile_open.assert_called_with(*args)
         tarfile_open(*args).extract_all.assert_called()

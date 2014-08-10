@@ -6,7 +6,7 @@ from zc.buildout.download import Download
 
 
 logger = getLogger(__name__)
-DOWNLOAD_BASE = 'ftp://python.infinidat.com/archives'
+DOWNLOAD_BASE = 'ftp://python.infinidat.com/python/sources'
 
 
 def get_isolated_python_source(buildout, options):
