@@ -34,7 +34,7 @@ ISOLATED_PYTHON_LIBS = ['z',
                         'ev', 'zmq',
                         'ldap', 'ldap_r', 'lber', # all oprvided by openldap
                         ]
-WINDWS_ISOLATED_PYTHON_LIBS = ['zlib', 'libdb51'
+WINDWS_ISOLATED_PYTHON_LIBS = ['zlib', 'libdb51',
                                'ssleay32', 'libeay32', # all provided by openssl
                                'asprintf', 'intl', # all provided by gettext
                                'iconv', 'charset',
@@ -89,11 +89,11 @@ def write_pystick_variable_file(pystick_variable_filepath, python_files, c_exten
     variables = dict(scons_variables)
     variables.update(json_reference_dict)
     manifest = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
-    manifest_embedded = "'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'".format(manifest)
+    manifest_embedded = "mt.exe -nologo -manifest {} -outputresource:$TARGET;2".format(manifest)
 
     with open(pystick_variable_filepath, 'w') as fd:
         fd.write("env = DefaultEnvironment(\n**{}\n)\n{}\n".format(pformat(variables, indent=4),
-                                                                   "LINKCOM=[env['LINKCOM'], {}]".format(manifest_embedded)
+                                                                   "LINKCOM=[env['LINKCOM'], {!r}]".format(manifest_embedded)
                                                                    if os_name == 'nt' else ''))
 
 
