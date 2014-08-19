@@ -12,7 +12,7 @@ from os import path, name as os_name
 DEFINES = dict(HAVE_CURSES=True, HAVE_CURSES_PANEL=True, HAVE_LIBBZ2=True, HAVE_LIBCABINET=True, HAVE_LIBCRYPT=True,
                HAVE_LIBDB=True, HAVE_LIBGDBM=True, HAVE_LIBM=True, HAVE_LIBNSL=True,
                HAVE_LIBRPCRT4=True, HAVE_LIBSQLITE3=True, HAVE_LIBTCL=False, HAVE_LIBTK=False, HAVE_LIBWS2_32=True,
-               HAVE_LIBZ=True, HAVE_OPENSSL=True, HAVE_READLINE=True,
+               HAVE_LIBZ=True, HAVE_OPENSSL=True, HAVE_LIBSSL=True, HAVE_LIBCRYPTO=True, HAVE_READLINE=True,
                WITH_PYTHON_MODULE_NIS=False, STATIC_PYTHON_MODULES=1)
 WINDOWS_DEFINES_UPDATE = dict(HAVE_CURSES=False, HAVE_CURSES_PANEL=False, HAVE_LIBGDBM=False, HAVE_LIBNDBM=False,
                               HAVE_LIBDB=False, HAVE_READLINE=False, HAVE_LIBCRYPT=False)
@@ -21,7 +21,7 @@ WINDOWS_NATIVE_LIBS = ['shell32', 'user32', 'advapi32', 'ole32', 'oleaut32', 'gd
 ISOLATED_PYTHON_LIBS = ['z',
                         'ncurses', 'form', 'panel', # all provided by ncurses
                         'readline', 'history', # all provided by readline
-                        'ssl', 'crypto', # all provided by openssl
+                        'crypto', 'ssl', # all provided by openssl
                         'gpg-error', 'gcrypt', 'tasn1', 'gmp',
                         'nettle', 'hogweed', # providef by nettle
                         'asprintf', 'gettextpo', 'intl', # all provided by gettext
