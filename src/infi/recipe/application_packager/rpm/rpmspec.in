@@ -164,6 +164,14 @@ if test -n "$$1" -a "$$1" != "0"; then
     execute bin/buildout -U install debug-logging close-application
     RC=$$?
     assert_rc
+
+    if test -d src; then
+        echo -en "\rRemoving stale cache files, this may take a few minutes"
+        execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
+        execute find src -type d -empty -exec rmdir -v'{}' \;
+        echo -en "\r"
+    fi
+
     exit 0
 fi
 
@@ -202,10 +210,6 @@ exit 0
 
 %postun
 
-if test -n "$$1" -a "$$1" != "0"; then
-    exit 0
-fi
-
 RC=0
 
 function execute() {
@@ -222,6 +226,17 @@ if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
     DEBUG=1
     set -xv
 fi
+
+if test -n "$$1" -a "$$1" != "0"; then
+    if test -d src; then
+        echo -en "\rRemoving stale cache files, this may take a few minutes"
+        execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
+        execute find src -type d -empty -exec rmdir -v'{}' \;
+        echo -en "\r"
+    fi
+    exit 0
+fi
+
 
 set +e
 execute rmdir %{prefix}
