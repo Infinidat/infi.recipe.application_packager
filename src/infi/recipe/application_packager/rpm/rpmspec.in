@@ -74,7 +74,7 @@ echo -en "\r"
 if test -d src; then
     echo -en "\rRemoving stale cache files, this may take a few minutes"
     execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
-    execute find src -type d -empty -exec rmdir -v'{}' \;
+    execute find src -type d -empty -exec rmdir -v '{}' \;
     echo -en "\r"
 fi
 
@@ -189,12 +189,6 @@ for script in *; do
     fi
 done
 cd ..
-
-# cleanup pyc files and old directories
-if test -d src; then
-    execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
-    execute find src -type d -empty -exec rmdir -v'{}' \;
-fi
 
 # clean installed directories
 # this also deletes installed files
