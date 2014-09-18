@@ -12,7 +12,10 @@ INSTALLDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), #scripts
                                           os.path.pardir, #src
                                           os.path.pardir))
 
+from .refactoring import before
+
 def hello(argv=argv):
+    before()
     print('hello world')
 
 def _write_file(name):
@@ -20,15 +23,18 @@ def _write_file(name):
         fd.write(' ')
 
 def post_install(argv=argv):
+    before()
     _write_file('post_install')
 
 def pre_uninstall(argv=argv):
     _write_file(os.path.join(INSTALLDIR, os.path.pardir, 'pre_uninstall'))
 
 def sample(argv=argv):
+    before()
     raw_input('sample, hit enter to exit')
 
 def sleep(argv=argv):
+    before()
     t0 = time.time()
     timeout = int(argv[-1])
     try:

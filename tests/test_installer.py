@@ -81,6 +81,37 @@ def devenv_build():
     from infi.execute import execute_assert_success
     execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'setup.py', '__version__.py'])
 
+def apply_change_in_file(filepath):
+    with open(filepath) as fd:
+        contents = fd.read()
+    with open(filepath, 'w') as fd:
+        fd.write(contents.replace('before', 'after'))
+
+def do_a_refactoring_change():
+    # HOSTDEV-1781
+    from gitpy import LocalRepository
+    from os import rename
+    scripts_dir = os.path.join("src", "infi", "recipe", "application_packager", "scripts")
+    refactoring_dir = os.path.join(scripts_dir, "refactoring")
+    scripts_init = os.path.join(scripts_dir, "__init__.py")
+    refactoring_py = "{}.py".format(refactoring_dir)
+    if not os.path.exists(refactoring_dir):
+        return
+    # move the file
+    rename(os.path.join(refactoring_dir, "__init__.py"), refactoring_py)
+
+    # change the files
+    apply_change_in_file(refactoring_py)
+    apply_change_in_file(scripts_init)
+
+    # commit the changes
+    repository = LocalRepository('.')
+    repository.delete(refactoring_dir, recursive=True, force=True)
+    repository.add(refactoring_py)
+    repository.add(scripts_init)
+    repository.commit("HOSTDEV-1781 refactoring scripts/refactoring")
+
+
 from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
 from infi.recipe.application_packager.utils import chdir
 from infi.recipe.application_packager.installer import Installer, MsiInstaller, DebInstaller, RpmInstaller
@@ -161,13 +192,13 @@ class Base(unittest.TestCase):
         self.uninstall_package(with_custom_actions)
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
-    @unittest.parameters.iterate("with_custom_actions", [True])
     def test_upgrade(self, with_custom_actions=True):
         self.assertFalse(self.is_product_installed())
         self.install_package(with_custom_actions)
         self.assert_product_was_installed_successfully(with_custom_actions)
         delete_existing_builds()
-        do_an_empty_commit()
+        do_a_refactoring_change()
+        # HOSTDEV-1781
         devenv_build()
         create_package()
         self.install_package(with_custom_actions)

@@ -67,7 +67,13 @@ execute cd %{prefix}
 
 # delete old eggs
 echo -en "\rRemoving temporary files, this may take a few minutes"
-rm -rf eggs
+execute rm -rvf eggs
+echo -en "\r"
+
+# cleanup pyc files and old directories
+echo -en "\rRemoving stale cache files, this may take a few minutes"
+execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
+execute find src -type d -empty -exec rmdir -v '{}' \;
 echo -en "\r"
 
 # bootstrap
