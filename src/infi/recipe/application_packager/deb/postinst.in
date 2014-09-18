@@ -40,8 +40,10 @@ execute cd $prefix
 execute rm -rvf eggs
 
 # cleanup pyc files and old directories
-execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
-execute find src -type d -empty -exec rmdir -v'{}' \;
+if test -d src; then
+    execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
+    execute find src -type d -empty -exec rmdir -v'{}' \;
+fi
 
 # bootstrap
 execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/ez_setup.py

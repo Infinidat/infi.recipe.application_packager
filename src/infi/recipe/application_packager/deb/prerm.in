@@ -67,6 +67,12 @@ for script in *; do
 done
 cd ..
 
+# cleanup pyc files and old directories
+if test -d src; then
+    execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
+    execute find src -type d -empty -exec rmdir -v'{}' \;
+fi
+
 # clean installed directories
 # this also deletes installed files
 for dirname in $directories_to_clean; do
