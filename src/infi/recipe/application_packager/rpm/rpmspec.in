@@ -31,7 +31,74 @@ Release: 1
 $directories
 $files
 
+%pre
+# http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
+# runs before a new package is installed
+#       install upgrade uninstall
+# %pre  $1 == 1 $1 == 2 (N/A)
+
+RC=0
+
+function assert_rc() {
+    if test $$RC -ne 0; then
+        exit 1
+    fi
+}
+
+function execute() {
+    if test $$DEBUG -eq 0; then
+        $$@ > /dev/null 2>&1
+    else
+        $$@
+    fi
+}
+
+# debugging
+DEBUG=0
+if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
+    DEBUG=1
+    set -xv
+fi
+
+# bypass custom actions
+if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
+    exit 0
+fi
+
+# if upgrading or installing, and target dir exists
+if test -n "$$1" -a -d %{prefix}; then
+
+    execute pushd .
+    execute cd %{prefix}
+
+    # close application
+    execute bin/buildout -U install debug-logging close-application
+    RC=$$?
+    assert_rc
+
+    if test -d src; then
+        echo -en "\rRemoving stale cache files, this may take a few minutes"
+        execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
+        execute find src -type d -empty -exec rmdir -v'{}' \;
+        echo -en "\r"
+
+        # move the old source files aside
+        execute rm -rf _src
+        execute mv -v src _src
+    fi
+
+    # delete old eggs
+    echo -en "\rRemoving temporary files, this may take a few minutes"
+    execute rm -rvf eggs
+    echo -en "\r"
+
+fi
+
 %post
+# http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
+# runs after files of the new package are in place
+#           install upgrade uninstall
+#  %post    $1 == 1 $1 == 2 (N/A)
 
 RC=0
 
@@ -64,19 +131,6 @@ fi
 # start
 execute pushd .
 execute cd %{prefix}
-
-# delete old eggs
-echo -en "\rRemoving temporary files, this may take a few minutes"
-execute rm -rvf eggs
-echo -en "\r"
-
-# cleanup pyc files and old directories
-if test -d src; then
-    echo -en "\rRemoving stale cache files, this may take a few minutes"
-    execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
-    execute find src -type d -empty -exec rmdir -v '{}' \;
-    echo -en "\r"
-fi
 
 # bootstrap
 echo -en "Bootstrapping, this may take a few minutes"
@@ -119,12 +173,25 @@ if test -n "%{post_install_script_name}" -a -x "bin/%{post_install_script_name}"
     assert_rc
 fi
 
+# if upgrading, lets merge src_ back to src
+if test -n "$$1" -a "$$1" != "1"; then
+    echo -en "Processing upgrade files"
+    execute cp -fvr src_ src
+    RC=$$?
+    echo -en "\r"
+    assert_rc
+fi
+
 #end
 execute popd
 exit 0
 
 
 %preun
+# http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
+# runs before old package is removed
+#         install upgrade uninstall
+# %preun  (N/A)   $1 == 1 $1 == 0
 
 RC=0
 
@@ -160,18 +227,6 @@ execute cd %{prefix}
 
 # detect upgrade
 if test -n "$$1" -a "$$1" != "0"; then
-    # close application
-    execute bin/buildout -U install debug-logging close-application
-    RC=$$?
-    assert_rc
-
-    if test -d src; then
-        echo -en "\rRemoving stale cache files, this may take a few minutes"
-        execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
-        execute find src -type d -empty -exec rmdir -v'{}' \;
-        echo -en "\r"
-    fi
-
     exit 0
 fi
 
@@ -209,6 +264,10 @@ execute popd
 exit 0
 
 %postun
+# http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
+# runs after old package is removed
+#           install upgrade uninstall
+# %postun   (N/A)   $1 == 1 $1 == 0
 
 RC=0
 
@@ -226,17 +285,6 @@ if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
     DEBUG=1
     set -xv
 fi
-
-if test -n "$$1" -a "$$1" != "0"; then
-    if test -d src; then
-        echo -en "\rRemoving stale cache files, this may take a few minutes"
-        execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
-        execute find src -type d -empty -exec rmdir -v'{}' \;
-        echo -en "\r"
-    fi
-    exit 0
-fi
-
 
 set +e
 execute rmdir %{prefix}
