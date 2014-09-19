@@ -34,57 +34,34 @@ $files
 %pre
 # http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
 # runs before a new package is installed
-#       install upgrade uninstall
-# %pre  $1 == 1 $1 == 2 (N/A)
+#       install  upgrade  uninstall
+# %pre  $$1 == 1 $$1 == 2 (N/A)
 
-RC=0
+$script_header
 
-function assert_rc() {
-    if test $$RC -ne 0; then
-        exit 1
-    fi
-}
-
-function execute() {
-    if test $$DEBUG -eq 0; then
-        $$@ > /dev/null 2>&1
-    else
-        $$@
-    fi
-}
-
-# debugging
-DEBUG=0
-if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
-    DEBUG=1
-    set -xv
-fi
-
-# bypass custom actions
-if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
-    exit 0
-fi
-
-# if upgrading or installing, and target dir exists
-if test -n "$$1" -a -d %{prefix}; then
+# if target dir exists
+if -d %{prefix}; then
 
     execute pushd .
     execute cd %{prefix}
 
-    # close application
-    execute bin/buildout -U install debug-logging close-application
-    RC=$$?
-    assert_rc
+    # in case of an upgrade, lets close the previously-running applications
+    if test -n "$$1" -a "$$1" != "1"; then
+        execute bin/buildout -U install debug-logging close-application
+        RC=$$?
+        assert_rc
+    fi
 
+    # if source directory exists,
+    # we need to delete the pyc files and then move it a side, since the %post script is executed
+    # before the old files are deleted
     if test -d src; then
         echo -en "\rRemoving stale cache files, this may take a few minutes"
         execute find src -type f -name '*.pyc' -exec rm -vf '{}' \;
         execute find src -type d -empty -exec rmdir -v'{}' \;
-        echo -en "\r"
-
-        # move the old source files aside
         execute rm -rf _src
         execute mv -v src _src
+        echo -en "\r"
     fi
 
     # delete old eggs
@@ -92,41 +69,19 @@ if test -n "$$1" -a -d %{prefix}; then
     execute rm -rvf eggs
     echo -en "\r"
 
+    execute popd
 fi
+
+exit 0
 
 %post
 # http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
 # runs after files of the new package are in place
-#           install upgrade uninstall
-#  %post    $1 == 1 $1 == 2 (N/A)
+# the %pre sccript prepared us for upgrade already
+#           install  upgrade  uninstall
+#  %post    $$1 == 1 $$1 == 2 (N/A)
 
-RC=0
-
-function assert_rc() {
-    if test $$RC -ne 0; then
-        exit 1
-    fi
-}
-
-function execute() {
-    if test $$DEBUG -eq 0; then
-        $$@ > /dev/null 2>&1
-    else
-        $$@
-    fi
-}
-
-# debugging
-DEBUG=0
-if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
-    DEBUG=1
-    set -xv
-fi
-
-# bypass custom actions
-if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
-    exit 0
-fi
+$script_header
 
 # start
 execute pushd .
@@ -190,42 +145,16 @@ exit 0
 %preun
 # http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
 # runs before old package is removed
-#         install upgrade uninstall
-# %preun  (N/A)   $1 == 1 $1 == 0
+#         install upgrade  uninstall
+# %preun  (N/A)   $$1 == 1 $$1 == 0
 
-RC=0
-
-function assert_rc() {
-    if test $$RC -ne 0; then
-        exit 1
-    fi
-}
-
-function execute() {
-    if test $$DEBUG -eq 0; then
-        $$@ > /dev/null 2>&1
-    else
-        $$@
-    fi
-}
-
-# debugging
-DEBUG=0
-if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
-    DEBUG=1
-    set -xv
-fi
-
-# bypass custom actions
-if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
-    exit 0
-fi
+$script_header
 
 # start
 execute pushd .
 execute cd %{prefix}
 
-# detect upgrade
+# detect upgrade, we need to run this script only on uninstall
 if test -n "$$1" -a "$$1" != "0"; then
     exit 0
 fi
@@ -266,26 +195,13 @@ exit 0
 %postun
 # http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
 # runs after old package is removed
-#           install upgrade uninstall
-# %postun   (N/A)   $1 == 1 $1 == 0
+#           install upgrade  uninstall
+# %postun   (N/A)   $$1 == 1 $$1 == 0
 
-RC=0
-
-function execute() {
-    if test $$DEBUG -eq 0; then
-        $$@ > /dev/null 2>&1
-    else
-        $$@
-    fi
-}
-
-# debugging
-DEBUG=0
-if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
-    DEBUG=1
-    set -xv
-fi
+$script_header
 
 set +e
-execute rmdir %{prefix}
+execute rmdir -v %{prefix}
 set -e
+
+exit 0
