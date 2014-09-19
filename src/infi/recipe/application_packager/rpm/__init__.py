@@ -137,7 +137,7 @@ class Recipe(PackagingRecipe):
                   'directories': "\n".join(["%dir {}/".format(item) for item in self._directories]),
                   'directories_to_clean': ' '.join(directories_to_clean)
                   }
-        post_install_script_args = fget_script_args("post_install")
+        post_install_script_args = get_script_args("post_install")
         pre_uninstall_script_args = self.get_script_args("pre_uninstall")
         kwargs['post_install_script_args_definition'] = \
                 "%define post_install_script_args {}".format(post_install_script_args) if post_install_script_args \
