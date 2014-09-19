@@ -40,7 +40,7 @@ $files
 $script_header
 
 # if target dir exists
-if -d %{prefix}; then
+if test -d %{prefix}; then
 
     execute pushd .
     execute cd %{prefix}
