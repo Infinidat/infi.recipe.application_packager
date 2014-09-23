@@ -10,6 +10,35 @@ from pkg_resources import resource_filename
 logger = getLogger(__name__)
 
 SPEC_TEMPLATE = resource_filename(__name__, 'rpmspec.in')
+SPEC_SCRIPT_HEADER = """
+RC=0
+
+function assert_rc() {
+    if test $RC -ne 0; then
+        exit 1
+    fi
+}
+
+function execute() {
+    if test $DEBUG -eq 0; then
+        $@ > /dev/null 2>&1
+    else
+        $@
+    fi
+}
+
+# debugging
+DEBUG=0
+if test -n "$DEBUG_CUSTOM_ACTIONS" -a "$DEBUG_CUSTOM_ACTIONS" == "1"; then
+    DEBUG=1
+    set -xv
+fi
+
+# bypass custom actions
+if test -n "$NO_CUSTOM_ACTIONS" -a "$NO_CUSTOM_ACTIONS" != "0"; then
+    exit 0
+fi
+"""
 
 class Recipe(PackagingRecipe):
     def install(self):
@@ -99,13 +128,14 @@ class Recipe(PackagingRecipe):
                   'package_version': self.get_project_version__short(),
                   'package_arch': self.get_platform_arch(),
                   'requires_declaration': self._get_requires_declaration(),
+                  'script_header': SPEC_SCRIPT_HEADER,
                   'prefix': self.get_install_prefix(),
                   'build_root': self._buildroot,
                   'post_install_script_name': self.get_script_name("post_install") or "''",
                   'pre_uninstall_script_name': self.get_script_name("pre_uninstall") or "''",
                   'files': "\n".join(self._files),
                   'directories': "\n".join(["%dir {}/".format(item) for item in self._directories]),
-                  'directories_to_clean': ' '.join(directories_to_clean),
+                  'directories_to_clean': ' '.join(directories_to_clean)
                   }
         post_install_script_args = self.get_script_args("post_install")
         pre_uninstall_script_args = self.get_script_args("pre_uninstall")

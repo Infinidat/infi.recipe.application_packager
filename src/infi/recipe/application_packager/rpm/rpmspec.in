@@ -31,44 +31,60 @@ Release: 1
 $directories
 $files
 
+%pre
+# http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
+# runs before a new package is installed
+#       install  upgrade  uninstall
+# %pre  $$1 == 1 $$1 == 2 (N/A)
+
+$script_header
+
+# if target dir exists
+if test -d %{prefix}; then
+    # in case of an upgrade
+    if test -n "$$1" -a "$$1" != "1"; then
+
+        execute pushd .
+        execute cd %{prefix}
+
+        # close the running application
+        if test -n "$$1" -a "$$1" != "1"; then
+            execute bin/buildout -U install debug-logging close-application
+            RC=$$?
+            assert_rc
+        fi
+
+        # if source directory exists, we need to delete since the files of the old package
+        # will be deleted only after the %post
+        if test -d src; then
+            echo -en "\rRemoving stale cache files, this may take a few minutes"
+            execute rm -rf src
+            echo -en "\r"
+        fi
+
+        # delete old eggs
+        echo -en "\rRemoving temporary files, this may take a few minutes"
+        execute rm -rvf eggs
+        echo -en "\r"
+
+        execute popd
+    fi
+fi
+
+exit 0
+
 %post
+# http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
+# runs after files of the new package are in place
+# the %pre sccript prepared us for upgrade already
+#           install  upgrade  uninstall
+#  %post    $$1 == 1 $$1 == 2 (N/A)
 
-RC=0
-
-function assert_rc() {
-    if test $$RC -ne 0; then
-        exit 1
-    fi
-}
-
-function execute() {
-    if test $$DEBUG -eq 0; then
-        $$@ > /dev/null 2>&1
-    else
-        $$@
-    fi
-}
-
-# debugging
-DEBUG=0
-if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
-    DEBUG=1
-    set -xv
-fi
-
-# bypass custom actions
-if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
-    exit 0
-fi
+$script_header
 
 # start
 execute pushd .
 execute cd %{prefix}
-
-# delete old eggs
-echo -en "\rRemoving temporary files, this may take a few minutes"
-rm -rf eggs
-echo -en "\r"
 
 # bootstrap
 echo -en "Bootstrapping, this may take a few minutes"
@@ -117,45 +133,19 @@ exit 0
 
 
 %preun
+# http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
+# runs before old package is removed
+#         install upgrade  uninstall
+# %preun  (N/A)   $$1 == 1 $$1 == 0
 
-RC=0
-
-function assert_rc() {
-    if test $$RC -ne 0; then
-        exit 1
-    fi
-}
-
-function execute() {
-    if test $$DEBUG -eq 0; then
-        $$@ > /dev/null 2>&1
-    else
-        $$@
-    fi
-}
-
-# debugging
-DEBUG=0
-if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
-    DEBUG=1
-    set -xv
-fi
-
-# bypass custom actions
-if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
-    exit 0
-fi
+$script_header
 
 # start
 execute pushd .
 execute cd %{prefix}
 
-# detect upgrade
+# detect upgrade, we need to run this script only on uninstall
 if test -n "$$1" -a "$$1" != "0"; then
-    # close application
-    execute bin/buildout -U install debug-logging close-application
-    RC=$$?
-    assert_rc
     exit 0
 fi
 
@@ -193,28 +183,17 @@ execute popd
 exit 0
 
 %postun
+# http://fedoraproject.org/wiki/Packaging:ScriptletSnippets
+# runs after old package is removed
+#           install upgrade  uninstall
+# %postun   (N/A)   $$1 == 1 $$1 == 0
 
 if test -n "$$1" -a "$$1" != "0"; then
     exit 0
 fi
 
-RC=0
-
-function execute() {
-    if test $$DEBUG -eq 0; then
-        $$@ > /dev/null 2>&1
-    else
-        $$@
-    fi
-}
-
-# debugging
-DEBUG=0
-if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
-    DEBUG=1
-    set -xv
-fi
-
 set +e
-execute rmdir %{prefix}
+rmdir -v %{prefix}
 set -e
+
+exit 0
