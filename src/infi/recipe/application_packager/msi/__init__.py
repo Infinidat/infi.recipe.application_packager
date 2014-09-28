@@ -214,6 +214,19 @@ class Recipe(PackagingRecipe):
                                                                   text="Closing open applications, this may take a few minutes")
 
     def _append_custom_actions(self, wix, silent_launcher_file_id):
+        recipe = self.get_recipe_section()
+        existing_installdir = recipe.get("existing-installdir")
+        # http://stackoverflow.com/questions/12576807/how-to-set-targetdir-or-installdir-from-a-registry-entry
+        if existing_installdir:
+            root, key = existing_installdir.split("\\", 1) # HKLM, SOFTWARE\...\InstallPath
+            key, value = key.rsplit("\\", 1) # Software...\, InstallPath
+            wix.add_existing_install_dir(root, key, value)
+            wix.set_custom_install_dir(recipe.get("custom-installdir", "[EXISTINGINSTALLDIR]"))
+            wix.prevent_user_from_choosing_installation_directory()
+        elif recipe.get("custom-installdir"):
+            wix.set_custom_install_dir(recipe.get("custom-installdir"))
+            wix.prevent_user_from_choosing_installation_directory()
+
         os_removedirs_eggs_id = self._append_os_removedirs_eggs(wix, silent_launcher_file_id)
         bootstrap_id = self._append_bootstrap_custom_action(wix, os_removedirs_eggs_id, silent_launcher_file_id)
         self._append_buildout_custom_action(wix, bootstrap_id, silent_launcher_file_id)
