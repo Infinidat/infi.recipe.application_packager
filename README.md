@@ -101,6 +101,8 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | LIBS                                  | executable, static_library                |                                                              | extra flags to pass (as a string) to pystick                             |
 | always-build                          | executable, static_library                |                                                              | always build from scratch, even when artifacts exist on disk             |
 | exclude-eggs                          | executable, static_library                | []                                                           | eggs not to include in the build                                         |
+| existing-installdir                   | msi                                       | None                                                         | path to registry value to look for installation directory                |
+| custom-installdir                     | msi                                       | None                                                         | override if want to use something other than [EXISTINGINSTALLDIR]        |
 
 Using the installers
 --------------------
@@ -140,6 +142,20 @@ To use these (example):
 * Redhat/CentOS: `NO_CUSTOM_ACTIONS=1 rpm ....`
 * Windows: `msiexec /i ... NO_CUSTOM_ACTIONS=1`
 
+Using fixed installation directory in Windows
+---------------------------------------------
+
+In some cases, you'd want to install the product in a specific location, without giving the end-user a choice to change that.
+
+When you set a value to `custom-installdir`, this will change the UI to jump from the welcome dialog to the verify-installation dialog.
+
+Looking for installation directory inside the Windows Registry
+--------------------------------------------------------------
+
+If you want to install the product under a directory that's written in the registry, add the following items to the buildout recipe:
+
+* existing-installdir: HKLM\Software\Key\SubKey\Value
+* custom-insalldir: [EXISTINGINSTALLDIR]
 
 Checking out the code
 =====================

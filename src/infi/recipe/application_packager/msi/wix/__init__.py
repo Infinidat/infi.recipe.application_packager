@@ -237,6 +237,35 @@ class Wix(object):
             if element.tag.endswith("Property") and element.get("Id") == name:
                 return element
 
+    def add_existing_install_dir(self, root, key, name):
+        # http://stackoverflow.com/questions/12576807/how-to-set-targetdir-or-installdir-from-a-registry-entry
+        element = self.new_element("Property", {"Id":"EXISTINGINSTALLDIR"}, self.product)
+        search_key = self.new_element("RegistrySearch", {"Id": "Locate_EXISTINGINSTALLDIR", "Root": root,
+                                                         "Key": key, "Name": name, "Type": "directory"}, element)
+        message = "Installation location in registry is missing: {}\\{}\\{}".format(root, key, name)
+        condition = self.new_element("Condition", {'Message': message}, self.product)
+        condition.text = "EXISTINGINSTALLDIR"
+
+    def set_custom_install_dir(self, value):
+        # http://stackoverflow.com/questions/12576807/how-to-set-targetdir-or-installdir-from-a-registry-entry
+        attributes = {'Id': "Set_INSTALLDIR", "Execute": "firstSequence", "Property": "INSTALLDIR", "Value": value}
+        action = self.new_element("CustomAction", attributes, self.product)
+        attributes = {"Action": action.get('Id')}
+        sequence = self.new_element("Custom", {"Action": action.get('Id'), "After": "FileCost"}, self.install_execute_sequence)
+        sequence.text = "(NOT Installed) AND (EXISTINGINSTALLDIR) AND (NOT UPGRADINGPRODUCTCODE)"
+        sequence = self.new_element("Custom", {"Action": action.get('Id'), "After": "FileCost"}, self.install_ui_sequence)
+        sequence.text = "(NOT Installed) AND (EXISTINGINSTALLDIR) AND (NOT UPGRADINGPRODUCTCODE)"
+
+    def prevent_user_from_choosing_installation_directory(self):
+        next = {"Dialog": "WelcomeDlg", "Control":"Next", "Event": "NewDialog", "Value": "InstallDirDlg"}
+        previous = {"Dialog": "VerifyReadyDlg", "Control":"Back", "Event": "NewDialog", "Value": "InstallDirDlg"}
+        for item in self.ui.iterchildren():
+            if item.tag.endswith("Publish"):
+                if all(item.attrib.get(key) == value for key, value in next.iteritems()):
+                    item.attrib["Value"] = "VerifyReadyDlg"
+                elif all(item.attrib.get(key) == value for key, value in previous.iteritems()):
+                    item.attrib["Value"] = "WelcomeDlg"
+
     def set_msi_property(self, key, value):
         element = self.get_msi_property(key)
         if element is None:
@@ -304,6 +333,10 @@ class Wix(object):
     @property
     def install_execute_sequence(self):
         return self.product[6]
+
+    @property
+    def install_ui_sequence(self):
+        return self.product[7]
 
     def build(self, wix_basedir, input_file, output_file):
         from ...utils.execute import execute_assert_success

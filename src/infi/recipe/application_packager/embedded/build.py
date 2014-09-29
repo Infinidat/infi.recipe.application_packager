@@ -116,6 +116,16 @@ def _scan_egg_dir(build_dir):
     #   <package>/
     from .setup import scan_for_python_files
     python_files = []
+
+    # read package name
+    with open(path.join(build_dir, "EGG-INFO", "top_level.txt"), "rb") as f:
+        package_name = f.read().strip()
+
+    package_as_py_file_path = path.join(build_dir, "{}.py".format(package_name))
+    if path.isfile(package_as_py_file_path):
+        return dict(python_files=[dict(package=False, name=package_name, source=package_as_py_file_path)],
+                    c_extensions=[])
+
     for dirpath in glob(path.join(build_dir, '*')):
         if not path.isdir(dirpath):
             continue
