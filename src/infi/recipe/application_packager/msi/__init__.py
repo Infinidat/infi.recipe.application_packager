@@ -129,6 +129,10 @@ class Recipe(PackagingRecipe):
         if dialog_bmp:
             logger.info("Setting custom dialog {}".format(dialog_bmp))
             wix.new_element("WixVariable", {"Id": "WixUIDialogBmp", "Value": dialog_bmp}, wix.product)
+        eula = self.get_eula_rtf()
+        if eula:
+            logger.info("Setting custom eula {}".format(eula))
+            wix.new_element("WixVariable", {"Id": "WixUILicenseRtf", "Value": eula}, wix.product)
         return wix
 
     @contextmanager

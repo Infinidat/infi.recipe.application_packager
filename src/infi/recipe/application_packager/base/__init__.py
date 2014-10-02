@@ -238,6 +238,9 @@ class PackagingRecipe(object):
     def get_msi_dialog_bmp(self):
         return self._get_resource_file_from_recipe_section('msi-dialog-bmp')
 
+    def get_eula_rtf(self):
+        return self._get_resource_file_from_recipe_section('eula-rtf')
+
     def get_shortcuts_icon(self):
         return self._get_resource_file_from_recipe_section("shortcuts-icon")
 
