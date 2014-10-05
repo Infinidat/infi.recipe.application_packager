@@ -146,6 +146,9 @@ class PackagingRecipe(object):
     def get_description(self):
         return self.get_project_section().get('long_description')
 
+    def get_documentation_url(self):
+        return self.get_project_section().get('documentation_url')
+
     def get_platform_arch(self):
         from platform import system, dist
         from sys import maxsize

@@ -1,17 +1,17 @@
 <?xml version='1.0'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-    <Product Id='*' Name='' Language='1033' Version='' Manufacturer='{company}' UpgradeCode=''>
-        <Package Description='' Manufacturer='{company}' InstallerVersion='301' Compressed='yes'/>
+    <Product Id='*' Name='{{ product_name }}' Language='1033' Version='{{ product_version }}' Manufacturer='{{ company_name }}' UpgradeCode='{{ upgrade_code }}'>
+        <Package Description='{{ description }}' Manufacturer='{{ company_name }}' InstallScope='perMachine' InstallerVersion='301' Compressed='yes'/>
         <Media Id='1' Cabinet='everything.cab' EmbedCab='yes'/>
         <Directory Id='TARGETDIR' Name='SourceDir'>
-            <Directory Id='ProgramFilesFolder'>
-                <Directory Id='COMPANYROOTDIRECTORY' Name='{company}'>
-                    <Directory Id='INSTALLDIR' Name=''/>
+            <Directory Id='{% if architecture == "x64" %}ProgramFiles64Folder{% else %}ProgramFilesFolder{% endif %}' >
+                <Directory Id='COMPANYROOTDIRECTORY' Name='{{ company_name }}'>
+                    <Directory Id='INSTALLDIR' Name='{{ product_name }}'/>
                 </Directory>
             </Directory>
             <Directory Id='ProgramMenuFolder'>
-                <Directory Id='CompanyProgramsFolder' Name='{company}'>
-                    <Directory Id='ApplicationProgramsFolder' Name=''/>
+                <Directory Id='CompanyProgramsFolder' Name='{{ company_name }}'>
+                    <Directory Id='ApplicationProgramsFolder' Name='{{ product_name }}'/>
                 </Directory>
             </Directory>
         </Directory>
@@ -21,6 +21,13 @@
         <InstallExecuteSequence/>
         <InstallUISequence/>
         <UIRef Id="WixUI_InstallDir_with_license_dialog"/>
+
+        {% if documentation_url %}
+            <CustomAction Id="LaunchDocumentation" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+            <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch a browser to view the product documentation online" />
+            <Property Id="WixShellExecTarget" Value="{{ documentation_url }}" />
+        {% endif %}
+
    </Product>
    <Fragment>
         <UI Id="WixUI_InstallDir_with_license_dialog">
@@ -45,7 +52,11 @@
             <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="3">1</Publish>
             <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
 
-            <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+            {% if documentation_url %}
+                <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="LaunchDocumentation" Order="999">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+            {% else %}
+                <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+            {% endif %}
 
             <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg">NOT Installed</Publish>
             <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">Installed AND PATCH</Publish>

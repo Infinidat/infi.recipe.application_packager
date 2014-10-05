@@ -1,7 +1,7 @@
 __import__("pkg_resources").declare_namespace(__name__)
 
 from logging import getLogger
-from pkg_resources import resource_filename
+from pkg_resources import resource_string
 
 logger = getLogger(__name__)
 
@@ -14,46 +14,35 @@ def generate_guid():
 
 ID_INVALID_PATTERN = r"[^A-Za-z0-9_\.]"
 ID_INVALID_PREFIX_PETTERN = r"^[^a-z_]"
-WIX_TEMPLATE = resource_filename(__name__, 'template.wxs')
+WIX_TEMPLATE = resource_string(__name__, 'template.wxs')
 BYPASS_CUSTOM_ACTION_PROPERTY = "NO_CUSTOM_ACTIONS"
 
-def read_template():
-    import lxml.etree
-    with open(WIX_TEMPLATE) as fd:
-        return lxml.etree.fromstring(fd.read())
 
 class Wix(object):
-    def __init__(self, product_name, product_version, architecture, upgrade_code, description, company_name):
+    def __init__(self, product_name, product_version, architecture, upgrade_code, description, company_name, documentation_url=None):
         super(Wix, self).__init__()
+        self._context = dict(
+            product_name=product_name,
+            product_version='.'.join(product_version.split('.')[:3]), # MSI supports a three-part version number format
+            architecture=architecture,
+            upgrade_code=upgrade_code,
+            description=description,
+            company_name=company_name,
+            documentation_url=documentation_url
+        )
+        xml = self._render_template()
+        self._content = self._parse_xml(xml)
         self._used_ids = set()
-        self._content = read_template()
-        self._inject_company_name(company_name)
-        self._inject_product_properties(product_name, product_version, architecture, upgrade_code, description)
-        self._architecture = architecture
         self._shortcuts_component = None
 
-    def _inject_company_name(self, company_name):
-        self.product.set("Manufacturer", company_name)
-        self.package.set("Manufacturer", company_name)
-        self.company_root_directory.set("Name", company_name)
-        self.company_program_menu_folder.set('Name', company_name)
+    def _render_template(self):
+        from jinja2 import Template, StrictUndefined
+        template = Template(WIX_TEMPLATE, undefined=StrictUndefined)
+        return template.render(self._context)
 
-    def _inject_product_properties(self, product_name, product_version, architecture, upgrade_code, description):
-        # Product
-        self.product.set('Name', product_name)
-        # MSI supports a three-part version number format
-        self.product.set('Version', '.'.join(product_version.split('.')[:3]))
-        self.product.set('UpgradeCode', upgrade_code)
-        # Package
-        self.package.set('InstallScope', 'perMachine')
-        self.package.set('Description', description)
-        # ProgramFiles
-        is64 = architecture == 'x64'
-        self.programfiles.set('Id', 'ProgramFiles64Folder' if is64 else 'ProgramFilesFolder')
-        # InstallDir
-        self.installdir.set('Name', product_name)
-        # Startmenu application folder
-        self.application_program_menu_folder.set('Name', product_name)
+    def _parse_xml(self, xml):
+        import lxml.etree
+        return lxml.etree.fromstring(xml)
 
     def _safe_id(self, unsafe_id):
         from re import sub
@@ -343,6 +332,6 @@ class Wix(object):
         from os import path
         candle = path.join(wix_basedir, "candle.exe")
         light = path.join(wix_basedir, "light.exe")
-        execute_assert_success([candle, input_file, '-arch', self._architecture])
+        execute_assert_success([candle, input_file, '-arch', self._context['architecture']])
         execute_assert_success([light, '-sval', '-ext', 'WixUIExtension', '-cultures:en-us',
                                'product.wixobj', '-o', output_file])
