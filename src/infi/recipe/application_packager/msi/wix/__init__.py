@@ -333,5 +333,5 @@ class Wix(object):
         candle = path.join(wix_basedir, "candle.exe")
         light = path.join(wix_basedir, "light.exe")
         execute_assert_success([candle, input_file, '-arch', self._context['architecture']])
-        execute_assert_success([light, '-sval', '-ext', 'WixUIExtension', '-cultures:en-us',
+        execute_assert_success([light, '-sval', '-ext', 'WixUIExtension', '-ext', 'WixUtilExtension', '-cultures:en-us',
                                'product.wixobj', '-o', output_file])
