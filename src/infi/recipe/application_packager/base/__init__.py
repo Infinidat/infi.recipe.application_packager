@@ -22,6 +22,8 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'msi-banner-bmp': None,
                    'msi-dialog-bmp': None,
                    'startmenu-shortcuts': [],
+                   'eula-rtf': None,
+                   'documentation-url': None
                   }
 
 PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
@@ -146,6 +148,9 @@ class PackagingRecipe(object):
     def get_description(self):
         return self.get_project_section().get('long_description')
 
+    def get_documentation_url(self):
+        return self._get_recipe_atribute('documentation-url')
+
     def get_platform_arch(self):
         from platform import system, dist
         from sys import maxsize
@@ -237,6 +242,9 @@ class PackagingRecipe(object):
 
     def get_msi_dialog_bmp(self):
         return self._get_resource_file_from_recipe_section('msi-dialog-bmp')
+
+    def get_eula_rtf(self):
+        return self._get_resource_file_from_recipe_section('eula-rtf')
 
     def get_shortcuts_icon(self):
         return self._get_resource_file_from_recipe_section("shortcuts-icon")

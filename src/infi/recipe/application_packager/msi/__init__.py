@@ -110,7 +110,7 @@ class Recipe(PackagingRecipe):
         from .wix import Wix
         wix = Wix(self.get_product_name(), self.get_project_version__short(),
                   self.get_platform_arch(), self.get_upgrade_code(), self.get_description(),
-                  self.get_company_name())
+                  self.get_company_name(), self.get_documentation_url())
         silent_launcher_file_id = self._put_all_files(wix, silent_launcher)
         self._append_bindir_to_system_path(wix)
         self._append_custom_actions(wix, silent_launcher_file_id)
@@ -129,6 +129,10 @@ class Recipe(PackagingRecipe):
         if dialog_bmp:
             logger.info("Setting custom dialog {}".format(dialog_bmp))
             wix.new_element("WixVariable", {"Id": "WixUIDialogBmp", "Value": dialog_bmp}, wix.product)
+        eula = self.get_eula_rtf()
+        if eula:
+            logger.info("Setting custom eula {}".format(eula))
+            wix.new_element("WixVariable", {"Id": "WixUILicenseRtf", "Value": eula}, wix.product)
         return wix
 
     @contextmanager

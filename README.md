@@ -103,6 +103,8 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | exclude-eggs                          | executable, static_library                | []                                                           | eggs not to include in the build                                         |
 | existing-installdir                   | msi                                       | None                                                         | path to registry value to look for installation directory                |
 | custom-installdir                     | msi                                       | None                                                         | override if want to use something other than [EXISTINGINSTALLDIR]        |
+| eula-rtf                              | msi                                       | None                                                         | path to end-user license agreement RTF file                              |
+| documentation-url                     | msi                                       | None                                                         | gives the user an option to launch the online docs after install         |
 
 Using the installers
 --------------------
