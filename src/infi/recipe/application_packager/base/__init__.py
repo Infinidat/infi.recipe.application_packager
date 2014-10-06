@@ -22,6 +22,8 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'msi-banner-bmp': None,
                    'msi-dialog-bmp': None,
                    'startmenu-shortcuts': [],
+                   'eula-rtf': None,
+                   'documentation-url': None
                   }
 
 PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
@@ -147,7 +149,7 @@ class PackagingRecipe(object):
         return self.get_project_section().get('long_description')
 
     def get_documentation_url(self):
-        return self.get_project_section().get('documentation_url')
+        return self._get_recipe_atribute('documentation-url')
 
     def get_platform_arch(self):
         from platform import system, dist
