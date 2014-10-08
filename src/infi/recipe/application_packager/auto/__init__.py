@@ -12,6 +12,9 @@ def get_platform_specific_recipe():
         elif distro.startswith('ubuntu'):
             from .. import deb
             return deb.Recipe
+    elif platform.system() == 'SunOS':
+        from .. import pkg
+        return pkg.Recipe
     else:
         return None
 

@@ -28,11 +28,14 @@ def chdir(destination_directory):
             logger.exception("Failed to change back to directory {}".format(current_dir))
 
 @contextmanager
-def temporary_directory_context():
+def temporary_directory_context(should_chdir=True):
     from tempfile import mkdtemp
     from shutil import rmtree
     tempdir = mkdtemp()
-    with chdir(tempdir):
+    if should_chdir:
+        with chdir(tempdir):
+            yield tempdir
+    else:
         yield tempdir
     rmtree(tempdir, ignore_errors=True)
 
