@@ -280,7 +280,7 @@ class Recipe(PackagingRecipe):
                                              'before': 'custom_action_close_application',
                                              'condition': CONDITION_DURING_UNINSTALL_NOT_UPGRADE}, }.items():
             script_name = self.get_script_name(key)
-            if script_name in ['', None]:
+            if script_name in ['', 'None', None]:
                 continue
             args = self.get_script_args(key)
             commandline = r'"[INSTALLDIR]\bin\{}.exe" {}'.format(script_name, args)

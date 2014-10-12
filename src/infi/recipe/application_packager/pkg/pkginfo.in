@@ -1,0 +1,8 @@
+PKG="$package_name"
+NAME="$product_description"
+VERSION="$package_version"
+ARCH="$package_arch"
+CLASSES="none"
+VENDOR="$company"
+BASEDIR="/"
+CATEGORY="application"
