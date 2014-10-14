@@ -1,4 +1,5 @@
 from infi.pyutils.contexts import contextmanager
+from infi.recipe.application_packager import utils
 from zc.buildout.download import Download
 from logging import getLogger
 logger = getLogger(__name__)
@@ -209,8 +210,9 @@ class PackagingRecipe(object):
         return self.get_project_section().get('{}_script_args'.format(key), '')
 
     def should_sign_files(self):
+        from os import name
         key = 'sign-executables-and-msi'
-        return self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]) in [True, 'true', 'True']
+        return self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]) in [True, 'true', 'True'] and name == "nt"
 
     def should_shrink_cache_dist(self):
         key = 'shrink-cache-dist'
@@ -290,3 +292,9 @@ class PackagingRecipe(object):
                 import pdb; pdb.post_mortem()
             raise
 
+    def get_signtool(self):
+        recipe = self.get_recipe_section()
+        timestamp_url = recipe.get("timestamp-url", RECIPE_DEFAULTS['timestamp-url'])
+        certificate = recipe.get("pfx-file", RECIPE_DEFAULTS['pfx-file'])
+        password_file = recipe.get("pfx-password-file", RECIPE_DEFAULTS['pfx-password-file'])
+        return utils.signtool.Signtool(timestamp_url, certificate, password_file)

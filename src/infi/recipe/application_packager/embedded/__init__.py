@@ -200,6 +200,7 @@ class Executable(Recipe):
     def install(self):
         """:returns: a list of installed filepaths"""
         with self.with_most_mortem():
+            self.signtool = self.get_signtool()
             python_source_path = self.prepare_sources()
             self.build_embedded_python(python_source_path)
             console_scripts = self.build_console_scripts(python_source_path)
@@ -312,6 +313,8 @@ class Executable(Recipe):
         files = [copy_executable_to_dist()]
         if os_name == 'nt':
             files.append(copy_pdb_to_dist())
+        if self.should_sign_files():
+            self.signtool.sign_executables_in_directory('dist')
         return files
 
     def update(self):
