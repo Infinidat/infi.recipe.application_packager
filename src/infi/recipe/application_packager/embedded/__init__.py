@@ -279,20 +279,17 @@ class Executable(Recipe):
             from .environment import is_64bit
             from pprint import pformat
             from jinja2 import Template
+
             variables = get_scons_variables(self.static_libdir, self.options)
-            # linkking with fpython
-            variables['!LIBPATH'].insert(0, self.embedded_python_build_dir)
-            variables['!LIBS'].insert(0, 'fpython27')
+
+            variables['!LIBPATH' if '!LIBPATH' in variables else 'LIBPATH'].insert(0, self.embedded_python_build_dir)
+            variables['!LIBS' if '!LIBS' in variables else 'LIBS'].insert(0, 'fpython27')
             # always generate pdb
             variables['!PDB'] = source_filename.replace('.c', '.pdb')
             # our generated C code for main uses headers from the Python source code
-            variables['!CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
-            variables['!CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
-            variables['!CPPDEFINES'] = ["Py_BUILD_CORE"]
-            if os_name == 'nt':
-                manifest_filepath = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
-                manifest_embedded = "'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'".format(manifest_filepath)
-                variables['LINKCOM'] = manifest_embedded
+            variables.setdefault('CPPFLAGS', []).append(' -I{}'.format(self.embedded_python_build_dir))
+            variables.setdefault('CPPFLAGS', []).append(' -I{}'.format(path.join(python_source_path, 'Include')))
+            variables.setdefault('CPPDEFINES', []).append(["Py_BUILD_CORE"])
 
             with open('SConstruct', 'w') as fd:
                 fd.write(Template(SCONSTRUCT).render(repr=repr, sorted=sorted, environment_variables=variables, source=source_filename))

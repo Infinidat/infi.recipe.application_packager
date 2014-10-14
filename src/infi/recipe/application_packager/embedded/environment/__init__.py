@@ -108,7 +108,11 @@ def write_pystick_variable_file(pystick_variable_filepath, python_files, c_exten
 def locate_vcvars():
     from infi.registry import LocalComputer
     VISUAL_STUDIO_9_REGKEY = "SOFTWARE\\{}Microsoft\\VisualStudio\\9.0".format(r"Wow6432Node\\" if is_64bit() else "")
-    visual_studio_9 = LocalComputer().local_machine[VISUAL_STUDIO_9_REGKEY]
+    try:
+        visual_studio_9 = LocalComputer().local_machine[VISUAL_STUDIO_9_REGKEY]
+    except KeyError:
+        return r"C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat" if is_64bit() else \
+               r"C:\Program Files\Microsoft Visual Studio 9.0\VC\bin\vcvars32.bat"
     # installdir = C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\
     # vcvars = C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat
     installdir = visual_studio_9.values_store['InstallDir'].to_python_object()
@@ -137,14 +141,14 @@ def get_scons_variables__windows(static_libdir, static_libs):
         # variables['!AS'] = '"C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\bin\\amd64\\ml64.exe"'
         variables['!AS'] = 'ml64'
 
-    variables.update({
-        "!LIBPATH": [static_libdir],
-        "!LIBS": WINDOWS_NATIVE_LIBS + static_libs,
-        "!CPPFLAGS": '/I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
-        "!CCPDBFLAGS": ['/Z7'],
-        "!LINKFLAGS": "/RELEASE",
-        "!LINKCOM": manifest_embedded,
-    })
+    variables.update(
+        LIBPATH=[static_libdir],
+        LIBS=WINDOWS_NATIVE_LIBS + static_libs,
+        CPPFLAGS='/I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
+        CCPDBFLAGS=['/Z7'],
+        LINKFLAGS="/RELEASE",
+        LINKCOM=manifest_embedded,
+    )
     variables['!MSVC_USE_SCRIPT'] = locate_vcvars()
     return variables
 
