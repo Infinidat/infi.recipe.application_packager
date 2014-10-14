@@ -112,7 +112,7 @@ def locate_vcvars():
         visual_studio_9 = LocalComputer().local_machine[VISUAL_STUDIO_9_REGKEY]
     except KeyError:
         return r"C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat" if is_64bit() else \
-               r"C:\Program Files\Microsoft Visual Studio 9.0\VC\bin\vcvars32.bat
+               r"C:\Program Files\Microsoft Visual Studio 9.0\VC\bin\vcvars32.bat"
     # installdir = C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\
     # vcvars = C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat
     installdir = visual_studio_9.values_store['InstallDir'].to_python_object()
