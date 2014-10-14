@@ -185,6 +185,17 @@ class Recipe(PackagingRecipe):
                 yield path.abspath(filepath)
 
 
+class BuildEnvironment(Recipe):
+    def install(self):
+        with self.with_most_mortem():
+            python_source_path = self.prepare_sources()
+            self.prepare_for_running_pystick()
+            return []
+
+    def update(self):
+        return []
+
+
 class Executable(Recipe):
     def install(self):
         """:returns: a list of installed filepaths"""

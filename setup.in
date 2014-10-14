@@ -33,6 +33,7 @@ SETUP_INFO = dict(
         'gui_scripts': [],
         'zc.buildout': [
                         'default = ${project:name}.auto:Recipe',
+                        'build_env' = ${project:name}.embedded:BuildEnvironment',
                         'executable = ${project:name}.embedded:Executable',
                         'static_library = ${project:name}.embedded:StaticLibrary',
                         'msi = ${project:name}.msi:Recipe',
