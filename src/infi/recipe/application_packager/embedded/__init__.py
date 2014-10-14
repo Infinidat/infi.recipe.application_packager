@@ -185,6 +185,17 @@ class Recipe(PackagingRecipe):
                 yield path.abspath(filepath)
 
 
+class BuildEnvironment(Recipe):
+    def install(self):
+        with self.with_most_mortem():
+            python_source_path = self.prepare_sources()
+            self.prepare_for_running_pystick()
+            return []
+
+    def update(self):
+        return []
+
+
 class Executable(Recipe):
     def install(self):
         """:returns: a list of installed filepaths"""
@@ -197,7 +208,7 @@ class Executable(Recipe):
     def build_console_scripts(self, python_source_path):
         executables = []
         for executable_name, (module_name, callable_name) in self.get_entry_points_for_production().items():
-            executables.append(self.build_console_script(executable_name, module_name, callable_name, python_source_path))
+            executables.extend(self.build_console_script(executable_name, module_name, callable_name, python_source_path))
         return executables
 
     def get_all_entry_points_available_in_production(self):
@@ -258,6 +269,8 @@ class Executable(Recipe):
             # linkking with fpython
             variables['LIBPATH'].insert(0, self.embedded_python_build_dir)
             variables['LIBS'].insert(0, 'fpython27')
+            # always generate pdb
+            variables['PDB'] = source_filename.replace('.c', '.pdb')
             # our generated C code for main uses headers from the Python source code
             variables['CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
             variables['CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
@@ -273,13 +286,21 @@ class Executable(Recipe):
         def compile_code_and_link_with_static_library():
             run_in_another_process(scons, None)
 
-        def copy_executable_to_dist():
-            extension = dict(Windows='.exe').get(system(), '')
-            src = path.join(build_dir, executable  + extension)
-            dst = path.join('dist', executable + extension)
+        def _copy_executable_file_from_build_to_dist(extension):
+            basename = executable + extension
+            src = path.join(build_dir, basename)
+            dst = path.join('dist', basename)
             ensure_directory(dst)
             copy(src, dst)
             return dst
+
+        def copy_executable_to_dist():
+            extension = dict(Windows='.exe').get(system(), '')
+            return _copy_executable_file_from_build_to_dist(extension)
+
+        def copy_pdb_to_dist():
+            extension = dict(Windows='.pdb').get(system(), '')
+            return _copy_executable_file_from_build_to_dist(extension)
 
         build_dir = path.join('build', 'executables', executable)
         ensure_directory(path.join(build_dir, executable))
@@ -288,8 +309,10 @@ class Executable(Recipe):
             generate_buildsystem_for_the_executable(source_filename)
             compile_code_and_link_with_static_library()
             run_in_another_process(scons, None)
-        dst = copy_executable_to_dist()
-        return dst
+        files = [copy_executable_to_dist()]
+        if os_name == 'nt':
+            files.append(copy_pdb_to_dist())
+        return files
 
     def update(self):
         pass

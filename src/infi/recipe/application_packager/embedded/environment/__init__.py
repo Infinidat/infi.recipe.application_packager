@@ -9,6 +9,15 @@ from json import dumps
 from glob import glob
 from os import path, name as os_name
 
+SCONSCRIPT_TEMPLATE = """env = DefaultEnvironment()
+{%- for key, value in sorted(environment_variables.items()) %}
+{%- if key.startswith("!") %}
+env[{{ repr(key[1:]) }}] = {{ repr(value) }}
+{%- else %}
+env.Append({{ key }}={{ repr(value) }})
+{%- endif %}
+{%- endfor %}
+"""
 DEFINES = dict(HAVE_CURSES=True, HAVE_CURSES_PANEL=True, HAVE_LIBBZ2=True, HAVE_LIBCABINET=True, HAVE_LIBCRYPT=True,
                HAVE_LIBDB=True, HAVE_LIBGDBM=True, HAVE_LIBM=True, HAVE_LIBNSL=True,
                HAVE_LIBRPCRT4=True, HAVE_LIBSQLITE3=True, HAVE_LIBTCL=False, HAVE_LIBTK=False, HAVE_LIBWS2_32=True,
@@ -84,17 +93,27 @@ def is_64bit():
 
 def write_pystick_variable_file(pystick_variable_filepath, python_files, c_extensions, scons_variables):
     from pprint import pformat
+    from jinja2 import Template
+    from json import dumps
     ensure_directory(pystick_variable_filepath)
     json_reference_dict = _write_json_files(path.dirname(pystick_variable_filepath), python_files, c_extensions)
     variables = dict(scons_variables)
     variables.update(json_reference_dict)
-    manifest = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
-    manifest_embedded = "mt.exe -nologo -manifest {} -outputresource:$TARGET;2".format(manifest)
-
     with open(pystick_variable_filepath, 'w') as fd:
-        fd.write("env = DefaultEnvironment(\n**{}\n)\n{}\n".format(pformat(variables, indent=4),
-                                                                   "LINKCOM=[env['LINKCOM'], {!r}]".format(manifest_embedded)
-                                                                   if os_name == 'nt' else ''))
+        fd.write(Template(SCONSCRIPT_TEMPLATE).render(repr=repr, sorted=sorted, environment_variables=variables))
+    with open(pystick_variable_filepath.replace('.scons', '.json'), 'w') as fd:
+        fd.write(dumps(variables))
+
+
+def locate_vcvars():
+    from infi.registry import LocalComputer
+    VISUAL_STUDIO_9_REGKEY = "SOFTWARE\\{}Microsoft\\VisualStudio\\9.0".format(r"Wow6432Node\\" if is_64bit() else "")
+    visual_studio_9 = LocalComputer().local_machine[VISUAL_STUDIO_9_REGKEY]
+    # installdir = C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\
+    # vcvars = C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat
+    installdir = visual_studio_9.values_store['InstallDir'].to_python_object()
+    basename = 'vcvars64.bat' if is_64bit() else 'vcvars32.bat'
+    return path.abspath(path.join(installdir, path.pardir, path.pardir, 'VC', 'bin', basename))
 
 
 def get_scons_variables__windows(static_libdir, static_libs):
@@ -109,17 +128,24 @@ def get_scons_variables__windows(static_libdir, static_libs):
     # If we'll need to support more environments, we'll give the user control to choose:
     # * Use the default SCons lookup behaviour
     # * Define in the recipe the path for 'vcvars'
-    from . import win32, win64
-    environment_variables = win64.env if is_64bit() else win32.env
-    variables = {key: value for key, value in environment_variables.items() if key in SCONS_VARIABLE_NAMES}
+    variables = {}
     variables.update(DEFINES)
     variables.update(WINDOWS_DEFINES_UPDATE)
+    manifest = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
+    manifest_embedded = "mt.exe -nologo -manifest {} -outputresource:$TARGET;2".format(manifest)
+    if is_64bit():
+        # variables['!AS'] = '"C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\bin\\amd64\\ml64.exe"'
+        variables['!AS'] = 'ml64'
+
     variables.update(
-        MSVC_USE_SCRIPT=False,
         LIBPATH=[static_libdir],
         LIBS=WINDOWS_NATIVE_LIBS + static_libs,
         CPPFLAGS='/I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
+        CCPDBFLAGS=['/Z7'],
+        LINKFLAGS="/RELEASE",
+        LINKCOM=manifest_embedded,
     )
+    variables['!MSVC_USE_SCRIPT'] = locate_vcvars()
     return variables
 
 
