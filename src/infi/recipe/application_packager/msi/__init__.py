@@ -1,8 +1,8 @@
 __import__("pkg_resources").declare_namespace(__name__)
 
 from logging import getLogger
-from ..base import PackagingRecipe, RECIPE_DEFAULTS
-from .. import utils, assertions
+from infi.recipe.application_packager.base import PackagingRecipe, RECIPE_DEFAULTS
+from infi.recipe.application_packager import utils, assertions
 from os import path, curdir, makedirs, listdir
 from shutil import rmtree, copy
 from pkg_resources import resource_filename
@@ -71,13 +71,6 @@ class Recipe(PackagingRecipe):
         launcher = resource_filename(__name__, SILENT_LAUNCHER.format(self.get_platform_arch()))
         copy(launcher, abspath)
         return abspath
-
-    def get_signtool(self):
-        recipe = self.get_recipe_section()
-        timestamp_url = recipe.get("timestamp-url", RECIPE_DEFAULTS['timestamp-url'])
-        certificate = recipe.get("pfx-file", RECIPE_DEFAULTS['pfx-file'])
-        password_file = recipe.get("pfx-password-file", RECIPE_DEFAULTS['pfx-password-file'])
-        return utils.signtool.Signtool(timestamp_url, certificate, password_file)
 
     def sign_all_executables_in_project(self):
         for archive_path in self.glob_in_dist_directory("setuptools*"):

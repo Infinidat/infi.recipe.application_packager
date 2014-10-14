@@ -137,57 +137,56 @@ def get_scons_variables__windows(static_libdir, static_libs):
         # variables['!AS'] = '"C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\bin\\amd64\\ml64.exe"'
         variables['!AS'] = 'ml64'
 
-    variables.update(
-        LIBPATH=[static_libdir],
-        LIBS=WINDOWS_NATIVE_LIBS + static_libs,
-        CPPFLAGS='/I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
-        CCPDBFLAGS=['/Z7'],
-        LINKFLAGS="/RELEASE",
-        LINKCOM=manifest_embedded,
-    )
+    variables.update({
+        "!LIBPATH": [static_libdir],
+        "!LIBS": WINDOWS_NATIVE_LIBS + static_libs,
+        "!CPPFLAGS": '/I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
+        "!CCPDBFLAGS": ['/Z7'],
+        "!LINKFLAGS": "/RELEASE",
+        "!LINKCOM": manifest_embedded,
+    })
     variables['!MSVC_USE_SCRIPT'] = locate_vcvars()
     return variables
 
 
 def get_scons_variables__linux(static_libdir, static_libs):
-    variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
+    variables = {'!{}'.format(key): value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
-    variables.update(
-        CPPFLAGS='-I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
-        LIBPATH=[static_libdir],
-        LIBS=static_libs + ['pthread', 'crypt', 'dl', 'util', 'm'],
-        CC=' '.join([variables['CC'],
-                     get_config_var('CCSHARED') # provides -fPIC
-                    ]),
+    variables.update({
+        "!CPPFLAGS": '-I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
+        "!LIBPATH": [static_libdir],
+        "!LIBS": static_libs + ['pthread', 'crypt', 'dl', 'util', 'm'],
+        "!CC": ' '.join([variables['!CC'], get_config_var('CCSHARED')]) # provides -fPIC
+        },
     )
     return variables
 
 
 def get_scons_variables__osx(static_libdir, static_libs):
-    variables = {key: value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
+    variables = {'!{}'.format(key): value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
     variables.update(OSX_DEFINES_UPDATE)
-    variables.update(
-        CPPFLAGS='-I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
-        LIBPATH=[static_libdir],
-        LIBS=static_libs + ['iconv', 'dl'],
-        LINKFLAGS=' '.join(['-framework CoreFoundation -framework SystemConfiguration',
-                           ]),
+    variables.update({
+        "!CPPFLAGS": '-I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
+        "!LIBPATH": [static_libdir],
+        "!LIBS": static_libs + ['iconv', 'dl'],
+        "!LINKFLAGS": ' '.join(['-framework CoreFoundation -framework SystemConfiguration'])
+        },
     )
     return variables
 
 
 def get_scons_variables(static_libdir, options):
     static_libs = get_names_of_static_libraries_for_linking(static_libdir)
-    project_specific_flags = dict(
-                                  LINKFLAGS=options.get('LINKFLAGS', None),
-                                  LIBS=options.get('LIBS', None),
-                                  CC=options.get('CC', None),
-                                  CXX=options.get('CXX', None),
-                                  PATH=options.get('PATH', None),
-                                  LIBRARY_PATH=options.get('LIBRARY_PATH', None),
-                                  LD_LIBRARY_PATH=options.get('LD_LIBRARY_PATH', None),
-                                  ) if system() != "Windows" else dict()
+    project_specific_flags = dict({
+                                  "!LINKFLAGS": options.get('LINKFLAGS', None),
+                                  "!LIBS": options.get('LIBS', None),
+                                  "!CC": options.get('CC', None),
+                                  "!CXX": options.get('CXX', None),
+                                  "!PATH": options.get('PATH', None),
+                                  "!LIBRARY_PATH": options.get('LIBRARY_PATH', None),
+                                  "!LD_LIBRARY_PATH": options.get('LD_LIBRARY_PATH', None),
+                                  }) if system() != "Windows" else dict()
     if system() == "Linux":
         variables = get_scons_variables__linux(static_libdir, static_libs)
     if system() == "Darwin":

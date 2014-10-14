@@ -12,7 +12,19 @@ from os import path, name as os_name
 
 logger = getLogger(__name__)
 MAIN = resource_string(__name__, 'main.c')
-SCONSTRUCT = resource_string(__name__, 'SConstruct')
+SCONSTRUCT = """env = DefaultEnvironment()
+
+{%- for key, value in sorted(environment_variables.items()) %}
+{%- if key.startswith("!") %}
+env[{{ repr(key[1:]) }}] = {{ repr(value) }}
+{%- else %}
+env.Append({{ key }}={{ repr(value) }})
+{%- endif %}
+{%- endfor %}
+
+env.Program({{ repr(source) }})
+"""
+
 
 def pystick(args):
     import sys
@@ -200,6 +212,7 @@ class Executable(Recipe):
     def install(self):
         """:returns: a list of installed filepaths"""
         with self.with_most_mortem():
+            self.signtool = self.get_signtool()
             python_source_path = self.prepare_sources()
             self.build_embedded_python(python_source_path)
             console_scripts = self.build_console_scripts(python_source_path)
@@ -265,23 +278,24 @@ class Executable(Recipe):
             from .environment import write_pystick_variable_file, get_sorted_static_libraries, get_scons_variables
             from .environment import is_64bit
             from pprint import pformat
+            from jinja2 import Template
             variables = get_scons_variables(self.static_libdir, self.options)
             # linkking with fpython
-            variables['LIBPATH'].insert(0, self.embedded_python_build_dir)
-            variables['LIBS'].insert(0, 'fpython27')
+            variables['!LIBPATH'].insert(0, self.embedded_python_build_dir)
+            variables['!LIBS'].insert(0, 'fpython27')
             # always generate pdb
-            variables['PDB'] = source_filename.replace('.c', '.pdb')
+            variables['!PDB'] = source_filename.replace('.c', '.pdb')
             # our generated C code for main uses headers from the Python source code
-            variables['CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
-            variables['CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
-            variables['CPPDEFINES'] = ["Py_BUILD_CORE"]
-            manifest = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
-            manifest_embedded = "'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'".format(manifest)
+            variables['!CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
+            variables['!CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
+            variables['!CPPDEFINES'] = ["Py_BUILD_CORE"]
+            if os_name == 'nt':
+                manifest_filepath = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
+                manifest_embedded = "'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'".format(manifest_filepath)
+                variables['LINKCOM'] = manifest_embedded
 
             with open('SConstruct', 'w') as fd:
-                fd.write(SCONSTRUCT.format(source=source_filename, variables=pformat(variables, indent=4),
-                                           manifest="LINKCOM=[env['LINKCOM'], {}]".format(manifest_embedded)
-                                           if os_name == 'nt' else ''))
+                fd.write(Template(SCONSTRUCT).render(repr=repr, sorted=sorted, environment_variables=variables, source=source_filename))
 
         def compile_code_and_link_with_static_library():
             run_in_another_process(scons, None)
@@ -312,6 +326,8 @@ class Executable(Recipe):
         files = [copy_executable_to_dist()]
         if os_name == 'nt':
             files.append(copy_pdb_to_dist())
+        if self.should_sign_files():
+            self.signtool.sign_executables_in_directory('dist')
         return files
 
     def update(self):
