@@ -137,14 +137,14 @@ def get_scons_variables__windows(static_libdir, static_libs):
         # variables['!AS'] = '"C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\bin\\amd64\\ml64.exe"'
         variables['!AS'] = 'ml64'
 
-    variables.update({
-        "!LIBPATH": [static_libdir],
-        "!LIBS": WINDOWS_NATIVE_LIBS + static_libs,
-        "!CPPFLAGS": '/I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
-        "!CCPDBFLAGS": ['/Z7'],
-        "!LINKFLAGS": "/RELEASE",
-        "!LINKCOM": manifest_embedded,
-    })
+    variables.update(
+        LIBPATH=[static_libdir],
+        LIBS=WINDOWS_NATIVE_LIBS + static_libs,
+        CPPFLAGS='/I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
+        CCPDBFLAGS=['/Z7'],
+        LINKFLAGS="/RELEASE",
+        LINKCOM=manifest_embedded,
+    )
     variables['!MSVC_USE_SCRIPT'] = locate_vcvars()
     return variables
 
