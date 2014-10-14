@@ -22,8 +22,6 @@ env.Append({{ key }}={{ repr(value) }})
 {%- endif %}
 {%- endfor %}
 
-{{ manifest }}
-
 env.Program({{ repr(source) }})
 """
 
@@ -291,15 +289,13 @@ class Executable(Recipe):
             variables['!CPPFLAGS'] += ' -I{}'.format(self.embedded_python_build_dir)
             variables['!CPPFLAGS'] += ' -I{}'.format(path.join(python_source_path, 'Include'))
             variables['!CPPDEFINES'] = ["Py_BUILD_CORE"]
-            manifest_filepath = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
-            manifest_embedded = "'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'".format(manifest_filepath)
-            manifest = "LINKCOM=[env['LINKCOM'], {}]".format(manifest_embedded) if os_name == 'nt' else ''
+            if os_name == 'nt':
+                manifest_filepath = resource_filename(__name__, 'Microsoft.VC90.CRT.manifest-{}'.format('x64' if is_64bit() else 'x86'))
+                manifest_embedded = "'mt.exe -nologo -manifest {} -outputresource:$TARGET;2'".format(manifest_filepath)
+                variables['LINKCOM'] = manifest_embedded
 
             with open('SConstruct', 'w') as fd:
-                fd.write(Template(SCONSTRUCT).render(repr=repr, sorted=sorted,
-                                                     environment_variables=variables,
-                                                     manifest=manifest,
-                                                     source=source_filename))
+                fd.write(Template(SCONSTRUCT).render(repr=repr, sorted=sorted, environment_variables=variables, source=source_filename))
 
         def compile_code_and_link_with_static_library():
             run_in_another_process(scons, None)
