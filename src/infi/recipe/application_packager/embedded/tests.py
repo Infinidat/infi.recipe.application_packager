@@ -5,12 +5,9 @@ from glob import glob
 from os import path, makedirs
 
 
-EXPECTED_PYSTICK_ENVIRONMENT_FILE_CONTENTS = """env = DefaultEnvironment(
-**{   'EXTERNAL_C_MODULES_FILE': './c_modules.json',
-    'EXTERNAL_PY_MODULES_FILE': './python_files.json'}
-)
-
-"""
+EXPECTED_PYSTICK_ENVIRONMENT_FILE_CONTENTS = """env = DefaultEnvironment()
+env.Append(EXTERNAL_C_MODULES_FILE='./c_modules.json')
+env.Append(EXTERNAL_PY_MODULES_FILE='./python_files.json')"""
 
 from . import build
 
@@ -51,8 +48,8 @@ class UnitTestCase(unittest.TestCase):
         if name == 'nt':
             raise SkipTest("windows")
         with temporary_directory_context():
-            environment.write_pystick_variable_file(path.join(path.curdir, 'pystick_variable_filepath'), [], [], {})
-            with open('pystick_variable_filepath') as fd:
+            environment.write_pystick_variable_file(path.join(path.curdir, 'pystick_variable_filepath.scons'), [], [], {})
+            with open('pystick_variable_filepath.scons') as fd:
                 actual = fd.read()
         self.assertEquals(actual, EXPECTED_PYSTICK_ENVIRONMENT_FILE_CONTENTS)
 
