@@ -163,6 +163,7 @@ class PackagingRecipe(object):
                       "Windows": 'x64' if is_64 else 'x86',
                       "Linux": ('x86_64' if is_redhat_or_centos else 'amd64') if is_64 else \
                                ('i686' if is_redhat_or_centos else 'i386'),
+                      # TODO SunOS
                      }
         return arch_by_os.get(system())
 
@@ -200,6 +201,7 @@ class PackagingRecipe(object):
                         "Linux": '-'.join([system_name,
                                            self._get_centos_dist_name() if is_centos else dist_name,
                                            dist_version_string, arch_name]),
+        # TODO SunOS
         }
         return string_by_os.get(system())
 

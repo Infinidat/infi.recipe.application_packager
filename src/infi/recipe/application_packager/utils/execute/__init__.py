@@ -3,11 +3,12 @@ from infi.execute import ExecutionError, execute_async
 
 logger = getLogger(__name__)
 
-def execute_assert_success(args, allowed_return_codes=[0], env=None):
+def execute_assert_success(args, allowed_return_codes=[0], env=None, shell=False):
     from infi import execute
-    logger.info("Executing {}".format(' '.join(args)))
+    msg = args if type(args) == str else ' '.join(args)
+    logger.info("Executing {}".format(msg))
     try:
-         pid = execute.execute_assert_success(args, env=env)
+         pid = execute.execute_assert_success(args, env=env, shell=shell)
          return pid
     except ExecutionError, error:
         return_code = error.result.get_returncode()

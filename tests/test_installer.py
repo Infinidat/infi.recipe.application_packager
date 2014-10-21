@@ -114,7 +114,7 @@ def do_a_refactoring_change():
 
 from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
 from infi.recipe.application_packager.utils import chdir
-from infi.recipe.application_packager.installer import Installer, MsiInstaller, DebInstaller, RpmInstaller
+from infi.recipe.application_packager.installer import Installer, MsiInstaller, DebInstaller, RpmInstaller, PkgInstaller
 
 class Base(unittest.TestCase):
     @classmethod
@@ -286,3 +286,19 @@ class DebTestCase(Posix, DebInstaller):
     @classmethod
     def should_run(cls):
         return platform.system() == "Linux" and platform.linux_distribution()[0].lower()[0:3] in ['ubu', 'deb']
+
+
+class PkgTestCase(Posix, PkgInstaller):
+    def __init__(self, *args, **kwargs):
+        Posix.__init__(self, *args, **kwargs)
+        PkgInstaller.__init__(self, TEST_BUIILDOUT)
+
+    @classmethod
+    def platform_specific_cleanup(cls):
+        env = os.environ.copy()
+        env['NO_CUSTOM_ACTIONS'] = '1'
+        execute_assert_success(['pkgrm', '-n', PACKAGE_NAME], env=env, allowed_return_codes=[0,])
+
+    @classmethod
+    def should_run(cls):
+        return platform.system() == "SunOS"
