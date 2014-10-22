@@ -159,8 +159,10 @@ def get_scons_variables__linux(static_libdir, static_libs):
     variables.update({
         "!CPPFLAGS": '-I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
         "!LIBPATH": [static_libdir],
-        "!LIBS": static_libs + ['pthread', 'crypt', 'dl', 'util', 'm'],
-        "!CC": ' '.join([variables['!CC'], get_config_var('CCSHARED')]) # provides -fPIC
+        "!LIBS": static_libs + ['crypt', 'dl', 'util', 'm'],
+        "!CC": ' '.join([variables['!CC'], get_config_var('CCSHARED')]), # provides -fPIC
+        "CCFLAGS": ['-g', '-pthread'],
+        "CXXFLAGS": ['-g', '-pthread']
         },
     )
     return variables
