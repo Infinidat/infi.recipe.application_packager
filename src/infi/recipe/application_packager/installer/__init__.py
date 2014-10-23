@@ -138,6 +138,7 @@ class Installer(object):
     def uninstall_package(self, with_custom_actions=True):
         raise NotImplementedError()
 
+
 class MsiInstaller(Installer):
     package_extension = 'msi'
     executable_extension = 'exe'
@@ -217,6 +218,7 @@ class RpmInstaller(Installer):
             env['NO_CUSTOM_ACTIONS'] = '1'
         execute_assert_success(['rpm', '-e', self.package_name], env=env)
 
+
 class DebInstaller(Installer):
     package_extension = 'deb'
 
@@ -236,3 +238,41 @@ class DebInstaller(Installer):
         if not with_custom_actions:
             env['NO_CUSTOM_ACTIONS'] = '1'
         execute_assert_success(['dpkg', '-r', self.package_name], env=env)
+
+
+class PkgInstaller(Installer):
+    package_extension = 'pkg.gz'
+
+    def __init__(self, *args, **kwargs):
+        super(PkgInstaller, self).__init__(*args, **kwargs)
+        from tempfile import NamedTemporaryFile
+        admin_file_content = '\n'.join(['partial=nocheck',
+                                    'runlevel=nocheck',
+                                    'idepend=nocheck',
+                                    'rdepend=nocheck',
+                                    'setuid=nocheck',
+                                    'action=nocheck',
+                                    'basedir=default'])
+        admin_file = NamedTemporaryFile(mode='w', delete=False)
+        admin_file.write(admin_file_content)
+        self.admin_filename = admin_file.name
+
+    def is_product_installed(self):
+        return 0 == execute(["pkginfo", self.package_name]).get_returncode()
+
+    def install_package(self, with_custom_actions=True):
+        env = os.environ.copy()
+        if not with_custom_actions:
+            env['NO_CUSTOM_ACTIONS'] = '1'
+        with prevent_access_to_pypi_servers(), prevent_access_to_gcc():
+            zipped_package_name = self.get_package()
+            unzipped_package_name = zipped_package_name[:-3]
+            execute_assert_success('gunzip -c {} > {}'.format(zipped_package_name, unzipped_package_name), env=env, shell=True)
+            execute_assert_success(['pkgadd', '-n', '-a', self.admin_filename, '-d', unzipped_package_name, self.package_name])
+            # TODO remove extracted package file after finish
+
+    def uninstall_package(self, with_custom_actions=True):
+        env = os.environ.copy()
+        if not with_custom_actions:
+            env['NO_CUSTOM_ACTIONS'] = '1'
+        execute_assert_success(['pkgrm', '-n', '-a', self.admin_filename, self.package_name], env=env, allowed_return_codes=[0,])

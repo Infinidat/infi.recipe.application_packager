@@ -14,7 +14,8 @@ logger = getLogger(__name__)
 
 PROTOTYPE_FILENAME = 'Prototype'
 PKGINFO_FILENAME = 'pkginfo'
-POSTINST_FILENAME = 'postinst'
+POSTINST_FILENAME = 'postinstall'
+PREUNINST_FILENAME = 'preremove'
 
 
 class Recipe(PackagingRecipe):
@@ -126,6 +127,7 @@ class Recipe(PackagingRecipe):
         with open(dst_filename, 'w') as fd:
             write_line(['i', PKGINFO_FILENAME])
             write_line(['i', POSTINST_FILENAME])
+            write_line(['i', PREUNINST_FILENAME])
             walk_root = path.abspath(curdir)
             for root, dirnames, pathnames in walk(walk_root):
                 for f in pathnames:
@@ -149,12 +151,29 @@ class Recipe(PackagingRecipe):
 
         post_install_script_name = self.get_script_name("post_install") or ''
         post_install_script_args = self.get_script_args("post_install") or ''
+        pre_uninstall_script_name = self.get_script_name("pre_uninstall") or ''
+        pre_uninstall_script_args = self.get_script_args("pre_uninstall") or ''
         self._write_template_file(POSTINST_FILENAME, {'package_name': self.get_package_name(),
                                                       'package_version': self.get_project_version__short(),
                                                       'prefix': self.get_install_prefix(),
                                                       'post_install_script_name': post_install_script_name,
                                                       'post_install_script_args': post_install_script_args,
+                                                      'pre_uninstall_script_name': pre_uninstall_script_name,
+                                                      'pre_uninstall_script_args': pre_uninstall_script_args,
                                                      }, '755')
+
+        directories_to_clean = [item for item in self._directories]
+        directories_to_clean.sort()
+        directories_to_clean.reverse()
+        self._write_template_file(PREUNINST_FILENAME, {'package_name': self.get_package_name(),
+                                                       'package_version': self.get_project_version__short(),
+                                                       'prefix': self.get_install_prefix(),
+                                                       'post_install_script_name': post_install_script_name,
+                                                       'post_install_script_args': post_install_script_args,
+                                                       'pre_uninstall_script_name': pre_uninstall_script_name,
+                                                       'pre_uninstall_script_args': pre_uninstall_script_args,
+                                                       'directories_to_clean': ' '.join(directories_to_clean),
+                                                       }, '755')
 
     def _write_working_directory(self):
         self._write_prototype_file()

@@ -1,7 +1,9 @@
 #!/bin/bash
 
-if test "$$1" != "configure"; then
-    exit 0
+# make sure to execute in bash (solaris package manager ignores #!/bin/bash)
+if [[ `ps -p $$$$ -ocomm=` != *bash* ]] ; then
+    /bin/bash "$$0"
+    exit
 fi
 
 RC=0
@@ -51,7 +53,7 @@ RC=$$?
 assert_rc
 
 # buildout
-execute bin/buildout -U
+bin/buildout -U
 RC=$$?
 assert_rc
 
@@ -62,6 +64,9 @@ for script in *; do
         continue;
     fi
     if test -n "$post_install_script_name" -a "$$script" == "$post_install_script_name"; then
+        continue;
+    fi
+    if test -n "$pre_uninstall_script_name" -a "$$script" == "$pre_uninstall_script_name"; then
         continue;
     fi
     execute ln -s -f $prefix/bin/$$script /usr/bin/$$script
