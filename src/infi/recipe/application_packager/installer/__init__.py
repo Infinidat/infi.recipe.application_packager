@@ -9,6 +9,8 @@ import stat
 
 from contextlib import contextmanager
 from ConfigParser import ConfigParser
+from tempfile import NamedTemporaryFile
+
 
 log = logging.getLogger(__name__)
 
@@ -245,34 +247,39 @@ class PkgInstaller(Installer):
 
     def __init__(self, *args, **kwargs):
         super(PkgInstaller, self).__init__(*args, **kwargs)
-        from tempfile import NamedTemporaryFile
         admin_file_content = '\n'.join(['partial=nocheck',
                                     'runlevel=nocheck',
                                     'idepend=nocheck',
                                     'rdepend=nocheck',
                                     'setuid=nocheck',
                                     'action=nocheck',
+                                    'instance=overwrite',
                                     'basedir=default'])
-        admin_file = NamedTemporaryFile(mode='w', delete=False)
-        admin_file.write(admin_file_content)
-        self.admin_filename = admin_file.name
+        self.admin_file = NamedTemporaryFile(mode='w')
+        self.admin_file.write(admin_file_content)
+        self.admin_file.flush()
+        os.fsync(self.admin_file.fileno())
 
     def is_product_installed(self):
         return 0 == execute(["pkginfo", self.package_name]).get_returncode()
 
     def install_package(self, with_custom_actions=True):
-        env = os.environ.copy()
-        if not with_custom_actions:
-            env['NO_CUSTOM_ACTIONS'] = '1'
+        response_file = NamedTemporaryFile(mode='w')
+        response_file.write("NO_CUSTOM_ACTIONS={}".format(int(not with_custom_actions)))
+        response_file.flush()
+        os.fsync(response_file.fileno())
         with prevent_access_to_pypi_servers(), prevent_access_to_gcc():
             zipped_package_name = self.get_package()
             unzipped_package_name = zipped_package_name[:-3]
-            execute_assert_success('gunzip -c {} > {}'.format(zipped_package_name, unzipped_package_name), env=env, shell=True)
-            execute_assert_success(['pkgadd', '-n', '-a', self.admin_filename, '-d', unzipped_package_name, self.package_name])
-            # TODO remove extracted package file after finish
+            execute_assert_success('gunzip -c {} > {}'.format(zipped_package_name, unzipped_package_name), shell=True)
+            execute_assert_success(['pkgadd',
+                                    '-n',
+                                    '-a', self.admin_file.name,
+                                    '-r', response_file.name,
+                                    '-d', unzipped_package_name,
+                                    self.package_name])
 
     def uninstall_package(self, with_custom_actions=True):
-        env = os.environ.copy()
-        if not with_custom_actions:
-            env['NO_CUSTOM_ACTIONS'] = '1'
-        execute_assert_success(['pkgrm', '-n', '-a', self.admin_filename, self.package_name], env=env, allowed_return_codes=[0,])
+        # with_custom_actions is actually ignored here. This flag is passed to the installer through the response file.
+        # Luckily, the preremove scripts also gets this info (it's saved somwhere in the os until the removal)
+        execute_assert_success(['pkgrm', '-n', '-a', self.admin_file.name, self.package_name], allowed_return_codes=[0,])

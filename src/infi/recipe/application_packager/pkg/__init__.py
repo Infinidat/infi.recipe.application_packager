@@ -14,6 +14,7 @@ logger = getLogger(__name__)
 
 PROTOTYPE_FILENAME = 'Prototype'
 PKGINFO_FILENAME = 'pkginfo'
+PREINST_FILENAME = 'preinstall'
 POSTINST_FILENAME = 'postinstall'
 PREUNINST_FILENAME = 'preremove'
 
@@ -126,18 +127,19 @@ class Recipe(PackagingRecipe):
         dst_filename = path.abspath(path.join(curdir, PROTOTYPE_FILENAME))
         with open(dst_filename, 'w') as fd:
             write_line(['i', PKGINFO_FILENAME])
+            write_line(['i', PREINST_FILENAME])
             write_line(['i', POSTINST_FILENAME])
             write_line(['i', PREUNINST_FILENAME])
             walk_root = path.abspath(curdir)
             for root, dirnames, pathnames in walk(walk_root):
                 for f in pathnames:
-                    relpath = path.join(path.sep, root.lstrip(walk_root), f)
+                    relpath = path.join(path.sep, root[len(walk_root):], f)
                     fullpath = path.join(root, f)
                     if path.abspath(fullpath) == dst_filename:
                         continue
                     write_line(['f', 'none', relpath, oct(stat(fullpath).st_mode)[-3:], 'root', 'root'])
                 for f in dirnames:
-                    relpath = path.join(path.sep, root.lstrip(walk_root), f)
+                    relpath = path.join(path.sep, root[len(walk_root):], f)
                     fullpath = path.join(root, f)
                     write_line(['d', 'none', relpath, oct(stat(fullpath).st_mode)[-3:], 'root', 'root'])
 
@@ -154,6 +156,14 @@ class Recipe(PackagingRecipe):
         pre_uninstall_script_name = self.get_script_name("pre_uninstall") or ''
         pre_uninstall_script_args = self.get_script_args("pre_uninstall") or ''
         self._write_template_file(POSTINST_FILENAME, {'package_name': self.get_package_name(),
+                                                      'package_version': self.get_project_version__short(),
+                                                      'prefix': self.get_install_prefix(),
+                                                      'post_install_script_name': post_install_script_name,
+                                                      'post_install_script_args': post_install_script_args,
+                                                      'pre_uninstall_script_name': pre_uninstall_script_name,
+                                                      'pre_uninstall_script_args': pre_uninstall_script_args,
+                                                     }, '755')
+        self._write_template_file(PREINST_FILENAME, {'package_name': self.get_package_name(),
                                                       'package_version': self.get_project_version__short(),
                                                       'prefix': self.get_install_prefix(),
                                                       'post_install_script_name': post_install_script_name,

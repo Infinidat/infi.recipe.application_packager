@@ -8,8 +8,8 @@ def execute_assert_success(args, allowed_return_codes=[0], env=None, shell=False
     msg = args if type(args) == str else ' '.join(args)
     logger.info("Executing {}".format(msg))
     try:
-         pid = execute.execute_assert_success(args, env=env, shell=shell)
-         return pid
+        pid = execute.execute_assert_success(args, env=env, shell=shell)
+        return pid
     except ExecutionError, error:
         return_code = error.result.get_returncode()
         if return_code in allowed_return_codes:
