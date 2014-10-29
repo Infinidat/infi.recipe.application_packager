@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# make sure to execute in bash (solaris package manager ignores #!/bin/bash)
+if [[ `ps -p $$$$ -ocomm=` != *bash* ]] ; then
+    /bin/bash "$$0"
+    exit
+fi
+
+RC=0
+
+function assert_rc() {
+    if test $$RC -ne 0; then
+        exit 1
+    fi
+}
+
+function execute() {
+    if test $$DEBUG -eq 0; then
+        $$@ > /dev/null 2>&1
+    else
+        $$@
+    fi
+}
+
+# debugging
+DEBUG=0
+if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
+    DEBUG=1
+    set -xv
+fi
+
+# bypass custom actions
+if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
+    exit 0
+fi
+
+# start
+execute pushd .
+execute cd $prefix
+
+# If this is an upgrade, execute preremove to cleanup everything before installing
+if test -n "$$UPDATE" -a "$$UPDATE" == "yes"; then
+    execute "`dirname $$0`/preremove"
+fi
+
+#end
+execute popd
+exit 0

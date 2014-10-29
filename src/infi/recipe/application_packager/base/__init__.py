@@ -153,7 +153,7 @@ class PackagingRecipe(object):
         return self._get_recipe_atribute('documentation-url')
 
     def get_platform_arch(self):
-        from platform import system, dist
+        from platform import system, dist, processor
         from sys import maxsize
         is_64 = maxsize > 2 ** 32
         distribution_name, _, _ = dist()
@@ -163,7 +163,7 @@ class PackagingRecipe(object):
                       "Windows": 'x64' if is_64 else 'x86',
                       "Linux": ('x86_64' if is_redhat_or_centos else 'amd64') if is_64 else \
                                ('i686' if is_redhat_or_centos else 'i386'),
-                      # TODO SunOS
+                      "SunOS": 'sparc' if 'sparc' == processor() else ('amd64' if is_64 else 'i386'),
                      }
         return arch_by_os.get(system())
 
@@ -186,10 +186,12 @@ class PackagingRecipe(object):
         return content.split()[0].lower()
 
     def get_os_string(self):
-        from platform import architecture, system, dist
+        from platform import architecture, system, dist, release, processor
         from sys import maxsize
         is_64 = maxsize > 2 ** 32
         arch_name = 'x64' if is_64 else 'x86'
+        if processor() == "sparc":
+            arch_name = "sparc"
         system_name = system().lower().replace('-', '').replace('_', '')
         dist_name, dist_version, dist_version_name = dist()
         dist_name = dist_name.lower()
@@ -201,7 +203,7 @@ class PackagingRecipe(object):
                         "Linux": '-'.join([system_name,
                                            self._get_centos_dist_name() if is_centos else dist_name,
                                            dist_version_string, arch_name]),
-        # TODO SunOS
+                        "SunOS": '-'.join([system_name, release(), arch_name]),
         }
         return string_by_os.get(system())
 

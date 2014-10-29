@@ -38,18 +38,6 @@ fi
 execute pushd .
 cd $prefix
 
-if test "$$1" == "upgrade"; then
-    # close application
-    execute bin/buildout -U install debug-logging close-application
-    RC=$$?
-    assert_rc
-    exit 0
-fi
-
-if test "$$1" != "remove"; then
-    exit 0
-fi
-
 # execute application's pre-uninstall script
 if test -n "$pre_uninstall_script_name" -a -x "bin/$pre_uninstall_script_name"; then
     execute bin/$pre_uninstall_script_name $pre_uninstall_script_args
@@ -76,7 +64,8 @@ cd ..
 # clean installed directories
 # this also deletes installed files
 for dirname in $directories_to_clean; do
-    execute find $$dirname -maxdepth 1 -mindepth 1 -delete
+    execute rm -rf $$dirname/*
+    execute rm -rf $$dirname/.*
 done
 
 # end
