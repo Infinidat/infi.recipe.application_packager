@@ -178,6 +178,8 @@ class Recipe(PackagingRecipe):
         self._write_template_file(PREUNINST_FILENAME, {'package_name': self.get_package_name(),
                                                        'package_version': self.get_project_version__short(),
                                                        'prefix': self.get_install_prefix(),
+                                                       'close_on_upgrade_or_removal' : '1' if \
+                                                            self.should_close_app_on_upgrade_or_removal() else '0',
                                                        'post_install_script_name': post_install_script_name,
                                                        'post_install_script_args': post_install_script_args,
                                                        'pre_uninstall_script_name': pre_uninstall_script_name,

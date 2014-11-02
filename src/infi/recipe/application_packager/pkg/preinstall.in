@@ -1,7 +1,11 @@
 #!/bin/bash
 
 # make sure to execute in bash (solaris package manager ignores #!/bin/bash)
-if [[ `ps -p $$$$ -ocomm=` != *bash* ]] ; then
+procname=`ps -p $$$$ -ocomm=`
+base=`basename $$procname`
+clean_procname=`echo $$base | sed 's/[^a-zA-Z]//g'`
+
+if test $$clean_procname != bash ; then
     /bin/bash "$$0"
     exit
 fi

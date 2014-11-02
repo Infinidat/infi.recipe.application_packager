@@ -129,6 +129,8 @@ class Recipe(PackagingRecipe):
                   'package_arch': self.get_platform_arch(),
                   'requires_declaration': self._get_requires_declaration(),
                   'script_header': SPEC_SCRIPT_HEADER,
+                  'close_on_upgrade_or_removal' : '1' if \
+                      self.should_close_app_on_upgrade_or_removal() else '0',
                   'prefix': self.get_install_prefix(),
                   'build_root': self._buildroot,
                   'post_install_script_name': self.get_script_name("post_install") or "''",

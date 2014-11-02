@@ -24,7 +24,8 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'msi-dialog-bmp': None,
                    'startmenu-shortcuts': [],
                    'eula-rtf': None,
-                   'documentation-url': None
+                   'documentation-url': None,
+                   'close-on-upgrade-or-removal' : 'true'
                   }
 
 PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
@@ -119,6 +120,10 @@ class PackagingRecipe(object):
 
     def get_deb_dependencies(self):
         return self._get_recipe_atribute("deb-dependencies")
+
+    def should_close_app_on_upgrade_or_removal(self):
+        key = 'close-on-upgrade-or-removal'
+        return self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]) in [True, 'true', 'True']
 
     def get_product_name(self):
         return self.get_project_section().get('product_name', self.get_project_section().get('name'))

@@ -156,10 +156,14 @@ if test -n "%{pre_uninstall_script_name}" -a -x "bin/%{pre_uninstall_script_name
     assert_rc
 fi
 
+CLOSE_ON_UPGRADE_OR_REMOVAL=$close_on_upgrade_or_removal
+
 # close application
-execute bin/buildout -U install debug-logging close-application
-RC=$$?
-assert_rc
+if test -n "$$CLOSE_ON_UPGRADE_OR_REMOVAL" -a "$$CLOSE_ON_UPGRADE_OR_REMOVAL" != "0"; then
+    execute bin/buildout -U install debug-logging close-application
+    RC=$$?
+    assert_rc
+fi
 
 # remove links to binaries from /usr/bin
 execute cd bin
