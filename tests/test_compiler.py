@@ -45,3 +45,15 @@ class CompilerTestCase(unittest.TestCase):
             utils.compiler.compile_binary_distributions(buildout_directory=BUILDOUT_DIRECTORY,
                                                         archives_directory=path.join(".cache", "dist"),
                                                         eggs_directory='eggs')
+
+    def test_setup_requires(self):
+        with mock.patch.object(utils.compiler.BinaryDistributionsCompiler, 'extract_archive'):
+            with open(path.join('tests', 'file_with_setup_requires')) as fd:
+                xreadlines = iter(fd.readlines())
+                with mock.patch('__builtin__.open') as _open:
+                    _open('setup.py').__enter__.return_value.xreadlines = lambda: xreadlines
+                    instance = utils.compiler.BinaryDistributionsCompiler(buildout_directory=BUILDOUT_DIRECTORY,
+                                                                          archives_directory=path.join(".cache", "dist"),
+                                                                          eggs_directory='eggs'
+                                                                          )
+                    self.assertTrue(instance.does_setup_py_uses_setup_requires('x'))
