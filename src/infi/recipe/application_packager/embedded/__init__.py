@@ -298,7 +298,7 @@ class Executable(Recipe):
             run_in_another_process(scons, None)
 
         def _copy_executable_file_from_build_to_dist(extension):
-            basename = executable + extension
+            basename = '{}-{}-{}{}'.format(executable, self.get_project_version__long(), self.get_os_string(), extension)
             src = path.join(build_dir, basename)
             dst = path.join('dist', basename)
             ensure_directory(dst)
