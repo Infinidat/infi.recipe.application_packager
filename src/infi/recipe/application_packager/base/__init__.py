@@ -149,12 +149,12 @@ class PackagingRecipe(object):
         from sys import maxsize
         is_64 = maxsize > 2 ** 32
         distribution_name, _, _ = dist()
-        is_redhat_or_centos = distribution_name.lower().startswith('red') or distribution_name.lower().startswith('cent')
+        is_rpm = any(distribution_name.lower().startswith(x) for x in ['red', 'cent', 'suse'])
         arch_by_distro = {''}
         arch_by_os = {
                       "Windows": 'x64' if is_64 else 'x86',
-                      "Linux": ('x86_64' if is_redhat_or_centos else 'amd64') if is_64 else \
-                               ('i686' if is_redhat_or_centos else 'i386'),
+                      "Linux": ('x86_64' if is_rpm else 'amd64') if is_64 else \
+                               ('i686' if is_rpm else 'i386'),
                       "SunOS": 'sparc' if 'sparc' == processor() else ('amd64' if is_64 else 'i386'),
                      }
         return arch_by_os.get(system())
