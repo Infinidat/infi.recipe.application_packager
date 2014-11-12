@@ -183,7 +183,7 @@ class Recipe(PackagingRecipe):
     def _append_bootstrap_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
         commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" bootstrap.py ' + \
                       r'--download-base="[INSTALLDIR].cache\dist" ' + \
-                      r'--setup-source="[INSTALLDIR].cache\dist\ez_setup.py ' + \
+                      r'--setup-source="[INSTALLDIR].cache\dist\ez_setup.py" ' + \
                       r'--index-url=http://256.256.256.256/'
         action = wix.add_deferred_in_system_context_custom_action('bootstrap', commandline,
                                                                   after=os_removedirs_eggs_id,
