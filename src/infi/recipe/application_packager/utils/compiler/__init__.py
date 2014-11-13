@@ -42,7 +42,7 @@ class BinaryDistributionsCompiler(object):
     def add_import_setuptools_to_setup_py(self):
         with open("setup.py") as fd:
             content = fd.read()
-        content = content.replace("from distutils.core import setup", "from setuptools import setup")
+        content = content.replace("distutils.core", "setuptools")
         content = content.replace("from distutils import core", "import setuptools as core")
         with open("setup.py", 'w') as fd:
             fd.write(content)
@@ -74,6 +74,14 @@ class BinaryDistributionsCompiler(object):
         [egg] = glob(path.join('dist', '*.egg'))
         return egg
 
+    def does_setup_py_uses_setup_requires(self, filepath):
+        # to make sure setup is actually called with setup_requires,
+        # we can refactor and use the code in the embedded module
+        # however, just checking if this keyword is in the setup.py file is good enough
+        with self.extract_archive(filepath) as extracted_dir:
+            with open('setup.py') as fd:
+                return any ('setup_requires' in line and not line.strip().startswith('#') for line in fd.xreadlines())
+
     def get_packages_to_install(self):
         source_archives = {self.extract_package_name_from_source_filepath(filename):
                            filename for filename in self.get_source_archives()}
@@ -83,8 +91,13 @@ class BinaryDistributionsCompiler(object):
         keys_for_install_binary_archives = set(installed_binary_archives.keys())
         for key in list(keys_for_install_binary_archives):
             keys_for_install_binary_archives.add(key.replace('_', '-'))
+
+        packages_with_setup_requires = {package_name for package_name, filename in source_archives.iteritems() if
+                                        self.does_setup_py_uses_setup_requires(filename)}
+        packages_require_to_get_build = set.union(keys_for_install_binary_archives, packages_with_setup_requires)
+
         return [source_archives[key]
-                for key in set.intersection(set(source_archives.keys()), keys_for_install_binary_archives)]
+                for key in set.intersection(set(source_archives.keys()), packages_require_to_get_build)]
 
     def compile(self):
         from ..execute import ExecutionError

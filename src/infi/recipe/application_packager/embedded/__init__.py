@@ -287,8 +287,8 @@ class Executable(Recipe):
             # always generate pdb
             variables['!PDB'] = source_filename.replace('.c', '.pdb')
             # our generated C code for main uses headers from the Python source code
-            variables.setdefault('CPPFLAGS', []).append(' -I{}'.format(self.embedded_python_build_dir))
-            variables.setdefault('CPPFLAGS', []).append(' -I{}'.format(path.join(python_source_path, 'Include')))
+            variables.setdefault('CPPFLAGS', []).append(['-I{}'.format(self.embedded_python_build_dir)])
+            variables.setdefault('CPPFLAGS', []).append(['-I{}'.format(path.join(python_source_path, 'Include'))])
             variables.setdefault('CPPDEFINES', []).append(["Py_BUILD_CORE"])
 
             with open('SConstruct', 'w') as fd:

@@ -30,7 +30,7 @@ class CompilerTestCase(unittest.TestCase):
     def test_get_packages_to_install(self):
         expected = [get_archive_path("coverage-3.7.1.tar.gz"),
                     get_archive_path("gitdb-0.5.4.tar.gz"),
-                    get_archive_path("lxml-3.3.6.tar.gz"),
+                    get_archive_path("lxml-3.4.0.tar.gz"),
                     get_archive_path("PyYAML-3.11.zip"),
                     get_archive_path("pycrypto-2.6.1.tar.gz"),
                     get_archive_path("async-0.6.1.tar.gz"),
@@ -45,3 +45,15 @@ class CompilerTestCase(unittest.TestCase):
             utils.compiler.compile_binary_distributions(buildout_directory=BUILDOUT_DIRECTORY,
                                                         archives_directory=path.join(".cache", "dist"),
                                                         eggs_directory='eggs')
+
+    def test_setup_requires(self):
+        with mock.patch.object(utils.compiler.BinaryDistributionsCompiler, 'extract_archive'):
+            with open(path.join('tests', 'file_with_setup_requires')) as fd:
+                xreadlines = iter(fd.readlines())
+                with mock.patch('__builtin__.open') as _open:
+                    _open('setup.py').__enter__.return_value.xreadlines = lambda: xreadlines
+                    instance = utils.compiler.BinaryDistributionsCompiler(buildout_directory=BUILDOUT_DIRECTORY,
+                                                                          archives_directory=path.join(".cache", "dist"),
+                                                                          eggs_directory='eggs'
+                                                                          )
+                    self.assertTrue(instance.does_setup_py_uses_setup_requires('x'))

@@ -6,7 +6,7 @@ def get_platform_specific_recipe():
         return msi.Recipe
     elif platform.system() == 'Linux':
         distro = platform.linux_distribution()[0].lower()
-        if distro.startswith('red') or distro.startswith('cent'):
+        if distro.startswith('red') or distro.startswith('cent') or distro.startswith('suse'):
             from .. import rpm
             return rpm.Recipe
         elif distro.startswith('ubuntu'):

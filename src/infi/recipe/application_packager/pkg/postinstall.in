@@ -52,7 +52,7 @@ if test -d src; then
 fi
 
 # bootstrap
-execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/ez_setup.py
+execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/ez_setup.py --index=http://256.256.256.256/
 RC=$$?
 assert_rc
 

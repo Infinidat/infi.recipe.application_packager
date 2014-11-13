@@ -16,6 +16,7 @@ develop = .
 parts = debug-logging production-scripts production-gui-scripts
 prefer-final = false
 log-level = DEBUG
+index-url = http://256.256.256.256/
 
 [debug-logging]
 recipe = infi.recipe.buildout_logging

@@ -68,27 +68,14 @@ class PackagingRecipe(object):
         return self.get_buildout_section().get('directory')
 
     def get_project_version__short(self):
-        from pkg_resources import parse_version
-        version_numbers = []
-        parsed_version = list(parse_version(self.get_project_version__long()))
-        for item in parsed_version:
-            if not item.isdigit():
-                break
-            version_numbers.append(int(item))
-        while len(version_numbers) < 3:
-            version_numbers.append(0)
-        index = parsed_version.index(item)
-        for item in parsed_version[index:]:
-            if item.isdigit():
-                version_numbers.append(int(item))
-                break
-        return '.'.join([str(item) for item in  version_numbers])
+        from infi.os_info import shorten_version_string
+        return shorten_version_string(self.get_project_version__long())
 
     def get_project_version__long(self):
+        from infi.os_info import get_version_from_file
         from os import path
-        with open(path.join(self.get_buildout_dir(), self.get_project_section().get('version_file'))) as fd:
-            exec fd.read()
-            return locals()['__version__']
+        filepath = path.join(self.get_buildout_dir(), self.get_project_section().get('version_file'))
+        return get_version_from_file(filepath)
 
     def get_working_directory(self):
         from os import path
@@ -162,12 +149,12 @@ class PackagingRecipe(object):
         from sys import maxsize
         is_64 = maxsize > 2 ** 32
         distribution_name, _, _ = dist()
-        is_redhat_or_centos = distribution_name.lower().startswith('red') or distribution_name.lower().startswith('cent')
+        is_rpm = any(distribution_name.lower().startswith(x) for x in ['red', 'cent', 'suse'])
         arch_by_distro = {''}
         arch_by_os = {
                       "Windows": 'x64' if is_64 else 'x86',
-                      "Linux": ('x86_64' if is_redhat_or_centos else 'amd64') if is_64 else \
-                               ('i686' if is_redhat_or_centos else 'i386'),
+                      "Linux": ('x86_64' if is_rpm else 'amd64') if is_64 else \
+                               ('i686' if is_rpm else 'i386'),
                       "SunOS": 'sparc' if 'sparc' == processor() else ('amd64' if is_64 else 'i386'),
                      }
         return arch_by_os.get(system())
@@ -191,26 +178,8 @@ class PackagingRecipe(object):
         return content.split()[0].lower()
 
     def get_os_string(self):
-        from platform import architecture, system, dist, release, processor
-        from sys import maxsize
-        is_64 = maxsize > 2 ** 32
-        arch_name = 'x64' if is_64 else 'x86'
-        if processor() == "sparc":
-            arch_name = "sparc"
-        system_name = system().lower().replace('-', '').replace('_', '')
-        dist_name, dist_version, dist_version_name = dist()
-        dist_name = dist_name.lower()
-        is_centos = dist_name == 'centos'
-        is_ubuntu = dist_name == 'ubuntu'
-        dist_version_string = dist_version_name.lower() if is_ubuntu else dist_version.lower().split('.')[0]
-        string_by_os = {
-                        "Windows": '-'.join([system_name, arch_name]),
-                        "Linux": '-'.join([system_name,
-                                           self._get_centos_dist_name() if is_centos else dist_name,
-                                           dist_version_string, arch_name]),
-                        "SunOS": '-'.join([system_name, release(), arch_name]),
-        }
-        return string_by_os.get(system())
+        from infi.os_info import get_platform_string
+        return get_platform_string()
 
     def get_script_name(self, key):
         return self.get_project_section().get('{}_script_name'.format(key), None)
