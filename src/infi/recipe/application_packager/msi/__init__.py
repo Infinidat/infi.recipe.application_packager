@@ -84,7 +84,7 @@ class Recipe(PackagingRecipe):
         from glob import glob
         return glob(path.join(self.get_download_cache_dist(), "dist", basename))
 
-    def write_wix_to_destionation_directory(self, wix):
+    def write_wix_to_destination_directory(self, wix):
         import xml.etree.ElementTree as ET
         src = path.join(self.get_working_directory(), 'product.wxs')
         with open(src, 'w') as fd:
@@ -95,7 +95,7 @@ class Recipe(PackagingRecipe):
 
     def build_package(self, silent_launcher):
         wix = self.prepare_wix(silent_launcher)
-        wix_filepath = self.write_wix_to_destionation_directory(wix)
+        wix_filepath = self.write_wix_to_destination_directory(wix)
         with self.wix_context() as wix_basedir:
             wix.build(wix_basedir, wix_filepath, self.get_msi_filepath())
         return self.get_msi_filepath()

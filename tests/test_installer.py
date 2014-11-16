@@ -9,7 +9,7 @@ import platform
 logger = logging.getLogger(__name__)
 
 TESTCASE_DIR = os.path.abspath(os.curdir)
-TEST_BUIILDOUT = os.path.join(TESTCASE_DIR, 'buildout.cfg')
+TEST_BUILDOUT = os.path.join(TESTCASE_DIR, 'buildout.cfg')
 PACKAGE_NAME = 'infi.recipe.application_packager'
 PREFIX = '/opt/infinidat/application-packager'
 INSTALLDIR = r"C:\Program Files\Infinidat\Application Packager"
@@ -240,7 +240,7 @@ class Base(unittest.TestCase):
 class MsiTestCase(Base, MsiInstaller):
     def __init__(self, *args, **kwargs):
         Base.__init__(self, *args, **kwargs)
-        MsiInstaller.__init__(self, TEST_BUIILDOUT)
+        MsiInstaller.__init__(self, TEST_BUILDOUT)
 
     @classmethod
     def platform_specific_cleanup(cls):
@@ -259,7 +259,7 @@ class Posix(Base):
 class RpmTestCase(Posix, RpmInstaller):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
-        RpmInstaller.__init__(self, TEST_BUIILDOUT)
+        RpmInstaller.__init__(self, TEST_BUILDOUT)
 
     @classmethod
     def platform_specific_cleanup(cls):
@@ -275,7 +275,7 @@ class RpmTestCase(Posix, RpmInstaller):
 class DebTestCase(Posix, DebInstaller):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
-        DebInstaller.__init__(self, TEST_BUIILDOUT)
+        DebInstaller.__init__(self, TEST_BUILDOUT)
 
     @classmethod
     def platform_specific_cleanup(cls):
@@ -291,7 +291,7 @@ class DebTestCase(Posix, DebInstaller):
 class PkgTestCase(Posix, PkgInstaller):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
-        PkgInstaller.__init__(self, TEST_BUIILDOUT)
+        PkgInstaller.__init__(self, TEST_BUILDOUT)
 
     @classmethod
     def platform_specific_cleanup(cls):
