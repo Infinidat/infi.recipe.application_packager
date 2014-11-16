@@ -2,6 +2,7 @@ __import__("pkg_resources").declare_namespace(__name__)
 
 from logging import getLogger
 from pkg_resources import resource_string
+import xml.etree.ElementTree as ET
 
 logger = getLogger(__name__)
 
@@ -41,8 +42,7 @@ class Wix(object):
         return template.render(self._context)
 
     def _parse_xml(self, xml):
-        import lxml.etree
-        return lxml.etree.fromstring(xml)
+        return ET.fromstring(xml)
 
     def _safe_id(self, unsafe_id):
         from re import sub
@@ -62,19 +62,9 @@ class Wix(object):
         return _id
 
     def new_element(self, tag, attributes, parent_element=None):
-        import lxml
-        element = lxml.etree.Element(tag)
-        for key, value in attributes.items():
-            element.set(key, value)
         if parent_element is None:
-            return element
-        if parent_element.getchildren():
-            parent_element.getchildren()[-1].tail = "{}    ".format(parent_element.getparent().text)
-        else:
-            parent_element.text = "{}    ".format(parent_element.getparent().text)
-        element.tail = "{}    ".format(parent_element.tail)
-        parent_element.append(element)
-        return element
+            return ET.Element(tag, attributes)
+        return ET.SubElement(parent_element, tag, attributes)
 
     def new_component(self, id, directory, guid='*'):
         return self.new_element("Component", {"Id": id, "Guid": guid}, directory)

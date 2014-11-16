@@ -85,10 +85,11 @@ class Recipe(PackagingRecipe):
         return glob(path.join(self.get_download_cache_dist(), "dist", basename))
 
     def write_wix_to_destionation_directory(self, wix):
-        import lxml.etree
+        import xml.etree.ElementTree as ET
         src = path.join(self.get_working_directory(), 'product.wxs')
         with open(src, 'w') as fd:
-            xml = lxml.etree.tostring(wix._content)
+            xml = ET.tostring(wix._content, encoding='utf-8')
+            xml = xml.replace('ns0:', '').replace('xmlns:ns0', 'xmlns') # hack to get rid of the namespace
             fd.write(xml)
         return src
 
