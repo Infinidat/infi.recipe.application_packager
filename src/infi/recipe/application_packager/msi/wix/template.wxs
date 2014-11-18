@@ -6,27 +6,95 @@
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='{% if architecture == "x64" %}ProgramFiles64Folder{% else %}ProgramFilesFolder{% endif %}' >
                 <Directory Id='COMPANYROOTDIRECTORY' Name='{{ company_name }}'>
-                    <Directory Id='INSTALLDIR' Name='{{ product_name }}'/>
+                    {% with element = installdir %}
+                        {% include element.get_template() %}
+                    {% endwith %}
                 </Directory>
             </Directory>
             <Directory Id='ProgramMenuFolder'>
                 <Directory Id='CompanyProgramsFolder' Name='{{ company_name }}'>
-                    <Directory Id='ApplicationProgramsFolder' Name='{{ product_name }}'/>
+                    <Directory Id='ApplicationProgramsFolder' Name='{{ product_name }}'>
+                        {% if shortcuts %}
+                            <!-- See http://stackoverflow.com/questions/470662/how-to-create-a-multi-level-subfolder-in-start-menu-using-wix -->
+                            <Component Guid="*" Id="start_menu_shortcuts">
+                                <CreateFolder Directory="CompanyProgramsFolder"/>
+                                <RemoveFolder Id="CompanyProgramsFolder" On="uninstall"/>
+                                <CreateFolder Directory="ApplicationProgramsFolder"/>
+                                <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+                                <RegistryValue Root="HKLM" Key="Software\{{ company_name }}\{{ product_name }}"
+                                               Name="Shortcuts" Type="integer" Value="1" KeyPath="yes"/>
+                                {% for element in shortcuts %}
+                                    {% include element.get_template() %}
+                                {% endfor %}
+                            </Component>
+                        {% endif %}
+                    </Directory>
                 </Directory>
             </Directory>
         </Directory>
-        <Feature Id='Everything' Title='Everything' Level='1' Display='hidden' Absent='disallow' AllowAdvertise='no' InstallDefault='local' TypicalDefault='install'/>
+        <Feature Id='Everything' Title='Everything' Level='1' Display='hidden' Absent='disallow' AllowAdvertise='no' InstallDefault='local' TypicalDefault='install'>
+            {% for element in features %}
+                <ComponentRef Id="{{ element.id }}"/>
+            {% endfor %}
+            {% if shortcuts %}
+                <ComponentRef Id="start_menu_shortcuts"/>
+            {% endif %}
+        </Feature>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
         <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable"/>
-        <InstallExecuteSequence/>
-        <InstallUISequence/>
+        <InstallExecuteSequence>
+            {% if existing_installdir_registry_key or custom_installdir %}
+                <Custom Action="Set_INSTALLDIR" After="FileCost">(NOT Installed) AND (EXISTINGINSTALLDIR) AND (NOT UPGRADINGPRODUCTCODE)</Custom>
+            {% endif %}
+            {% for element in custom_actions %}
+                <Custom Action="{{ element.id }}"
+                        {% if element.after %}After="{{ element.after }}"{% endif %}
+                        {% if element.before %}Before="{{ element.before }}"{% endif %}>
+                    {% if element.condition %}
+                        ({{ element.condition }}) AND (NOT NO_CUSTOM_ACTIONS=&quot;1&quot;)
+                    {% endif %}
+                </Custom>
+            {% endfor %}
+        </InstallExecuteSequence>
+        <InstallUISequence>
+            {% if existing_installdir_registry_key or custom_installdir %}
+                <Custom Action="Set_INSTALLDIR" After="FileCost">(NOT Installed) AND (EXISTINGINSTALLDIR) AND (NOT UPGRADINGPRODUCTCODE)</Custom>
+            {% endif %}
+        </InstallUISequence>
         <UIRef Id="WixUI_InstallDir_with_license_dialog"/>
+
+        {% for element in variables + conditions + custom_actions + icons %}
+            {% include element.get_template() %}
+        {% endfor %}
 
         {% if documentation_url %}
             <CustomAction Id="LaunchDocumentation" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
             <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch a browser to view the product documentation online" />
             <Property Id="WixShellExecTarget" Value="{{ documentation_url }}" />
         {% endif %}
+
+        {% if arp_icon_id %}
+            <Property Id="ARPPRODUCTICON" Value="{{ arp_icon_id }}" />
+        {% endif %}
+
+        {% if shortcuts %}
+            <Property Id="DISABLEADVTSHORTCUTS" Value="1" />
+        {% endif %}
+
+        {% if existing_installdir_registry_key %}
+            <Property Id="EXISTINGINSTALLDIR">
+                <RegistrySearch Id="Locate_EXISTINGINSTALLDIR" Type="directory"
+                                Root="{{ existing_installdir_registry_key[0] }}"
+                                Key="{{ existing_installdir_registry_key[1] }}"
+                                Name="{{ existing_installdir_registry_key[2] }}" />
+            </Property>
+            <CustomAction Id="Set_INSTALLDIR" Execute="firstSequence" Property="INSTALLDIR" Value="[EXISTINGINSTALLDIR]" />
+        {% elif custom_installdir %}
+            <CustomAction Id="Set_INSTALLDIR" Execute="firstSequence" Property="INSTALLDIR" Value="" />
+        {% endif %}
+
+        <Property Id="NO_CUSTOM_ACTIONS" Value="0"/>
+        <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." IgnoreRemoveFailure="yes"/>
 
    </Product>
    <Fragment>
@@ -50,7 +118,7 @@
             <DialogRef Id="UserExit" />
 
             <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="3">1</Publish>
-            <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+            <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4">WIXUI_INSTALLDIR_VALID&lt;&gt;"1"</Publish>
 
             {% if documentation_url %}
                 <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchDocumentation" Order="998">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
@@ -61,17 +129,25 @@
             <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">Installed AND PATCH</Publish>
 
             <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
-            <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg">LicenseAccepted = "1"</Publish>
+            {% if user_can_choose_installation_directory %}
+                <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg">LicenseAccepted = "1"</Publish>
+            {% else %}
+                <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">LicenseAccepted = "1"</Publish>
+            {% endif %}
 
             <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
             <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
             <Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath" Order="2">NOT WIXUI_DONTVALIDATEPATH</Publish>
-            <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3"><![CDATA[NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+            <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3">NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID&lt;&gt;"1"</Publish>
             <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="4">WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"</Publish>
             <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
             <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2">1</Publish>
 
-            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1">NOT Installed</Publish>
+            {% if user_can_choose_installation_directory %}
+                <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1">NOT Installed</Publish>
+            {% else %}
+                <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg" Order="1">NOT Installed</Publish>
+            {% endif %}
             <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed AND NOT PATCH</Publish>
             <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2">Installed AND PATCH</Publish>
 
@@ -83,6 +159,13 @@
 
             <Property Id="ARPNOMODIFY" Value="1" />
             <Property Id="ARPNOREPAIR" Value="1" />
+
+            {% for element in custom_actions %}
+                {% if element.text %}
+                    <ProgressText Action="{{ element.id }}">{{ element.text }}</ProgressText>
+                {% endif %}
+            {% endfor %}
+
         </UI>
 
         <UIRef Id="WixUI_Common" />
