@@ -1,7 +1,7 @@
 __import__("pkg_resources").declare_namespace(__name__)
 
 from logging import getLogger
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from jinja2 import Environment, PackageLoader, StrictUndefined
 import os
 
 logger = getLogger(__name__)
@@ -16,7 +16,7 @@ def generate_guid():
 ID_INVALID_PATTERN = r"[^A-Za-z0-9_\.]"
 ID_INVALID_PREFIX_PATTERN = r"^[^a-z_]"
 
-JINJA_ENV = Environment(loader=FileSystemLoader(os.path.dirname(__file__)),
+JINJA_ENV = Environment(loader=PackageLoader('infi.recipe.application_packager.msi', 'wix'),
                         extensions=['jinja2.ext.with_'],
                         autoescape=True,
                         undefined=StrictUndefined)
