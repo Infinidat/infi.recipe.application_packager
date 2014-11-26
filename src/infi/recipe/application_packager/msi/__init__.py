@@ -140,7 +140,7 @@ class Recipe(PackagingRecipe):
         from os import close
         fd, path = mkstemp(suffix='.zip')
         close(fd)
-        urlretrieve("ftp://python.infinidat.com/archives/wix-binaries-v3.5-windows-x86.zip", path)
+        urlretrieve("http://python.infinidat.com/packages/main-stable/index/packages/wix/releases/3.5/distributions/other/architectures/x86/extensions/zip/wix-3.5-windows-x86.zip", path)
         return path
 
     def _append_bindir_to_system_path(self, wix):
