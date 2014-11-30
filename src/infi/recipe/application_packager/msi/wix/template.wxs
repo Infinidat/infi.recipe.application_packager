@@ -88,9 +88,10 @@
                                 Key="{{ existing_installdir_registry_key[1] }}"
                                 Name="{{ existing_installdir_registry_key[2] }}" />
             </Property>
-            <CustomAction Id="Set_INSTALLDIR" Execute="firstSequence" Property="INSTALLDIR" Value="[EXISTINGINSTALLDIR]" />
+            <CustomAction Id="Set_INSTALLDIR" Execute="firstSequence" Property="INSTALLDIR"
+                          Value="{% if custom_installdir %}{{ custom_installdir }}{% else %}[EXISTINGINSTALLDIR]{% endif %}" />
         {% elif custom_installdir %}
-            <CustomAction Id="Set_INSTALLDIR" Execute="firstSequence" Property="INSTALLDIR" Value="" />
+            <CustomAction Id="Set_INSTALLDIR" Execute="firstSequence" Property="INSTALLDIR" Value="{{ custom_installdir }}" />
         {% endif %}
 
         <Property Id="NO_CUSTOM_ACTIONS" Value="0"/>
