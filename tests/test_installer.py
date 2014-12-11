@@ -223,6 +223,8 @@ class Base(unittest.TestCase):
 
     def test_processes_from_previous_version_are_not_killed_during_upgrade(self):
         from time import time, sleep
+        if 'windows' in get_platform_string():
+            raise unittest.SkipTest("Skipping")
         self.install_package()
         cleanup_buildout_logs()
 
