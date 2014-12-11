@@ -111,6 +111,21 @@ def do_a_refactoring_change():
     repository.add(scripts_init)
     repository.commit("HOSTDEV-1781 refactoring scripts/refactoring")
 
+def _apply_close_on_upgrade_or_removal(value):
+    from gitpy import LocalRepository
+    from infi.recipe.application_packager.utils.buildout import open_buildout_configfile
+    with open_buildout_configfile(write_on_exit=True) as buildout:
+        buildout.set("pack", "close-on-upgrade-or-removal", value)
+    repository = LocalRepository('.')
+    repository.add('buildout.cfg')
+    repository.commit('HOSTDEV-1922 testing close-on-upgrade-or-removal=false')
+
+def set_close_on_upgrade_or_removal():
+    _apply_close_on_upgrade_or_removal('true')
+
+def unset_close_on_upgrade_or_removal():
+    _apply_close_on_upgrade_or_removal('false')
+
 
 from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
 from infi.recipe.application_packager.utils import chdir
@@ -206,6 +221,32 @@ class Base(unittest.TestCase):
         self.uninstall_package(with_custom_actions)
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
+    def test_processes_from_previous_version_are_not_killed_during_upgrade(self):
+        from time import time, sleep
+        self.install_package()
+        cleanup_buildout_logs()
+
+        # start process
+        timeout = 3600
+        t0 = time()
+        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
+        # we need to give the process time to start, checking it didn't return 1 because of an error
+        sleep(10)
+        self.assertFalse(pid.is_finished())
+
+        # upgrade
+        delete_existing_builds()
+        unset_close_on_upgrade_or_removal()
+        do_an_empty_commit()
+        devenv_build()
+        create_package()
+        self.install_package()
+
+        # assert
+        cleanup_buildout_logs()
+        pid.poll()
+        self.assertFalse(pid.is_finished())
+
     def test_processes_from_previous_version_are_killed_during_upgrade(self):
         from time import time, sleep
         self.install_package()
@@ -221,6 +262,7 @@ class Base(unittest.TestCase):
 
         # upgrade
         delete_existing_builds()
+        set_close_on_upgrade_or_removal()
         do_an_empty_commit()
         devenv_build()
         create_package()
