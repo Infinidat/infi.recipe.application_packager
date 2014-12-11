@@ -237,7 +237,7 @@ class Base(unittest.TestCase):
             raise unittest.SkipTest("Skipping")
 
         # for debian-based, this decision occurs in the version being upgraded
-        _apply_close_on_upgrade_or_removal('true' if close_on_upgrade_or_removal else 'false')
+        self._apply_close_on_upgrade_or_removal('true' if close_on_upgrade_or_removal else 'false')
 
         self._rebuild_package()
         self.install_package()
