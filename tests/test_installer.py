@@ -66,7 +66,7 @@ def create_package():
     from infi.execute import execute_assert_success
     try:
         stderr = execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack']).get_stderr()
-        log.debug('package created, stderr: {}'.format(stderr))
+        logger.debug('package created, stderr: {}'.format(stderr))
     finally:
         wxs = os.path.join("parts", "product.wxs")
         if os.name == 'nt' and os.path.exists(wxs):
