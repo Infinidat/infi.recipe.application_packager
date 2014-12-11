@@ -1,0 +1,1 @@
+<RemoveFile Id="{{ element.id }}" Name="{{ element.name }}" On="uninstall"/>

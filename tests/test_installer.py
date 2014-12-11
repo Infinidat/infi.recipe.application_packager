@@ -1,15 +1,15 @@
 import infi.unittest as unittest
+from infi.os_info import get_platform_string
 import infi.recipe.buildout_logging as buildout_logging
 import os
 import glob
 import logging
 import shutil
-import platform
 
 logger = logging.getLogger(__name__)
 
 TESTCASE_DIR = os.path.abspath(os.curdir)
-TEST_BUIILDOUT = os.path.join(TESTCASE_DIR, 'buildout.cfg')
+TEST_BUILDOUT = os.path.join(TESTCASE_DIR, 'buildout.cfg')
 PACKAGE_NAME = 'infi.recipe.application_packager'
 PREFIX = '/opt/infinidat/application-packager'
 INSTALLDIR = r"C:\Program Files\Infinidat\Application Packager"
@@ -65,7 +65,8 @@ def create_console_scripts():
 def create_package():
     from infi.execute import execute_assert_success
     try:
-        execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack'])
+        stdout = execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack']).get_stdout()
+        logger.debug('package created, stdout: {}'.format(stdout))
     finally:
         wxs = os.path.join("parts", "product.wxs")
         if os.name == 'nt' and os.path.exists(wxs):
@@ -110,7 +111,6 @@ def do_a_refactoring_change():
     repository.add(refactoring_py)
     repository.add(scripts_init)
     repository.commit("HOSTDEV-1781 refactoring scripts/refactoring")
-
 
 from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
 from infi.recipe.application_packager.utils import chdir
@@ -206,31 +206,61 @@ class Base(unittest.TestCase):
         self.uninstall_package(with_custom_actions)
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
-    def test_processes_from_previous_version_are_killed_during_upgrade(self):
-        from time import time, sleep
-        self.install_package()
-        cleanup_buildout_logs()
+    def _apply_close_on_upgrade_or_removal(self, value):
+        from gitpy import LocalRepository
+        from infi.recipe.application_packager.utils.buildout import open_buildout_configfile
+        with open_buildout_configfile(write_on_exit=True) as buildout:
+            buildout.set("pack", "close-on-upgrade-or-removal", value)
+        repository = LocalRepository('.')
+        repository.add('buildout.cfg')
+        repository.commit('HOSTDEV-1922 testing close-on-upgrade-or-removal={}'.format(value))
 
-        # start process
-        timeout = 3600
-        t0 = time()
-        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
-        # we need to give the process time to start, checking it didn't return 1 because of an error
-        sleep(10)
-        self.assertFalse(pid.is_finished())
-
-        # upgrade
+    def _rebuild_package(self):
         delete_existing_builds()
         do_an_empty_commit()
         devenv_build()
         create_package()
+
+    def _run_the_installed_script_in_the_background(self):
+        from time import sleep
+        timeout = 3600
+        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
+        # we need to give the process time to start, checking it didn't return 1 because of an error
+        sleep(10)
+        self.assertFalse(pid.is_finished())
+        return pid
+
+    @unittest.parameters.iterate("close_on_upgrade_or_removal", [True, False])
+    def test_close_on_upgrade_or_removal(self, close_on_upgrade_or_removal):
+        if close_on_upgrade_or_removal is False and 'windows' in get_platform_string():
+            # this is not supported on Windows because we cannot override running executables
+            raise unittest.SkipTest("Skipping")
+
+        # for debian-based, this decision occurs in the version being upgraded
+        self._apply_close_on_upgrade_or_removal('true' if close_on_upgrade_or_removal else 'false')
+
+        self._rebuild_package()
+        self.install_package()
+        cleanup_buildout_logs()
+
+        # start process and upgrade
+        pid = self._run_the_installed_script_in_the_background()
+        self._rebuild_package()
         self.install_package()
 
-        # assert
+        # assert on upgrade
         cleanup_buildout_logs()
         pid.poll()
-        self.assertTrue(pid.is_finished())
-        self.assertLess(time(), t0 + timeout)
+        self.assertEquals(close_on_upgrade_or_removal, pid.is_finished())
+
+        # start process and uninstall
+        pid = self._run_the_installed_script_in_the_background()
+        self.uninstall_package()
+
+        # assert on removal
+        cleanup_buildout_logs()
+        pid.poll()
+        self.assertEquals(close_on_upgrade_or_removal, pid.is_finished())
 
     @classmethod
     def platform_specific_cleanup(cls):
@@ -240,7 +270,7 @@ class Base(unittest.TestCase):
 class MsiTestCase(Base, MsiInstaller):
     def __init__(self, *args, **kwargs):
         Base.__init__(self, *args, **kwargs)
-        MsiInstaller.__init__(self, TEST_BUIILDOUT)
+        MsiInstaller.__init__(self, TEST_BUILDOUT)
 
     @classmethod
     def platform_specific_cleanup(cls):
@@ -249,7 +279,7 @@ class MsiTestCase(Base, MsiInstaller):
 
     @classmethod
     def should_run(cls):
-        return platform.system() == "Windows"
+        return 'windows' in get_platform_string()
 
 
 class Posix(Base):
@@ -259,7 +289,7 @@ class Posix(Base):
 class RpmTestCase(Posix, RpmInstaller):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
-        RpmInstaller.__init__(self, TEST_BUIILDOUT)
+        RpmInstaller.__init__(self, TEST_BUILDOUT)
 
     @classmethod
     def platform_specific_cleanup(cls):
@@ -269,13 +299,13 @@ class RpmTestCase(Posix, RpmInstaller):
 
     @classmethod
     def should_run(cls):
-        return platform.system() == "Linux" and platform.linux_distribution()[0].lower().startswith('red')
+        return 'redhat' in get_platform_string() or 'centos' in get_platform_string()
 
 
 class DebTestCase(Posix, DebInstaller):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
-        DebInstaller.__init__(self, TEST_BUIILDOUT)
+        DebInstaller.__init__(self, TEST_BUILDOUT)
 
     @classmethod
     def platform_specific_cleanup(cls):
@@ -285,13 +315,13 @@ class DebTestCase(Posix, DebInstaller):
 
     @classmethod
     def should_run(cls):
-        return platform.system() == "Linux" and platform.linux_distribution()[0].lower()[0:3] in ['ubu', 'deb']
+        return 'ubuntu' in get_platform_string() or 'debian' in get_platform_string()
 
 
 class PkgTestCase(Posix, PkgInstaller):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
-        PkgInstaller.__init__(self, TEST_BUIILDOUT)
+        PkgInstaller.__init__(self, TEST_BUILDOUT)
 
     @classmethod
     def platform_specific_cleanup(cls):
@@ -301,4 +331,4 @@ class PkgTestCase(Posix, PkgInstaller):
 
     @classmethod
     def should_run(cls):
-        return platform.system() == "SunOS"
+        return 'solaris' in get_platform_string()

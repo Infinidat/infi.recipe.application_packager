@@ -15,7 +15,6 @@ CONDITION_DURING_INSTALL_OR_REPAIR = 'NOT Installed OR MaintenanceMode="Modify"'
 CONDITION_DURING_UNINSTALL_NOT_UPGRADE = 'REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE'
 CONDITION_DURING_UPGRADE = "UPGRADINGPRODUCTCODE"
 CONDITION_DURING_UPGRADE_AND_UNINSTALL = "({}) OR ({})".format(CONDITION_DURING_UPGRADE, CONDITION_DURING_UNINSTALL_NOT_UPGRADE)
-DowngradeErrorMessage = 'A later version of [ProductName] is already installed. Setup will now exit.'
 LAUNCH_CONDITION__WINDOWS_2008_AND_R2_ONLY = \
     "(Not Version9X) And (Not VersionNT=400) And (Not VersionNT=500) And (Not VersionNT=501) And" + \
     "(Not VersionNT=502) And (Not (VersionNT=600 And (MsiNTProductType=1))) And " + \
@@ -84,48 +83,47 @@ class Recipe(PackagingRecipe):
         from glob import glob
         return glob(path.join(self.get_download_cache_dist(), "dist", basename))
 
-    def write_wix_to_destionation_directory(self, wix):
-        import lxml.etree
+    def write_wix_to_destination_directory(self, wix):
+        import xml.etree.ElementTree as ET
         src = path.join(self.get_working_directory(), 'product.wxs')
         with open(src, 'w') as fd:
-            xml = lxml.etree.tostring(wix._content)
-            fd.write(xml)
+            fd.write(wix.to_xml())
         return src
 
     def build_package(self, silent_launcher):
         wix = self.prepare_wix(silent_launcher)
-        wix_filepath = self.write_wix_to_destionation_directory(wix)
+        wix_filepath = self.write_wix_to_destination_directory(wix)
         with self.wix_context() as wix_basedir:
             wix.build(wix_basedir, wix_filepath, self.get_msi_filepath())
         return self.get_msi_filepath()
 
     def prepare_wix(self, silent_launcher):
         from .wix import Wix
+        recipe = self.get_recipe_section()
+        existing_installdir = recipe.get("existing-installdir")
+        custom_installdir = recipe.get("custom-installdir")
         wix = Wix(self.get_product_name(), self.get_project_version__short(),
                   self.get_platform_arch(), self.get_upgrade_code(), self.get_description(),
-                  self.get_company_name(), self.get_documentation_url())
+                  self.get_company_name(), self.get_documentation_url(), self.get_add_remove_programs_icon(),
+                  existing_installdir, custom_installdir)
         silent_launcher_file_id = self._put_all_files(wix, silent_launcher)
         self._append_bindir_to_system_path(wix)
         self._append_custom_actions(wix, silent_launcher_file_id)
-        self._prepare_for_major_upgrade(wix)
         self._add_launch_conditions(wix)
         self._add_project_entry_points(wix, silent_launcher_file_id)
-        arp_icon = self.get_add_remove_programs_icon()
-        if arp_icon:
-            arp_icon = wix.set_add_remove_programs_icon(arp_icon)
         self._add_shortcuts(wix)
         banner_bmp = self.get_msi_banner_bmp()
         if banner_bmp:
             logger.info("Setting custom banner {}".format(banner_bmp))
-            wix.new_element("WixVariable", {"Id": "WixUIBannerBmp", "Value": banner_bmp}, wix.product)
+            wix.add_variable("WixUIBannerBmp", banner_bmp)
         dialog_bmp = self.get_msi_dialog_bmp()
         if dialog_bmp:
             logger.info("Setting custom dialog {}".format(dialog_bmp))
-            wix.new_element("WixVariable", {"Id": "WixUIDialogBmp", "Value": dialog_bmp}, wix.product)
+            wix.add_variable("WixUIDialogBmp", dialog_bmp)
         eula = self.get_eula_rtf()
         if eula:
             logger.info("Setting custom eula {}".format(eula))
-            wix.new_element("WixVariable", {"Id": "WixUILicenseRtf", "Value": eula}, wix.product)
+            wix.add_variable("WixUILicenseRtf", eula)
         return wix
 
     @contextmanager
@@ -142,7 +140,7 @@ class Recipe(PackagingRecipe):
         from os import close
         fd, path = mkstemp(suffix='.zip')
         close(fd)
-        urlretrieve("ftp://python.infinidat.com/archives/wix-binaries-v3.5-windows-x86.zip", path)
+        urlretrieve("http://python.infinidat.com/packages/main-stable/index/packages/wix/releases/3.5/distributions/other/architectures/x86/extensions/zip/wix-3.5-windows-x86.zip", path)
         return path
 
     def _append_bindir_to_system_path(self, wix):
@@ -151,15 +149,13 @@ class Recipe(PackagingRecipe):
         assembly_dir = wix.mkdir('Microsoft.VC90.CRT', bindir)
         component = wix.new_component(wix.new_id('bin'), bindir, generate_guid())
         wix.add_environment_variable('Path', r'[INSTALLDIR]bin', component)
-        wix.add_delete_all_files_on_removal_component_to_directory(bindir)
-        wix.add_delete_empty_folder_component_to_directory(bindir)
 
     def _put_all_files(self, wix, silent_launcher):
         wix.add_file('bootstrap.py', wix.installdir)
         wix.add_file('buildout.in', wix.installdir, 'buildout.cfg')
         wix.add_file('setup.py', wix.installdir)
         cachedir = wix.mkdir('.cache', wix.installdir)
-        silent_launcher_file_id = wix.add_file(silent_launcher, cachedir).get('Id')
+        silent_launcher_file_id = wix.add_file(silent_launcher, cachedir).id
         develop_eggs = wix.mkdir('develop-eggs', wix.installdir)
         wix.add_directory(self.get_download_cache_dist(), cachedir)
         parts = wix.mkdir('parts', wix.installdir)
@@ -168,8 +164,6 @@ class Recipe(PackagingRecipe):
         wix.add_directory(path.join(self.get_buildout_dir(), 'parts', 'python'), parts)
         wix.add_directory(path.join(self.get_buildout_dir(), 'src'), wix.installdir)
         wix.add_directory(path.join(self.get_buildout_dir(), 'eggs'), wix.installdir, True, True)
-        wix.add_delete_all_files_on_removal_component_to_directory(wix.installdir)
-        wix.add_delete_empty_folder_component_to_directory(wix.installdir)
         return silent_launcher_file_id
 
     def _append_os_removedirs_eggs(self, wix, silent_launcher_file_id):
@@ -178,7 +172,7 @@ class Recipe(PackagingRecipe):
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
                                                                   silent_launcher_file_id=silent_launcher_file_id,
                                                                   text="Removing temporary files, this may take a few minutes")
-        return action.get('Id')
+        return action.id
 
     def _append_bootstrap_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
         commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" bootstrap.py ' + \
@@ -191,7 +185,7 @@ class Recipe(PackagingRecipe):
                                                                   silent_launcher_file_id=silent_launcher_file_id,
                                                                   text="Bootstrapping, this may take a few minutes")
 
-        return action.get('Id')
+        return action.id
 
     def _append_buildout_custom_action(self, wix, bootstrap_id, silent_launcher_file_id):
         commandline = r'"[INSTALLDIR]bin\buildout.exe" -U -c "[INSTALLDIR]buildout.cfg"'
@@ -212,24 +206,10 @@ class Recipe(PackagingRecipe):
                                                                   text="Closing open applications, this may take a few minutes")
 
     def _append_custom_actions(self, wix, silent_launcher_file_id):
-        recipe = self.get_recipe_section()
-        existing_installdir = recipe.get("existing-installdir")
-        # http://stackoverflow.com/questions/12576807/how-to-set-targetdir-or-installdir-from-a-registry-entry
-        if existing_installdir:
-            root, key = existing_installdir.split("\\", 1) # HKLM, SOFTWARE\...\InstallPath
-            key, value = key.rsplit("\\", 1) # Software...\, InstallPath
-            wix.add_existing_install_dir(root, key, value)
-            wix.set_custom_install_dir(recipe.get("custom-installdir", "[EXISTINGINSTALLDIR]"))
-            wix.prevent_user_from_choosing_installation_directory()
-        elif recipe.get("custom-installdir"):
-            wix.set_custom_install_dir(recipe.get("custom-installdir"))
-            wix.prevent_user_from_choosing_installation_directory()
-
         os_removedirs_eggs_id = self._append_os_removedirs_eggs(wix, silent_launcher_file_id)
         bootstrap_id = self._append_bootstrap_custom_action(wix, os_removedirs_eggs_id, silent_launcher_file_id)
         self._append_buildout_custom_action(wix, bootstrap_id, silent_launcher_file_id)
         self._append_close_application_action(wix, bootstrap_id, silent_launcher_file_id)
-        wix.new_element("Property", {"Id": BYPASS_CUSTOM_ACTION_PROPERTY, "Value":"0"}, wix.product)
 
     def _add_launch_conditions(self, wix):
         self._add_os_requirements_launch_condition(wix)
@@ -240,14 +220,10 @@ class Recipe(PackagingRecipe):
         is_64 = maxsize > 2 ** 32
         if is_64:
             return
-        condition = wix.new_element("Condition", {'Message': OS_32BIT_ON_64BIT_LAUNCH_CONDITION_MESSAGE},
-                                    wix.product)
-        condition.text = "Not VersionNT64"
+        wix.add_condition(OS_32BIT_ON_64BIT_LAUNCH_CONDITION_MESSAGE, "Not VersionNT64")
 
     def _add_os_requirements_launch_condition(self, wix):
-        condition = wix.new_element("Condition", {'Message': OS_REQUIREMENTS_LAUNCH_CONDITION_MESSAGE},
-                                    wix.product)
-        condition.text = self._calculate_os_requirements() + (wix.product.text or '')
+        wix.add_condition(OS_REQUIREMENTS_LAUNCH_CONDITION_MESSAGE, self._calculate_os_requirements())
 
     def _calculate_os_requirements(self):
         # the launch condition is conjcution of all operating systems that are NOT allowed
@@ -258,13 +234,6 @@ class Recipe(PackagingRecipe):
             if self.get_recipe_section().get("install-on-{}".format(name.lower().replace(' ', '-')), default):
                 prevent_installation_on_operating_systems.add(condition)
         return " Or ".join([condition for condition in prevent_installation_on_operating_systems])
-
-    def _prepare_for_major_upgrade(self, wix):
-        wix.new_element("MajorUpgrade", {'AllowDowngrades': 'no',
-                                          'AllowSameVersionUpgrades': 'yes',
-                                          'DowngradeErrorMessage': DowngradeErrorMessage,
-                                          'IgnoreRemoveFailure': 'yes',
-                                          }, wix.product)
 
     def _add_project_entry_points(self, wix, silent_launcher_file_id):
         for key, value in {'post_install': {'after': 'custom_action_buildout',
@@ -288,7 +257,7 @@ class Recipe(PackagingRecipe):
     def _add_shortcuts(self, wix):
         if not self.get_startmenu_shortcuts() or not self.get_shortcuts_icon():
             return
-        icon_id = wix.new_icon(self.get_shortcuts_icon())
+        icon_id = wix.add_icon(self.get_shortcuts_icon())
         for item in eval(self.get_startmenu_shortcuts()):
             shortcut_name, executable_name = item.split('=')
             wix.add_shortcut(shortcut_name.strip(), executable_name.strip(), icon_id)

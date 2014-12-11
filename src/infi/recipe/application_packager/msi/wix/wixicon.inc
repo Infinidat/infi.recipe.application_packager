@@ -1,0 +1,1 @@
+<Icon Id="{{ element.id }}" SourceFile="{{ element.source }}"/>

@@ -47,8 +47,10 @@ if test -d %{prefix}; then
         execute pushd .
         execute cd %{prefix}
 
-        # close the running application
-        if test -n "$$1" -a "$$1" != "1"; then
+        CLOSE_ON_UPGRADE_OR_REMOVAL=$close_on_upgrade_or_removal
+
+        # close application before the upgrade
+        if test -n "$$CLOSE_ON_UPGRADE_OR_REMOVAL" -a "$$CLOSE_ON_UPGRADE_OR_REMOVAL" != "0"; then
             execute bin/buildout -U install debug-logging close-application
             RC=$$?
             assert_rc
@@ -158,7 +160,7 @@ fi
 
 CLOSE_ON_UPGRADE_OR_REMOVAL=$close_on_upgrade_or_removal
 
-# close application
+# close application before uninstalling
 if test -n "$$CLOSE_ON_UPGRADE_OR_REMOVAL" -a "$$CLOSE_ON_UPGRADE_OR_REMOVAL" != "0"; then
     execute bin/buildout -U install debug-logging close-application
     RC=$$?

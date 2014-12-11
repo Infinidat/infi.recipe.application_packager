@@ -1,0 +1,1 @@
+<CustomAction ExeCommand="&quot;[INSTALLDIR]&quot; {{ element.cmd_line }}" Execute="deferred" FileKey="{{ element.silent_launcher_file_id }}" Id="{{ element.id }}" Impersonate="no" Return="check"/>

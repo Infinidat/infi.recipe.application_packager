@@ -98,7 +98,9 @@ class Recipe(PackagingRecipe):
         with open(src, 'r') as fd:
             template = Template(fd.read())
         with open(dst, 'w') as fd:
-            fd.write(template.substitute(formatting_dict))
+            contents = template.substitute(formatting_dict)
+            fd.write(contents)
+            logger.debug("writing {!r}:\n {}".format(filename, contents))
             utils.execute.execute_assert_success("chmod {} {}".format(permissions, dst).split())
 
     def _get_depends_declaration(self):

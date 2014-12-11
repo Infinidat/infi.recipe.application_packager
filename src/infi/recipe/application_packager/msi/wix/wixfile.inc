@@ -1,0 +1,1 @@
+<File Checksum="yes" Id="{{ element.id }}" KeyPath="yes" Name="{{ element.name }}" Source="{{ element.source }}"/>
