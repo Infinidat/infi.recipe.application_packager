@@ -129,8 +129,8 @@ class Installer(object):
     def create_package(self):
         from ..utils import chdir
         with chdir(os.path.dirname(self._buildout_path)):
-            stderr = execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack']).get_stderr()
-            log.debug('package created, stderr: {}'.format(stderr))
+            stdout = execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack']).get_stdout()
+            log.debug('package created, stdout: {}'.format(stdout))
 
     def is_product_installed(self):
         raise NotImplementedError()
