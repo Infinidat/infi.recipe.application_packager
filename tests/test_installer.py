@@ -112,22 +112,6 @@ def do_a_refactoring_change():
     repository.add(scripts_init)
     repository.commit("HOSTDEV-1781 refactoring scripts/refactoring")
 
-def _apply_close_on_upgrade_or_removal(value):
-    from gitpy import LocalRepository
-    from infi.recipe.application_packager.utils.buildout import open_buildout_configfile
-    with open_buildout_configfile(write_on_exit=True) as buildout:
-        buildout.set("pack", "close-on-upgrade-or-removal", value)
-    repository = LocalRepository('.')
-    repository.add('buildout.cfg')
-    repository.commit('HOSTDEV-1922 testing close-on-upgrade-or-removal=false')
-
-def set_close_on_upgrade_or_removal():
-    _apply_close_on_upgrade_or_removal('true')
-
-def unset_close_on_upgrade_or_removal():
-    _apply_close_on_upgrade_or_removal('false')
-
-
 from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
 from infi.recipe.application_packager.utils import chdir
 from infi.recipe.application_packager.installer import Installer, MsiInstaller, DebInstaller, RpmInstaller, PkgInstaller
@@ -222,60 +206,61 @@ class Base(unittest.TestCase):
         self.uninstall_package(with_custom_actions)
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
-    def test_processes_from_previous_version_are_not_killed_during_upgrade(self):
-        from time import time, sleep
-        if 'windows' in get_platform_string():
+    def _apply_close_on_upgrade_or_removal(self, value):
+        from gitpy import LocalRepository
+        from infi.recipe.application_packager.utils.buildout import open_buildout_configfile
+        with open_buildout_configfile(write_on_exit=True) as buildout:
+            buildout.set("pack", "close-on-upgrade-or-removal", value)
+        repository = LocalRepository('.')
+        repository.add('buildout.cfg')
+        repository.commit('HOSTDEV-1922 testing close-on-upgrade-or-removal={}'.format(value))
+
+    def _rebuild_package(self):
+        delete_existing_builds()
+        do_an_empty_commit()
+        devenv_build()
+        create_package()
+
+    def _run_the_installed_script_in_the_background(self):
+        from time import sleep
+        timeout = 3600
+        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
+        # we need to give the process time to start, checking it didn't return 1 because of an error
+        sleep(10)
+        self.assertFalse(pid.is_finished())
+        return pid
+
+    @unittest.parameters.iterate("close_on_upgrade_or_removal", [True, False])
+    def test_close_on_upgrade_or_removal(self, close_on_upgrade_or_removal):
+        if close_on_upgrade_or_removal is False and 'windows' in get_platform_string():
+            # this is not supported on Windows because we cannot override running executables
             raise unittest.SkipTest("Skipping")
+
+        # for debian-based, this decision occurs in the version being upgraded
+        _apply_close_on_upgrade_or_removal('true' if close_on_upgrade_or_removal else 'false')
+
+        self._rebuild_package()
         self.install_package()
         cleanup_buildout_logs()
 
-        # start process
-        timeout = 3600
-        t0 = time()
-        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
-        # we need to give the process time to start, checking it didn't return 1 because of an error
-        sleep(10)
-        self.assertFalse(pid.is_finished())
-
-        # upgrade
-        delete_existing_builds()
-        unset_close_on_upgrade_or_removal()
-        do_an_empty_commit()
-        devenv_build()
-        create_package()
+        # start process and upgrade
+        pid = self._run_the_installed_script_in_the_background()
+        self._rebuild_package()
         self.install_package()
 
-        # assert
+        # assert on upgrade
         cleanup_buildout_logs()
         pid.poll()
-        self.assertFalse(pid.is_finished())
+        self.assertEquals(close_on_upgrade_or_removal, pid.is_finished())
 
-    def test_processes_from_previous_version_are_killed_during_upgrade(self):
-        from time import time, sleep
-        self.install_package()
-        cleanup_buildout_logs()
+        # start process and uninstall
+        pid = self._run_the_installed_script_in_the_background()
+        self.uninstall_package()
 
-        # start process
-        timeout = 3600
-        t0 = time()
-        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
-        # we need to give the process time to start, checking it didn't return 1 because of an error
-        sleep(10)
-        self.assertFalse(pid.is_finished())
-
-        # upgrade
-        delete_existing_builds()
-        set_close_on_upgrade_or_removal()
-        do_an_empty_commit()
-        devenv_build()
-        create_package()
-        self.install_package()
-
-        # assert
+        # assert on removal
         cleanup_buildout_logs()
         pid.poll()
-        self.assertTrue(pid.is_finished())
-        self.assertLess(time(), t0 + timeout)
+        self.assertEquals(close_on_upgrade_or_removal, pid.is_finished())
 
     @classmethod
     def platform_specific_cleanup(cls):
