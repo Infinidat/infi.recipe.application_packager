@@ -1,10 +1,10 @@
 import infi.unittest as unittest
+from infi.os_info import get_platform_string
 import infi.recipe.buildout_logging as buildout_logging
 import os
 import glob
 import logging
 import shutil
-import platform
 
 logger = logging.getLogger(__name__)
 
@@ -291,7 +291,7 @@ class MsiTestCase(Base, MsiInstaller):
 
     @classmethod
     def should_run(cls):
-        return platform.system() == "Windows"
+        return 'windows' in get_platform_string()
 
 
 class Posix(Base):
@@ -311,7 +311,7 @@ class RpmTestCase(Posix, RpmInstaller):
 
     @classmethod
     def should_run(cls):
-        return platform.system() == "Linux" and platform.linux_distribution()[0].lower().startswith('red')
+        return 'redhat' in get_platform_string() or 'centos' in get_platform_string()
 
 
 class DebTestCase(Posix, DebInstaller):
@@ -327,7 +327,7 @@ class DebTestCase(Posix, DebInstaller):
 
     @classmethod
     def should_run(cls):
-        return platform.system() == "Linux" and platform.linux_distribution()[0].lower()[0:3] in ['ubu', 'deb']
+        return 'ubuntu' in get_platform_string() or 'debian' in get_platform_string()
 
 
 class PkgTestCase(Posix, PkgInstaller):
@@ -343,4 +343,4 @@ class PkgTestCase(Posix, PkgInstaller):
 
     @classmethod
     def should_run(cls):
-        return platform.system() == "SunOS"
+        return 'solaris' in get_platform_string()
