@@ -23,9 +23,12 @@ This recipe, along with our isolated python builds, provides the following featu
 What deployment solution should I use
 -------------------------------------
 
-# If you need to build a shared library but want to write it in Python, then you can pack the Python code as a static library and link you shared library with it
-# If you need to a sinlge standalone, no-installation-required executable then use the executable recipe
-# if you need a full Python interpreter, or access to package resources, then you should pack your Python project in an OS package
+If you need to build a shared library but want to write it in Python, then you can pack the Python code as a static library and link you shared library with it.
+
+If you need to a sinlge standalone, no-installation-required executable then use the executable recipe.
+
+if you need a full Python interpreter, or access to package resources, then you should pack your Python project in an OS package.
+
 
 
 Using this recipe
