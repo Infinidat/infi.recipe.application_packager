@@ -51,6 +51,9 @@ class Recipe(PackagingRecipe):
             utils.download_buildout(self.get_download_cache_dist())
             utils.download_setuptools(self.get_download_cache_dist())
             silent_launcher = self.get_silent_launcher()
+            if self.get_add_remove_programs_icon():
+              self.set_icon_in_all_executables_in_project()
+              utils.rcedit.set_icon_in_executable(silent_launcher, self.get_add_remove_programs_icon())
             if self.should_sign_files():
                 self.sign_all_executables_in_project()
                 self.signtool.sign_file(silent_launcher)
@@ -80,6 +83,15 @@ class Recipe(PackagingRecipe):
             self.signtool.sign_executables_in_archive(archive_path)
         # The original python executable is running, cannot sign it
         # self.signtool.sign_file(path.join(self.get_buildout_dir(), 'parts', 'python', 'bin', 'python.exe'))
+
+    def set_icon_in_all_executables_in_project(self):
+        icon = self.get_add_remove_programs_icon()
+        for archive_path in self.glob_in_dist_directory("setuptools*"):
+            utils.rcedit.set_icon_for_executables_in_archive(archive_path, icon)
+        for archive_path in self.glob_in_dist_directory("infi.recipe.console_scripts*"):
+            utils.rcedit.set_icon_for_executables_in_archive(archive_path, icon)
+        for archive_path in self.glob_in_dist_directory("infi.node_webkit*"):
+            utils.rcedit.set_icon_for_executables_in_archive(archive_path, icon)
 
     def glob_in_dist_directory(self, basename):
         from glob import glob

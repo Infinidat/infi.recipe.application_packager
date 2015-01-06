@@ -2,7 +2,7 @@
 from pkg_resources import resource_filename
 from contextlib import contextmanager
 from logging import getLogger
-from . import buildout, compiler, execute, signtool
+from . import buildout, compiler, execute, signtool, rcedit
 
 logger = getLogger(__name__)
 ez_setup_txt = resource_filename(__name__, "ez_setup.txt")
