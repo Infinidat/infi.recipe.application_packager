@@ -76,6 +76,8 @@ class Recipe(PackagingRecipe):
             self.signtool.sign_executables_in_archive(archive_path)
         for archive_path in self.glob_in_dist_directory("infi.recipe.console_scripts*"):
             self.signtool.sign_executables_in_archive(archive_path)
+        for archive_path in self.glob_in_dist_directory("infi.node_webkit*"):
+            self.signtool.sign_executables_in_archive(archive_path)
         # The original python executable is running, cannot sign it
         # self.signtool.sign_file(path.join(self.get_buildout_dir(), 'parts', 'python', 'bin', 'python.exe'))
 
