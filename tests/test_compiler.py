@@ -29,7 +29,7 @@ class CompilerTestCase(unittest.TestCase):
 
     def test_get_packages_to_install(self):
         expected = [get_archive_path("coverage-3.7.1.tar.gz"),
-                    get_archive_path("gitdb-0.6.0.tar.gz"),
+                    get_archive_path("gitdb-0.6.1.tar.gz"),
                     get_archive_path("PyYAML-3.11.zip"),
                     get_archive_path("pycrypto-2.6.1.tar.gz"),
                     get_archive_path("MarkupSafe-0.23.tar.gz"),

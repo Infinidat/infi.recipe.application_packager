@@ -18,9 +18,10 @@ def ZipFile__add(archive):
 def open_archive(archive_path, mode='r'):
     from tarfile import TarFile
     from zipfile import ZipFile
-    open_func = ZipFile if archive_path.endswith("zip") else TarFile.open
+    use_ZipFile = archive_path.endswith("zip") or archive_path.endswith("egg")
+    open_func = ZipFile if use_ZipFile else TarFile.open
     archive = open_func(archive_path, mode=mode)
-    archive.add = ZipFile__add(archive) if archive_path.endswith("zip") else archive.add
+    archive.add = ZipFile__add(archive) if use_ZipFile else archive.add
     try:
         yield archive
     finally:
