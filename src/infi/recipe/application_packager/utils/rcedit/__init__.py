@@ -4,7 +4,7 @@ logger = getLogger(__name__)
 
 def set_icon_in_executable(executable, icon):
     from pkg_resources import resource_filename
-    from .execute import execute_assert_success
+    from infi.recipe.application_packager.utils.execute import execute_assert_success
     rcedit = resource_filename(__name__, "rcedit.exe")
     execute_assert_success([rcedit, executable, '--set-icon', icon])
 
