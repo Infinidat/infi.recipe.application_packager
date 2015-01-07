@@ -95,7 +95,7 @@ class Recipe(PackagingRecipe):
 
     def glob_in_dist_directory(self, basename):
         from glob import glob
-        return glob(path.join(self.get_download_cache_dist(), "dist", basename))
+        return glob(path.abspath(path.join(self.get_download_cache_dist(), basename)))
 
     def write_wix_to_destination_directory(self, wix):
         import xml.etree.ElementTree as ET
