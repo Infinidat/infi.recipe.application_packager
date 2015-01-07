@@ -257,7 +257,11 @@ class PackagingRecipe(object):
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
             basename = path.basename(filepath).lower()
             if any([distname.lower() in basename and version.replace('-', '_') in basename.replace('-', '_')
-                   for distname, version in distributions.items()]):
+                    for distname, version in distributions.items()]):
+                continue
+            # in the post-pep-440 era, foo-1.0-1.tar.gz is parsed as foo-1.0.post1
+            if any([distname.lower() in basename and version.replace('.post', '-') in basename
+                    for distname, version in distributions.items()]):
                 continue
             remove(filepath)
 
