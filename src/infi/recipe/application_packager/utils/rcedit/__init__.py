@@ -19,7 +19,7 @@ def set_icon_for_executables_in_directory(tempdir, icon):
 
 def set_icon_for_executables_in_archive(archive_path, icon):
     from os import listdir, path
-    from . import temporary_directory_context, signtool
+    from infi.recipe.application_packager.utils import temporary_directory_context, signtool
     write_mode = 'w:gz' if archive_path.endswith('tar.gz') else 'w'
     with temporary_directory_context() as tempdir:
         with signtool.open_archive(archive_path) as archive:

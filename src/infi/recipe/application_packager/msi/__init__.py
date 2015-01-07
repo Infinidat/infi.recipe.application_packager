@@ -52,8 +52,8 @@ class Recipe(PackagingRecipe):
             utils.download_setuptools(self.get_download_cache_dist())
             silent_launcher = self.get_silent_launcher()
             if self.get_add_remove_programs_icon():
-              self.set_icon_in_all_executables_in_project()
-              utils.rcedit.set_icon_in_executable(silent_launcher, self.get_add_remove_programs_icon())
+                self.set_icon_in_all_executables_in_project()
+                utils.rcedit.set_icon_in_executable(silent_launcher, self.get_add_remove_programs_icon())
             if self.should_sign_files():
                 self.sign_all_executables_in_project()
                 self.signtool.sign_file(silent_launcher)
