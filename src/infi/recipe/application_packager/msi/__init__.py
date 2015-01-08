@@ -90,8 +90,6 @@ class Recipe(PackagingRecipe):
             utils.rcedit.set_icon_for_executables_in_archive(archive_path, icon)
         for archive_path in self.glob_in_dist_directory("infi.recipe.console_scripts*"):
             utils.rcedit.set_icon_for_executables_in_archive(archive_path, icon)
-        for archive_path in self.glob_in_dist_directory("infi.node_webkit*"):
-            utils.rcedit.set_icon_for_executables_in_archive(archive_path, icon)
 
     def glob_in_dist_directory(self, basename):
         from glob import glob
