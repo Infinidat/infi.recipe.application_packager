@@ -69,8 +69,8 @@ class BinaryDistributionsCompiler(object):
         env['PYTHONPATH'] = os.path.pathsep.join([path for path in sys.path])
         execute_assert_success(executable + args, env=env)
 
-    def build_binary_egg(self):
-        self.execute_with_isolated_python("setup.py bdist_egg".split())
+    def build_binary_egg(self, setup_script="setup.py"):
+        self.execute_with_isolated_python([setup_script, "bdist_egg"])
         [egg] = glob(path.join('dist', '*.egg'))
         return egg
 
@@ -107,7 +107,7 @@ class BinaryDistributionsCompiler(object):
             logger.info("Compiling egg for {}".format(archive))
             with self.extract_archive(archive) as extracted_dir:
                 try:
-                    built_egg = self.build_binary_egg()
+                    built_egg = self.build_binary_egg("setupegg.py" if path.exists("setupegg.py") else "setup.py")
                 except ExecutionError:
                     self.add_import_setuptools_to_setup_py()
                     built_egg = self.build_binary_egg()
