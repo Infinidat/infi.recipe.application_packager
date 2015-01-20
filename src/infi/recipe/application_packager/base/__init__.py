@@ -263,6 +263,11 @@ class PackagingRecipe(object):
             if any([distname.lower() in basename and version.replace('.post', '-') in basename
                     for distname, version in distributions.items()]):
                 continue
+            # in the post-pep-440 era, foo-2.0.0-pre8.tar.gz is parsed as 2.0.0rc8
+            if any([distname.lower() in basename and version in basename.replace('-pre', 'rc')
+                    for distname, version in distributions.items()]):
+                continue
+
             remove(filepath)
 
     @contextmanager
