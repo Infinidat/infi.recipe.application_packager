@@ -2,7 +2,7 @@
 
 
 from .scons_variables import SCONS_VARIABLE_NAMES
-from sysconfig import get_config_var, get_config_vars
+from sysconfig import get_config_var
 from pkg_resources import ensure_directory, resource_filename
 from platform import system
 from json import dumps
@@ -66,6 +66,182 @@ def _write_json_files(base_directory, python_files, c_extensions):
     with open(c_modules_file, 'w') as fd:
         fd.write(dumps(c_extensions, indent=4))
     return dict(EXTERNAL_PY_MODULES_FILE=python_modules_file, EXTERNAL_C_MODULES_FILE=c_modules_file)
+
+
+def ParseFlags(*flags):
+    """
+    Parse the set of flags and return a dict with the flags placed
+    in the appropriate entry.  The flags are treated as a typical
+    set of command-line flags for a GNU-like toolchain and used to
+    populate the entries in the dict immediately below.  If one of
+    the flag strings begins with a bang (exclamation mark), it is
+    assumed to be a command and the rest of the string is executed;
+    the result of that evaluation is then added to the dict.
+    """
+    dict = {
+        'ASFLAGS'       : [],
+        'CFLAGS'        : [],
+        'CCFLAGS'       : [],
+        'CXXFLAGS'      : [],
+        'CPPDEFINES'    : [],
+        'CPPFLAGS'      : [],
+        'CPPPATH'       : [],
+        'FRAMEWORKPATH' : [],
+        'FRAMEWORKS'    : [],
+        'LIBPATH'       : [],
+        'LIBS'          : [],
+        'LINKFLAGS'     : [],
+        'RPATH'         : []
+    }
+
+    def do_parse(arg):
+        # if arg is a sequence, recurse with each element
+        if not arg:
+            return
+
+        if not isinstance(arg, basestring):
+            for t in arg: do_parse(t)
+            return
+
+        # if arg is a command, execute it
+        # if arg[0] == '!':
+        #     arg = self.backtick(arg[1:])
+
+        # utility function to deal with -D option
+        def append_define(name, dict = dict):
+            t = name.split('=')
+            if len(t) == 1:
+                dict['CPPDEFINES'].append(name)
+            else:
+                dict['CPPDEFINES'].append([t[0], '='.join(t[1:])])
+
+        # Loop through the flags and add them to the appropriate option.
+        # This tries to strike a balance between checking for all possible
+        # flags and keeping the logic to a finite size, so it doesn't
+        # check for some that don't occur often.  It particular, if the
+        # flag is not known to occur in a config script and there's a way
+        # of passing the flag to the right place (by wrapping it in a -W
+        # flag, for example) we don't check for it.  Note that most
+        # preprocessor options are not handled, since unhandled options
+        # are placed in CCFLAGS, so unless the preprocessor is invoked
+        # separately, these flags will still get to the preprocessor.
+        # Other options not currently handled:
+        #  -iqoutedir      (preprocessor search path)
+        #  -u symbol       (linker undefined symbol)
+        #  -s              (linker strip files)
+        #  -static*        (linker static binding)
+        #  -shared*        (linker dynamic binding)
+        #  -symbolic       (linker global binding)
+        #  -R dir          (deprecated linker rpath)
+        # IBM compilers may also accept -qframeworkdir=foo
+
+        import shlex
+        params = shlex.split(arg)
+        append_next_arg_to = None   # for multi-word args
+        for arg in params:
+            if append_next_arg_to:
+               if append_next_arg_to == 'CPPDEFINES':
+                   append_define(arg)
+               elif append_next_arg_to == '-include':
+                   t = '-include ' + arg
+                   dict['CCFLAGS'].append(t)
+               elif append_next_arg_to == '-isysroot':
+                   t = '-isysroot ' + arg
+                   dict['CCFLAGS'].append(t)
+                   dict['LINKFLAGS'].append(t)
+               elif append_next_arg_to == '-arch':
+                   t = '-arch ' + arg
+                   dict['CCFLAGS'].append(t)
+                   dict['LINKFLAGS'].append(t)
+               else:
+                   dict[append_next_arg_to].append(arg)
+               append_next_arg_to = None
+            elif not arg[0] in ['-', '+']:
+                dict['LIBS'].append(arg)
+            elif arg == '-dylib_file':
+                dict['LINKFLAGS'].append(arg)
+                append_next_arg_to = 'LINKFLAGS'
+            elif arg[:2] == '-L':
+                if arg[2:]:
+                    dict['LIBPATH'].append(arg[2:])
+                else:
+                    append_next_arg_to = 'LIBPATH'
+            elif arg[:2] == '-l':
+                if arg[2:]:
+                    dict['LIBS'].append(arg[2:])
+                else:
+                    append_next_arg_to = 'LIBS'
+            elif arg[:2] == '-I':
+                if arg[2:]:
+                    dict['CPPPATH'].append(arg[2:])
+                else:
+                    append_next_arg_to = 'CPPPATH'
+            elif arg[:4] == '-Wa,':
+                dict['ASFLAGS'].append(arg[4:])
+                dict['CCFLAGS'].append(arg)
+            elif arg[:4] == '-Wl,':
+                if arg[:11] == '-Wl,-rpath=':
+                    dict['RPATH'].append(arg[11:])
+                elif arg[:7] == '-Wl,-R,':
+                    dict['RPATH'].append(arg[7:])
+                elif arg[:6] == '-Wl,-R':
+                    dict['RPATH'].append(arg[6:])
+                else:
+                    dict['LINKFLAGS'].append(arg)
+            elif arg[:4] == '-Wp,':
+                dict['CPPFLAGS'].append(arg)
+            elif arg[:2] == '-D':
+                if arg[2:]:
+                    append_define(arg[2:])
+                else:
+                    append_next_arg_to = 'CPPDEFINES'
+            elif arg == '-framework':
+                append_next_arg_to = 'FRAMEWORKS'
+            elif arg[:14] == '-frameworkdir=':
+                dict['FRAMEWORKPATH'].append(arg[14:])
+            elif arg[:2] == '-F':
+                if arg[2:]:
+                    dict['FRAMEWORKPATH'].append(arg[2:])
+                else:
+                    append_next_arg_to = 'FRAMEWORKPATH'
+            elif arg in ['-mno-cygwin',
+                         '-pthread',
+                         '-openmp',
+                         '-fopenmp']:
+                dict['CCFLAGS'].append(arg)
+                dict['LINKFLAGS'].append(arg)
+            elif arg == '-mwindows':
+                dict['LINKFLAGS'].append(arg)
+            elif arg[:5] == '-std=':
+                if arg[5:].find('++')!=-1:
+                    key='CXXFLAGS'
+                else:
+                    key='CFLAGS'
+                dict[key].append(arg)
+            elif arg[0] == '+':
+                dict['CCFLAGS'].append(arg)
+                dict['LINKFLAGS'].append(arg)
+            elif arg in ['-include', '-isysroot', '-arch']:
+                append_next_arg_to = arg
+            else:
+                dict['CCFLAGS'].append(arg)
+
+    for arg in flags:
+        do_parse(arg)
+    return dict
+
+
+def get_config_vars():
+    # our relocatable-python passes include dirs in CFLAGS instead of CPPFLAGS
+    # this breaks builds of some C extensions (e.g. pymongo)
+    # this is a workaround until relocatable-python is fixed
+    from sysconfig import get_config_vars as _get_config_vars
+    config_vars = _get_config_vars()
+    flags_to_extract = [config_vars.get(key, '') for key in ('CFLAGS', 'CPPPATH', 'CCFLAGS', 'LDFLAGS')]
+    extracted_config_vars = ParseFlags(*flags_to_extract)
+    extracted_config_vars['CFLAGS'] = extracted_config_vars['CCFLAGS']
+    config_vars.update((k, v) for k,v in extracted_config_vars.items() if v)
+    return config_vars
 
 
 def _apply_project_specific_on_top_of_platform_defaults(variables, project_specific_flags):
