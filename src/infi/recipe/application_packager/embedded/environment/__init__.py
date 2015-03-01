@@ -352,7 +352,7 @@ def get_scons_variables__osx(static_libdir, static_libs):
         "!CPPFLAGS": '-I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
         "!LIBPATH": [static_libdir],
         "!LIBS": static_libs + ['iconv', 'dl'],
-        "!LINKFLAGS": ' '.join(['-framework CoreFoundation -framework SystemConfiguration'])
+        "!LINKFLAGS": ' '.join(['-framework CoreFoundation -framework SystemConfiguration -framework IOKit'])
         },
     )
     return variables
