@@ -23,6 +23,7 @@ class Recipe(PackagingRecipe):
     def install(self):
         with self.with_most_mortem():
             self.delete_non_production_packages_from_cache_dist()
+            self.write_bootstrap_for_production()
             self.write_buildout_configuration_file_for_production()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),

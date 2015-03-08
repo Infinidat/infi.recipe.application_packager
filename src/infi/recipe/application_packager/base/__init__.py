@@ -232,6 +232,10 @@ class PackagingRecipe(object):
     def get_startmenu_shortcuts(self):
         return self._get_recipe_atribute("startmenu-shortcuts")
 
+    def write_bootstrap_for_production(self):
+        from ..utils.buildout import write_bootstrap_for_production
+        write_bootstrap_for_production()
+
     def write_buildout_configuration_file_for_production(self):
         from .. import utils, assertions
         method = utils.buildout.write_buildout_configuration_file_for_production
