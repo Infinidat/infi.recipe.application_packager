@@ -253,7 +253,7 @@ def _apply_project_specific_on_top_of_platform_defaults(variables, project_speci
         if key in ("CC", "CXX", "!CC", "!CXX"):
             variables[key] = added_value
         elif isinstance(value, basestring):
-            variables[key] = " ".join([value, added_value])
+            variables[key] = [value, added_value]
         elif isinstance(value, list):
             variables[key].append(added_value)
         elif isinstance(value, tuple):
@@ -358,7 +358,12 @@ def get_scons_variables__osx(static_libdir, static_libs):
 def get_scons_variables(static_libdir, options):
     static_libs = get_names_of_static_libraries_for_linking(static_libdir)
     project_specific_flags = dict({
+                                  "!CPPPATH": options.get('CPPPATH', None),
+                                  "!CPPDEFINES": options.get('CPPDEFINES', None),
+                                  "!CPPFLAGS": options.get('CPPFLAGS', None),
                                   "!LINKFLAGS": options.get('LINKFLAGS', None),
+                                  "!CFLAGS": options.get('CFLAGS', None),
+                                  "!CCFLAGS": options.get('CCFLAGS', None),
                                   "!LIBS": options.get('LIBS', None),
                                   "!CC": options.get('CC', None),
                                   "!CXX": options.get('CXX', None),
