@@ -55,8 +55,10 @@ class BinaryDistributionsCompiler(object):
             extract(archive_path, tempdir)
             archive_files = glob('*')
             if len(archive_files) == 1: # all files are under a sub-directory
-                with chdir(extracted_dir):
-                    yield extracted_dir
+                with chdir(archive_files[0]):
+                    yield archive_files[0]
+            else:
+                yield tempdir
 
     def execute_with_isolated_python(self, commandline_or_args):
         import sys
