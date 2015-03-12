@@ -378,9 +378,10 @@ def get_scons_variables(static_libdir, options):
     elif system() == "Windows":
         variables = get_scons_variables__windows(static_libdir, static_libs)
 
-    python_include_dir = path.abspath(path.join('parts', 'python', 'include'))
-    if python_include_dir not in variables['!CPPPATH']:
-        variables['!CPPPATH'].insert(0, python_include_dir)
+    if system() != "Windows":
+        python_include_dir = path.abspath(path.join('parts', 'python', 'include'))
+        if python_include_dir not in variables['!CPPPATH']:
+            variables['!CPPPATH'].insert(0, python_include_dir)
     final_variables = _apply_project_specific_on_top_of_platform_defaults(variables, project_specific_flags)
     return final_variables
 
