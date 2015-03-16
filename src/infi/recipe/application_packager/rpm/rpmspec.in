@@ -167,10 +167,41 @@ if test -n "$$CLOSE_ON_UPGRADE_OR_REMOVAL" -a "$$CLOSE_ON_UPGRADE_OR_REMOVAL" !=
     assert_rc
 fi
 
+# readlink doesn't exist on AIX so we implement it here
+# copied from http://gnu-bash.2382.n7.nabble.com/equivalent-of-Linux-readlink-f-in-pure-bash-td10338.html
+readlink_f()
+{
+        local path="$$1"
+        test -z "$$path" && echo "usage: readlink_f path" 1>&2 && exit 1;
+
+        local dir
+
+        if test -L "$$path"
+        then
+                local link=$$(ls -l "$$path" | sed "s/.* -> //")
+                if test "$$link" = "$${link#/}"
+                then
+                        # relative link
+                        dir="$$(dirname "$$path")"
+                        readlink_f "$${dir%/}/$$link"
+                else
+                        # absolute link
+                        readlink_f "$$link"
+                fi
+        elif test -d "$$path"
+        then
+                (cd "$$path"; pwd -P) # normalize it
+        else
+                dir="$$(cd $$(dirname "$$path"); pwd -P)"
+                base="$$(basename "$$path")"
+                echo "$${dir%/}/$${base}"
+        fi
+}
+
 # remove links to binaries from /usr/bin
 execute cd bin
 for script in *; do
-    if test -n "$$script" -a -L %{_bindir}/$$script -a "`readlink %{_bindir}/$$script`" == "%{prefix}/bin/$$script"; then
+    if test -n "$$script" -a -L %{_bindir}/$$script -a "`readlink_f %{_bindir}/$$script`" == "%{prefix}/bin/$$script"; then
         execute rm -f %{_bindir}/$$script
         RC=$$?
         assert_rc
@@ -181,7 +212,7 @@ cd ..
 # clean installed directories
 # this also deletes installed files
 for dirname in $directories_to_clean; do
-    execute find $$dirname -maxdepth 1 -mindepth 1 -delete
+    execute rm -rf $$dirname
 done
 
 # end
@@ -199,7 +230,7 @@ if test -n "$$1" -a "$$1" != "0"; then
 fi
 
 set +e
-rmdir -v %{prefix}
+rmdir %{prefix}
 set -e
 
 exit 0

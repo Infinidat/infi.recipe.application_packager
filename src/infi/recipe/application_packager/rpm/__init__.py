@@ -13,13 +13,13 @@ SPEC_TEMPLATE = resource_filename(__name__, 'rpmspec.in')
 SPEC_SCRIPT_HEADER = """
 RC=0
 
-function assert_rc() {
+assert_rc() {
     if test $RC -ne 0; then
         exit 1
     fi
 }
 
-function execute() {
+execute() {
     if test $DEBUG -eq 0; then
         $@ > /dev/null 2>&1
     else
@@ -176,4 +176,6 @@ class Recipe(PackagingRecipe):
         return path.join(self.get_working_directory(), self.get_rpm_filename())
 
     def _call_rpmbuild(self, specfile):
-        return utils.execute.execute_assert_success(['rpmbuild', '--verbose', '--buildroot', self._buildroot, '-bb', specfile]).get_stdout()
+        import platform
+        rpmbuild_executable = "rpmbuild" if platform.system() != "AIX" else "rpm"
+        return utils.execute.execute_assert_success([rpmbuild_executable, '--verbose', '--buildroot', self._buildroot, '-bb', specfile]).get_stdout()

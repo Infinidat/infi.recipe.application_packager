@@ -373,7 +373,9 @@ def get_scons_variables(static_libdir, options):
                                   }) if system() != "Windows" else dict()
     if system() == "Linux":
         variables = get_scons_variables__linux(static_libdir, static_libs)
-    if system() == "Darwin":
+    elif system() == "AIX":
+        variables = get_scons_variables__linux(static_libdir, static_libs)
+    elif system() == "Darwin":
         variables = get_scons_variables__osx(static_libdir, static_libs)
     elif system() == "Windows":
         variables = get_scons_variables__windows(static_libdir, static_libs)

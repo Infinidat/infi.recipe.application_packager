@@ -15,6 +15,9 @@ def get_platform_specific_recipe():
     elif platform.system() == 'SunOS':
         from .. import pkg
         return pkg.Recipe
+    elif platform.system() == "AIX":
+        from .. import rpm
+        return rpm.Recipe
     else:
         return None
 

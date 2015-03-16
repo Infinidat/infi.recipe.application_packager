@@ -156,6 +156,7 @@ class PackagingRecipe(object):
                       "Linux": ('x86_64' if is_rpm else 'amd64') if is_64 else \
                                ('i686' if is_rpm else 'i386'),
                       "SunOS": 'sparc' if 'sparc' == processor() else ('amd64' if is_64 else 'i386'),
+                      "AIX": "ppc",
                      }
         return arch_by_os.get(system())
 

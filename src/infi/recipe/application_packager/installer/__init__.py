@@ -205,8 +205,9 @@ class RpmInstaller(Installer):
     package_extension = 'rpm'
 
     def is_product_installed(self):
-        return not 'not installed' in execute_assert_success(['rpm', '-q', self.package_name],
-                                                         allowed_return_codes=[0, 1]).get_stdout()
+        pid = execute_assert_success(['rpm', '-q', self.package_name], allowed_return_codes=[0, 1])
+        output = pid.get_stderr() + pid.get_stdout()
+        return 'not installed' not in output
 
     def install_package(self, with_custom_actions=True):
         env = os.environ.copy()
