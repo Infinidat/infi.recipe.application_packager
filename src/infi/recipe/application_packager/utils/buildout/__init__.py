@@ -45,6 +45,15 @@ def open_buildout_configfile(filepath="buildout.cfg", write_on_exit=False):
         with open(filepath, 'w') as fd:
             parser.write(fd)
 
+
+def write_bootstrap_for_production():
+    from pkg_resources import resource_filename
+    with open(resource_filename(__name__, 'bootstrap.py')) as fd:
+        contents = fd.read()
+        with open('bootstrap.py', 'w') as fd:
+            fd.write(contents)
+
+
 def write_buildout_configuration_file_for_production(dependent_scripts, minimal_packages, eggs, scripts,
                                                      gui_scripts, require_admin, gui_require_admin):
     from textwrap import dedent

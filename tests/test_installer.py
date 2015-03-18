@@ -299,7 +299,7 @@ class RpmTestCase(Posix, RpmInstaller):
 
     @classmethod
     def should_run(cls):
-        return 'redhat' in get_platform_string() or 'centos' in get_platform_string()
+        return 'redhat' in get_platform_string() or 'centos' in get_platform_string() or "suse" in get_platform_string()
 
 
 class DebTestCase(Posix, DebInstaller):

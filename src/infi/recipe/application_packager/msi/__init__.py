@@ -47,6 +47,7 @@ class Recipe(PackagingRecipe):
         with self.with_most_mortem():
             self.delete_non_production_packages_from_cache_dist()
             self.signtool = self.get_signtool()
+            self.write_bootstrap_for_production()
             self.write_buildout_configuration_file_for_production()
             utils.download_buildout(self.get_download_cache_dist())
             utils.download_setuptools(self.get_download_cache_dist())

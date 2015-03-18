@@ -2,11 +2,10 @@
 
 
 from .scons_variables import SCONS_VARIABLE_NAMES
-from sysconfig import get_config_var, get_config_vars
+from sysconfig import get_config_var
 from pkg_resources import ensure_directory, resource_filename
 from platform import system
 from json import dumps
-from glob import glob
 from os import path, name as os_name
 
 SCONSCRIPT_TEMPLATE = """env = DefaultEnvironment()
@@ -22,7 +21,7 @@ DEFINES = dict(HAVE_CURSES=True, HAVE_CURSES_PANEL=True, HAVE_LIBBZ2=True, HAVE_
                HAVE_LIBDB=True, HAVE_LIBGDBM=True, HAVE_LIBM=True, HAVE_LIBNSL=True,
                HAVE_LIBRPCRT4=True, HAVE_LIBSQLITE3=True, HAVE_LIBTCL=False, HAVE_LIBTK=False, HAVE_LIBWS2_32=True,
                HAVE_LIBZ=True, HAVE_OPENSSL=True, HAVE_LIBSSL=True, HAVE_LIBCRYPTO=True, HAVE_READLINE=True,
-               WITH_PYTHON_MODULE_NIS=False, STATIC_PYTHON_MODULES=1)
+               HAVE_LIBGMP=True, WITH_PYTHON_MODULE_NIS=False, STATIC_PYTHON_MODULES=1)
 WINDOWS_DEFINES_UPDATE = dict(HAVE_CURSES=False, HAVE_CURSES_PANEL=False, HAVE_LIBGDBM=False, HAVE_LIBNDBM=False,
                               HAVE_LIBDB=False, HAVE_READLINE=False, HAVE_LIBCRYPT=False)
 OSX_DEFINES_UPDATE = dict(HAVE_READLINE=False)
@@ -68,6 +67,184 @@ def _write_json_files(base_directory, python_files, c_extensions):
     return dict(EXTERNAL_PY_MODULES_FILE=python_modules_file, EXTERNAL_C_MODULES_FILE=c_modules_file)
 
 
+# Extracted from SCons:
+def ParseFlags(*flags):
+    """
+    Parse the set of flags and return a dict with the flags placed
+    in the appropriate entry.  The flags are treated as a typical
+    set of command-line flags for a GNU-like toolchain and used to
+    populate the entries in the dict immediately below.  If one of
+    the flag strings begins with a bang (exclamation mark), it is
+    assumed to be a command and the rest of the string is executed;
+    the result of that evaluation is then added to the dict.
+    """
+    dict = {
+        'ASFLAGS'       : [],
+        'CFLAGS'        : [],
+        'CCFLAGS'       : [],
+        'CXXFLAGS'      : [],
+        'CPPDEFINES'    : [],
+        'CPPFLAGS'      : [],
+        'CPPPATH'       : [],
+        'FRAMEWORKPATH' : [],
+        'FRAMEWORKS'    : [],
+        'LIBPATH'       : [],
+        'LIBS'          : [],
+        'LINKFLAGS'     : [],
+        'RPATH'         : []
+    }
+
+    def do_parse(arg):
+        # if arg is a sequence, recurse with each element
+        if not arg:
+            return
+
+        if not isinstance(arg, basestring):
+            for t in arg: do_parse(t)
+            return
+
+        # if arg is a command, execute it
+        # if arg[0] == '!':
+        #     arg = self.backtick(arg[1:])
+
+        # utility function to deal with -D option
+        def append_define(name, dict=dict):
+            t = name.split('=')
+            if len(t) == 1:
+                dict['CPPDEFINES'].append(name)
+            else:
+                dict['CPPDEFINES'].append([t[0], '='.join(t[1:])])
+
+        # Loop through the flags and add them to the appropriate option.
+        # This tries to strike a balance between checking for all possible
+        # flags and keeping the logic to a finite size, so it doesn't
+        # check for some that don't occur often.  It particular, if the
+        # flag is not known to occur in a config script and there's a way
+        # of passing the flag to the right place (by wrapping it in a -W
+        # flag, for example) we don't check for it.  Note that most
+        # preprocessor options are not handled, since unhandled options
+        # are placed in CCFLAGS, so unless the preprocessor is invoked
+        # separately, these flags will still get to the preprocessor.
+        # Other options not currently handled:
+        #  -iqoutedir      (preprocessor search path)
+        #  -u symbol       (linker undefined symbol)
+        #  -s              (linker strip files)
+        #  -static*        (linker static binding)
+        #  -shared*        (linker dynamic binding)
+        #  -symbolic       (linker global binding)
+        #  -R dir          (deprecated linker rpath)
+        # IBM compilers may also accept -qframeworkdir=foo
+
+        import shlex
+        params = shlex.split(arg)
+        append_next_arg_to = None   # for multi-word args
+        for arg in params:
+            if append_next_arg_to:
+                if append_next_arg_to == 'CPPDEFINES':
+                    append_define(arg)
+                elif append_next_arg_to == '-include':
+                    t = '-include ' + arg
+                    dict['CCFLAGS'].append(t)
+                elif append_next_arg_to == '-isysroot':
+                    t = '-isysroot ' + arg
+                    dict['CCFLAGS'].append(t)
+                    dict['LINKFLAGS'].append(t)
+                elif append_next_arg_to == '-arch':
+                    t = '-arch ' + arg
+                    dict['CCFLAGS'].append(t)
+                    dict['LINKFLAGS'].append(t)
+                else:
+                    dict[append_next_arg_to].append(arg)
+                append_next_arg_to = None
+            elif not arg[0] in ['-', '+']:
+                dict['LIBS'].append(arg)
+            elif arg == '-dylib_file':
+                dict['LINKFLAGS'].append(arg)
+                append_next_arg_to = 'LINKFLAGS'
+            elif arg[:2] == '-L':
+                if arg[2:]:
+                    dict['LIBPATH'].append(arg[2:])
+                else:
+                    append_next_arg_to = 'LIBPATH'
+            elif arg[:2] == '-l':
+                if arg[2:]:
+                    dict['LIBS'].append(arg[2:])
+                else:
+                    append_next_arg_to = 'LIBS'
+            elif arg[:2] == '-I':
+                if arg[2:]:
+                    dict['CPPPATH'].append(arg[2:])
+                else:
+                    append_next_arg_to = 'CPPPATH'
+            elif arg[:4] == '-Wa,':
+                dict['ASFLAGS'].append(arg[4:])
+                dict['CCFLAGS'].append(arg)
+            elif arg[:4] == '-Wl,':
+                if arg[:11] == '-Wl,-rpath=':
+                    dict['RPATH'].append(arg[11:])
+                elif arg[:7] == '-Wl,-R,':
+                    dict['RPATH'].append(arg[7:])
+                elif arg[:6] == '-Wl,-R':
+                    dict['RPATH'].append(arg[6:])
+                else:
+                    dict['LINKFLAGS'].append(arg)
+            elif arg[:4] == '-Wp,':
+                dict['CPPFLAGS'].append(arg)
+            elif arg[:2] == '-D':
+                if arg[2:]:
+                    append_define(arg[2:])
+                else:
+                    append_next_arg_to = 'CPPDEFINES'
+            elif arg == '-framework':
+                append_next_arg_to = 'FRAMEWORKS'
+            elif arg[:14] == '-frameworkdir=':
+                dict['FRAMEWORKPATH'].append(arg[14:])
+            elif arg[:2] == '-F':
+                if arg[2:]:
+                    dict['FRAMEWORKPATH'].append(arg[2:])
+                else:
+                    append_next_arg_to = 'FRAMEWORKPATH'
+            elif arg in ['-mno-cygwin',
+                         '-pthread',
+                         '-openmp',
+                         '-fopenmp']:
+                dict['CCFLAGS'].append(arg)
+                dict['LINKFLAGS'].append(arg)
+            elif arg == '-mwindows':
+                dict['LINKFLAGS'].append(arg)
+            elif arg[:5] == '-std=':
+                if arg[5:].find('++') != -1:
+                    key = 'CXXFLAGS'
+                else:
+                    key = 'CFLAGS'
+                dict[key].append(arg)
+            elif arg[0] == '+':
+                dict['CCFLAGS'].append(arg)
+                dict['LINKFLAGS'].append(arg)
+            elif arg in ['-include', '-isysroot', '-arch']:
+                append_next_arg_to = arg
+            else:
+                dict['CCFLAGS'].append(arg)
+
+    for arg in flags:
+        do_parse(arg)
+    return dict
+
+
+def get_config_vars():
+    # our relocatable-python passes include dirs in CFLAGS instead of CPPFLAGS
+    # this breaks builds of some C extensions (e.g. pymongo)
+    # this is a workaround until relocatable-python is fixed
+    from sysconfig import get_config_vars as _get_config_vars
+    config_vars = _get_config_vars()
+    keys = ('CFLAGS', 'CCFLAGS', 'CPPPATH', 'CPPFLAGS', 'LDFLAGS')
+    flags_to_extract = [config_vars.get(key, '') for key in keys]
+    extracted_config_vars = ParseFlags(*flags_to_extract)
+    extracted_config_vars['CFLAGS'] = extracted_config_vars['CCFLAGS']
+    config_vars.update((k, v) for k, v in extracted_config_vars.items() if k in keys)
+    return config_vars
+
+
 def _apply_project_specific_on_top_of_platform_defaults(variables, project_specific_flags):
     for key, added_value in project_specific_flags.items():
         if added_value is None:
@@ -76,7 +253,7 @@ def _apply_project_specific_on_top_of_platform_defaults(variables, project_speci
         if key in ("CC", "CXX", "!CC", "!CXX"):
             variables[key] = added_value
         elif isinstance(value, basestring):
-            variables[key] = " ".join([value, added_value])
+            variables[key] = [value, added_value]
         elif isinstance(value, list):
             variables[key].append(added_value)
         elif isinstance(value, tuple):
@@ -92,7 +269,6 @@ def is_64bit():
 
 
 def write_pystick_variable_file(pystick_variable_filepath, python_files, c_extensions, scons_variables):
-    from pprint import pformat
     from jinja2 import Template
     from json import dumps
     ensure_directory(pystick_variable_filepath)
@@ -144,7 +320,6 @@ def get_scons_variables__windows(static_libdir, static_libs):
     variables.update(
         LIBPATH=[static_libdir],
         LIBS=WINDOWS_NATIVE_LIBS + static_libs,
-        CPPFLAGS='/I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
         CCPDBFLAGS=['/Z7'],
         LINKFLAGS="/RELEASE",
         LINKCOM=manifest_embedded,
@@ -157,10 +332,9 @@ def get_scons_variables__linux(static_libdir, static_libs):
     variables = {'!{}'.format(key): value for key, value in get_config_vars().items() if key in SCONS_VARIABLE_NAMES}
     variables.update(DEFINES)
     variables.update({
-        "!CPPFLAGS": '-I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
         "!LIBPATH": [static_libdir],
         "!LIBS": static_libs + ['crypt', 'dl', 'util', 'm'],
-        "!CC": ' '.join([variables['!CC'], get_config_var('CCSHARED')]), # provides -fPIC
+        "!CC": ' '.join([variables['!CC'], get_config_var('CCSHARED')]),  # provides -fPIC
         "CCFLAGS": ['-g', '-pthread'],
         "CXXFLAGS": ['-g', '-pthread']
         },
@@ -173,10 +347,9 @@ def get_scons_variables__osx(static_libdir, static_libs):
     variables.update(DEFINES)
     variables.update(OSX_DEFINES_UPDATE)
     variables.update({
-        "!CPPFLAGS": '-I{}'.format(path.abspath(path.join('parts', 'python', 'include'))),
         "!LIBPATH": [static_libdir],
         "!LIBS": static_libs + ['iconv', 'dl'],
-        "!LINKFLAGS": ' '.join(['-framework CoreFoundation -framework SystemConfiguration'])
+        "!LINKFLAGS": ' '.join(['-framework CoreFoundation -framework SystemConfiguration -framework IOKit'])
         },
     )
     return variables
@@ -185,7 +358,12 @@ def get_scons_variables__osx(static_libdir, static_libs):
 def get_scons_variables(static_libdir, options):
     static_libs = get_names_of_static_libraries_for_linking(static_libdir)
     project_specific_flags = dict({
+                                  "!CPPPATH": options.get('CPPPATH', None),
+                                  "!CPPDEFINES": options.get('CPPDEFINES', None),
+                                  "!CPPFLAGS": options.get('CPPFLAGS', None),
                                   "!LINKFLAGS": options.get('LINKFLAGS', None),
+                                  "!CFLAGS": options.get('CFLAGS', None),
+                                  "!CCFLAGS": options.get('CCFLAGS', None),
                                   "!LIBS": options.get('LIBS', None),
                                   "!CC": options.get('CC', None),
                                   "!CXX": options.get('CXX', None),
@@ -200,6 +378,11 @@ def get_scons_variables(static_libdir, options):
     elif system() == "Windows":
         variables = get_scons_variables__windows(static_libdir, static_libs)
 
+    python_include_dir = path.abspath(path.join('parts', 'python', 'include'))
+    current_cpppath = variables.get('!CPPPATH', [])
+    if python_include_dir not in current_cpppath:
+        current_cpppath = [python_include_dir] + current_cpppath
+    variables['!CPPPATH'] = current_cpppath
     final_variables = _apply_project_specific_on_top_of_platform_defaults(variables, project_specific_flags)
     return final_variables
 
@@ -209,7 +392,7 @@ def get_names_of_static_libraries_for_linking(static_libdir):
     :returns: a list of names of libraries under static_libdir, sorted as linking-order in the isolated-python build
     """
     names = []
-    prefix, suffix  = ('', '.lib') if system() == "Windows" else ('lib', '.a')
+    prefix, suffix = ('', '.lib') if system() == "Windows" else ('lib', '.a')
     for name in STATIC_LIBS:
         if path.exists(path.join(static_libdir, '{}{}{}'.format(prefix, name, suffix))):
             names.append(name)
@@ -221,7 +404,7 @@ def get_sorted_static_libraries(static_libdir):
     :returns: a list of filepaths under static_libdir, sorted as linking-order in the isolated-python build
     """
     files = []
-    prefix, suffix  = ('', '.lib') if system() == "Windows" else ('lib', '.a')
+    prefix, suffix = ('', '.lib') if system() == "Windows" else ('lib', '.a')
     for name in STATIC_LIBS:
         filepath = path.join(static_libdir, '{}{}{}'.format(prefix, name, suffix))
         if path.exists(filepath):
