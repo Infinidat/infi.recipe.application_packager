@@ -20,7 +20,7 @@ class CompilerTestCase(unittest.TestCase):
         return compiler
 
     def test_compile_async(self):
-        archive_to_compile = get_archive_path("psutil-3.0.1.tar.gz")
+        archive_to_compile = get_archive_path("psutil-3.0.2.tar.gz")
         compiler = self.get_compiler()
         with compiler.extract_archive(archive_to_compile):
             compiler.add_import_setuptools_to_setup_py()
