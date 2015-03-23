@@ -375,11 +375,14 @@ def get_scons_variables(static_libdir, options):
         variables = get_scons_variables__linux(static_libdir, static_libs)
     elif system() == "AIX":
         variables = get_scons_variables__linux(static_libdir, static_libs)
+    elif system() == "SunOS":
+        variables = get_scons_variables__linux(static_libdir, static_libs)
     elif system() == "Darwin":
         variables = get_scons_variables__osx(static_libdir, static_libs)
     elif system() == "Windows":
         variables = get_scons_variables__windows(static_libdir, static_libs)
-
+    else:
+        variables = dict()
     python_include_dir = path.abspath(path.join('parts', 'python', 'include'))
     current_cpppath = variables.get('!CPPPATH', [])
     if python_include_dir not in current_cpppath:
