@@ -255,6 +255,9 @@ class PkgInstaller(Installer):
                                     'rdepend=nocheck',
                                     'setuid=nocheck',
                                     'action=nocheck',
+                                    'partial=nocheck',
+                                    'conflict=nocheck',
+                                    'authentication=quit',
                                     'instance=overwrite',
                                     'basedir=default'])
         self.admin_file = NamedTemporaryFile(mode='w')
