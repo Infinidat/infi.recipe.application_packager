@@ -17,7 +17,7 @@ fi
 LONG_BIT="$(getconf LONG_BIT)"
 
 # prevent installation of 32bit packages on 64bit systems
-if -n "$LONG_BIT" -a "$LONG_BIT" == "64" -a "$package_arch" == "i386"; then
+if test -n "$LONG_BIT" -a "$LONG_BIT" == "64" -a "$package_arch" == "i386"; then
     echo package architecture ("$package_arch") does not match system (amd64) 1>&2;
     exit 1
 fi
