@@ -25,7 +25,7 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'startmenu-shortcuts': [],
                    'eula-rtf': None,
                    'documentation-url': None,
-                   '_package_arch': None
+                   '_package_arch': None,
                    'close-on-upgrade-or-removal' : 'true'
                   }
 
