@@ -25,6 +25,7 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'startmenu-shortcuts': [],
                    'eula-rtf': None,
                    'documentation-url': None,
+                   '_target_arch': None,
                    'close-on-upgrade-or-removal' : 'true'
                   }
 
@@ -159,6 +160,9 @@ class PackagingRecipe(object):
                       "AIX": "ppc",
                      }
         return arch_by_os.get(system())
+
+    def get_target_arch(self):
+        return self._get_recipe_atribute('_target_arch') or self.get_platform_arch()
 
     def get_install_dir(self):
         from os import path

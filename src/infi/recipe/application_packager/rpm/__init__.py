@@ -101,6 +101,7 @@ class Recipe(PackagingRecipe):
                   'package_name': self.get_package_name(),
                   'package_version': self.get_project_version__short(),
                   'package_arch': self.get_platform_arch(),
+                  'target_arch': self.get_target_arch(),
                   'requires_declaration': self._get_requires_declaration(),
                   'close_on_upgrade_or_removal' : '1' if \
                       self.should_close_app_on_upgrade_or_removal() else '0',
