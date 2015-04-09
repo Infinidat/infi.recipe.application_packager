@@ -314,7 +314,7 @@ class X86_package_on_X64_machine(object):
             self.install_package()
         self._assert_invalid_arch_message(cm.exception.result.get_stderr())
 
-class RpmTestCase(Posix, RpmInstaller, X86_package_on_X64_machine):
+class RpmTestCase(Posix, RpmInstaller):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
         RpmInstaller.__init__(self, TEST_BUILDOUT)
