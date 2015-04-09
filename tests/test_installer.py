@@ -306,9 +306,16 @@ class X86_package_on_X64_machine(object):
     def _assert_invalid_arch_message(self, stderr):
         raise NotImplementedError()
 
+    def _build_a_proper_package_again(self):
+        delete_existing_builds()
+        do_an_empty_commit()
+        devenv_build()
+        create_package()
+
     def test_installation_of_32bit_package_on_64bit_machine(self):
         from infi.execute import ExecutionError
         self._skip_on_irrelvant_platforms()
+        self.addCleanup(self._build_a_proper_package_again)
         self._build_package_with_invalid_arch()
         with self.assertRaises(ExecutionError) as cm:
             self.install_package()
@@ -330,7 +337,7 @@ class RpmTestCase(Posix, RpmInstaller, X86_package_on_X64_machine):
         return 'redhat' in get_platform_string() or 'centos' in get_platform_string() or "suse" in get_platform_string() or "aix" in get_platform_string()
 
     def _assert_invalid_arch_message(self, stderr):
-        self.assertIn("is intended for a i686 architecture", stderr)
+        self.assertIn("is intended for a i386 architecture", stderr)
 
 
 class DebTestCase(Posix, DebInstaller, X86_package_on_X64_machine):
