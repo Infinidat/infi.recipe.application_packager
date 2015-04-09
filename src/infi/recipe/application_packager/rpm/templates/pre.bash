@@ -5,6 +5,15 @@
 
 {% include 'header.bash' %}
 
+LONG_BIT="$(getconf LONG_BIT)"
+
+# prevent installation of 32bit packages on 64bit systems
+if -n "$LONG_BIT" -a "$LONG_BIT" == "64" \
+   -a "%{package_arch}" == "i386" -o "%{package_arch}" == "i686"; then
+    echo package %{package_name}-%{package_version}-1.%{package_arch} is intended for a %{package_arch} architecture 1>&2;
+    exit 1
+fi
+
 # if target dir exists
 if test -d %{prefix}; then
     # in case of an upgrade
