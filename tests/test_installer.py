@@ -301,7 +301,7 @@ class X86_package_on_X64_machine(object):
         delete_existing_builds()
         do_an_empty_commit()
         devenv_build()
-        create_package(recipe_parameters=["buidlout:installed=.installed_32_on_64.cfg", "pack:_package_arch=i386"])
+        create_package(recipe_parameters=["buidlout:installed=.installed_32_on_64.cfg", "pack:_target_arch=i386"])
 
     def _assert_invalid_arch_message(self, stderr):
         raise NotImplementedError()
@@ -314,7 +314,7 @@ class X86_package_on_X64_machine(object):
             self.install_package()
         self._assert_invalid_arch_message(cm.exception.result.get_stderr())
 
-class RpmTestCase(Posix, RpmInstaller):
+class RpmTestCase(Posix, RpmInstaller, X86_package_on_X64_machine):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
         RpmInstaller.__init__(self, TEST_BUILDOUT)
