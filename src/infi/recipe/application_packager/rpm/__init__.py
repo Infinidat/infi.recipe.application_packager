@@ -9,37 +9,6 @@ from pkg_resources import resource_filename
 
 logger = getLogger(__name__)
 
-SPEC_TEMPLATE = resource_filename(__name__, 'rpmspec.in')
-SPEC_SCRIPT_HEADER = """
-RC=0
-
-function assert_rc() {
-    if test $RC -ne 0; then
-        exit 1
-    fi
-}
-
-function execute() {
-    if test $DEBUG -eq 0; then
-        $@ > /dev/null 2>&1
-    else
-        $@
-    fi
-}
-
-# debugging
-DEBUG=0
-if test -n "$DEBUG_CUSTOM_ACTIONS" -a "$DEBUG_CUSTOM_ACTIONS" == "1"; then
-    DEBUG=1
-    set -xv
-fi
-
-# bypass custom actions
-if test -n "$NO_CUSTOM_ACTIONS" -a "$NO_CUSTOM_ACTIONS" != "0"; then
-    exit 0
-fi
-"""
-
 class Recipe(PackagingRecipe):
     def install(self):
         with self.with_most_mortem():
@@ -57,7 +26,8 @@ class Recipe(PackagingRecipe):
 
     def build_package(self):
         from re import search
-        self._template = self._get_content_from_template()
+        import platform
+        self._is_aix = platform.system() == "AIX"
         self._files = set()
         self._directories = set()
         self._directories_to_clean = set()
@@ -65,11 +35,8 @@ class Recipe(PackagingRecipe):
         with utils.temporary_directory_context() as tempdir:
             self._buildroot = tempdir
             self._put_all_files()
-            self._inject_product_properties_to_spec()
             with utils.chdir(self.get_working_directory()):
-                specfile = 'rpm.spec'
-                with open(specfile, 'w') as fd:
-                    fd.write(self._content)
+                specfile = self._create_specfile()
                 output = self._call_rpmbuild(specfile)
                 rpm_wrote = search("Wrote: (.*)", output).groups()[0]
                 if path.exists(self.rpm_filepath):
@@ -77,10 +44,16 @@ class Recipe(PackagingRecipe):
                 copy(rpm_wrote, self.rpm_filepath)
             return self.rpm_filepath
 
-    def _get_content_from_template(self):
-        from string import Template
-        with open(SPEC_TEMPLATE) as fd:
-            return Template(fd.read())
+    def _create_specfile(self):
+        from jinja2 import Environment, PackageLoader
+        env = Environment(loader=PackageLoader('infi.recipe.application_packager', 'rpm/templates'))
+        template = env.get_template("rpmspec.in")
+        kwargs = self._get_template_kwargs()
+        content = template.render(kwargs)
+        specfile = 'rpm.spec'
+        with open(specfile, 'w') as fd:
+            fd.write(content)
+        return specfile
 
     def _mkdir(self, name, parent_directory, just_add_it=False):
         dst = path.join(parent_directory, name)
@@ -117,7 +90,7 @@ class Recipe(PackagingRecipe):
         deps = [item.strip() for item in rpm_dependencies.splitlines()]
         return "\n".join(["Requires: {}".format(dep) for dep in deps])
 
-    def _inject_product_properties_to_spec(self):
+    def _get_template_kwargs(self):
         directories_to_clean = [item for item in self._directories_to_clean]
         directories_to_clean.sort()
         directories_to_clean.reverse()
@@ -128,8 +101,8 @@ class Recipe(PackagingRecipe):
                   'package_name': self.get_package_name(),
                   'package_version': self.get_project_version__short(),
                   'package_arch': self.get_platform_arch(),
+                  'target_arch': self.get_target_arch(),
                   'requires_declaration': self._get_requires_declaration(),
-                  'script_header': SPEC_SCRIPT_HEADER,
                   'close_on_upgrade_or_removal' : '1' if \
                       self.should_close_app_on_upgrade_or_removal() else '0',
                   'prefix': self.get_install_prefix(),
@@ -138,7 +111,8 @@ class Recipe(PackagingRecipe):
                   'pre_uninstall_script_name': self.get_script_name("pre_uninstall") or "''",
                   'files': "\n".join(self._files),
                   'directories': "\n".join(["%dir {}/".format(item) for item in self._directories]),
-                  'directories_to_clean': ' '.join(directories_to_clean)
+                  'directories_to_clean': ' '.join(directories_to_clean),
+                  'aix': self._is_aix
                   }
         post_install_script_args = self.get_script_args("post_install")
         pre_uninstall_script_args = self.get_script_args("pre_uninstall")
@@ -148,7 +122,7 @@ class Recipe(PackagingRecipe):
         kwargs['pre_uninstall_script_args_definition'] = \
             "%define pre_uninstall_script_args {}".format(pre_uninstall_script_args) if pre_uninstall_script_args \
             else ''
-        self._content = self._template.substitute(kwargs)
+        return kwargs
 
     def _put_all_files(self):
         makedirs("{}{}".format(self._buildroot, self.get_install_prefix()))
@@ -176,4 +150,5 @@ class Recipe(PackagingRecipe):
         return path.join(self.get_working_directory(), self.get_rpm_filename())
 
     def _call_rpmbuild(self, specfile):
-        return utils.execute.execute_assert_success(['rpmbuild', '--verbose', '--buildroot', self._buildroot, '-bb', specfile]).get_stdout()
+        rpmbuild_executable = "rpm" if self._is_aix else "rpmbuild"
+        return utils.execute.execute_assert_success([rpmbuild_executable, '--verbose', '--buildroot', self._buildroot, '-bb', specfile]).get_stdout()

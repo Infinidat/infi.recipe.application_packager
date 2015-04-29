@@ -1,3 +1,4 @@
+from unittest import SkipTest
 import infi.unittest as unittest
 from infi.os_info import get_platform_string
 import infi.recipe.buildout_logging as buildout_logging
@@ -62,10 +63,14 @@ def create_console_scripts():
         execute_assert_success([os.path.join('bin', 'projector'),
                                "devenv", "build", "--no-scripts"])
 
-def create_package():
+def create_package(recipe_parameters=None):
     from infi.execute import execute_assert_success
     try:
-        stdout = execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack']).get_stdout()
+        cmdline = [os.path.join('bin', 'buildout'), '-v']
+        if recipe_parameters:
+            cmdline += recipe_parameters
+        cmdline += ['install', 'pack']
+        stdout = execute_assert_success(cmdline).get_stdout()
         logger.debug('package created, stdout: {}'.format(stdout))
     finally:
         wxs = os.path.join("parts", "product.wxs")
@@ -286,7 +291,37 @@ class Posix(Base):
     pass
 
 
-class RpmTestCase(Posix, RpmInstaller):
+class X86_package_on_X64_machine(object):
+    def _skip_on_irrelvant_platforms(self):
+        from infi.os_info import get_platform_string
+        if 'x64' not in get_platform_string():
+            raise SkipTest("this test runs only on 64bit machines")
+
+    def _build_package_with_invalid_arch(self):
+        delete_existing_builds()
+        do_an_empty_commit()
+        devenv_build()
+        create_package(recipe_parameters=["buidlout:installed=.installed_32_on_64.cfg", "pack:_target_arch=i386"])
+
+    def _assert_invalid_arch_message(self, stderr):
+        raise NotImplementedError()
+
+    def _build_a_proper_package_again(self):
+        delete_existing_builds()
+        do_an_empty_commit()
+        devenv_build()
+        create_package()
+
+    def test_installation_of_32bit_package_on_64bit_machine(self):
+        from infi.execute import ExecutionError
+        self._skip_on_irrelvant_platforms()
+        self.addCleanup(self._build_a_proper_package_again)
+        self._build_package_with_invalid_arch()
+        with self.assertRaises(ExecutionError) as cm:
+            self.install_package()
+        self._assert_invalid_arch_message(cm.exception.result.get_stderr())
+
+class RpmTestCase(Posix, RpmInstaller, X86_package_on_X64_machine):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
         RpmInstaller.__init__(self, TEST_BUILDOUT)
@@ -299,10 +334,13 @@ class RpmTestCase(Posix, RpmInstaller):
 
     @classmethod
     def should_run(cls):
-        return 'redhat' in get_platform_string() or 'centos' in get_platform_string() or "suse" in get_platform_string()
+        return 'redhat' in get_platform_string() or 'centos' in get_platform_string() or "suse" in get_platform_string() or "aix" in get_platform_string()
+
+    def _assert_invalid_arch_message(self, stderr):
+        self.assertIn("is intended for a i386 architecture", stderr)
 
 
-class DebTestCase(Posix, DebInstaller):
+class DebTestCase(Posix, DebInstaller, X86_package_on_X64_machine):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
         DebInstaller.__init__(self, TEST_BUILDOUT)
@@ -316,6 +354,9 @@ class DebTestCase(Posix, DebInstaller):
     @classmethod
     def should_run(cls):
         return 'ubuntu' in get_platform_string() or 'debian' in get_platform_string()
+
+    def _assert_invalid_arch_message(self, stderr):
+        self.assertIn("package architecture (i386) does not match system (amd64)", stderr)
 
 
 class PkgTestCase(Posix, PkgInstaller):

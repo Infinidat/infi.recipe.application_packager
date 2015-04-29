@@ -103,7 +103,7 @@ class Recipe(PackagingRecipe):
         self.write_pystick_variable_file(python_files, c_extensions)
 
     def copy_static_libraries_from_isolated_python(self):
-        extension = dict(Darwin='a', Linux='a', Windows="lib")[system()]
+        extension = dict(Darwin='a', Linux='a', Windows="lib", AIX='a', SunOS='a')[system()]
         for src in glob(path.join(self.isolated_python_dirpath, 'lib*', '*.{}'.format(extension))):
             if src.rsplit('.', 1)[0].endswith("_g") or 'python2.7' in src:
                 continue

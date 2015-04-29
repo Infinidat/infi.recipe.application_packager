@@ -149,6 +149,8 @@ class Recipe(PackagingRecipe):
                                                'pre_uninstall_script_args': pre_uninstall_script_args,
                                                'directories_to_clean': ' '.join(directories_to_clean),
                                                }, '755')
+        self._write_template_file('preinst.in', {'target_arch': self.get_target_arch(),
+                                                 }, '755')
 
     def _write_debian_directory(self):
         self._clean_debian_directory()

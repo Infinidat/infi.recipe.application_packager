@@ -1,0 +1,48 @@
+%define product_name {{ product_name }}
+%define product_description {{ product_description }}
+%define package_name {{ package_name }}
+%define package_version {{ package_version }}
+%define package_arch {{ package_arch }}
+%define target_arch {{ target_arch }}
+%define build_root {{ build_root }}
+%define post_install_script_name {{ post_install_script_name }}
+%define pre_uninstall_script_name {{ pre_uninstall_script_name }}
+{{ post_install_script_args_definition }}
+{{ pre_uninstall_script_args_definition }}
+%define prefix {{ prefix }}
+
+BuildArch: %{package_arch}
+BuildRoot: %{build_root}
+Source: %{package_name}-%{package_version}-%{package_arch}.tar.gz
+Version: %{package_version}
+Summary: %{product_name}
+AutoReqProv: no
+{{ requires_declaration }}
+
+Group: Utilities
+License: Commercial
+Name: %{package_name}
+Release: 1
+
+%description
+%{product_description}
+
+%files
+%defattr(-,root,root)
+{{ directories }}
+{{ files }}
+
+%pre
+{% include 'pre.bash' %}
+
+
+%post
+{% include 'post.bash' %}
+
+
+%preun
+{% include 'prerun.bash' %}
+
+
+%postun
+{% include 'postrun.bash' %}

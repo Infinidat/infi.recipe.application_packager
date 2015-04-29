@@ -25,6 +25,7 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'startmenu-shortcuts': [],
                    'eula-rtf': None,
                    'documentation-url': None,
+                   '_target_arch': None,
                    'close-on-upgrade-or-removal' : 'true'
                   }
 
@@ -156,8 +157,12 @@ class PackagingRecipe(object):
                       "Linux": ('x86_64' if is_rpm else 'amd64') if is_64 else \
                                ('i686' if is_rpm else 'i386'),
                       "SunOS": 'sparc' if 'sparc' == processor() else ('amd64' if is_64 else 'i386'),
+                      "AIX": "ppc",
                      }
         return arch_by_os.get(system())
+
+    def get_target_arch(self):
+        return self._get_recipe_atribute('_target_arch') or self.get_platform_arch()
 
     def get_install_dir(self):
         from os import path
