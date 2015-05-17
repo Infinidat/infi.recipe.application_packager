@@ -39,6 +39,9 @@ for script in *; do
     fi
     _echo "Bootstrapping, this may take a few minutes"
     execute ln -s -f %{prefix}/bin/$script %{_bindir}/$script
+    {% if aix %}
+    execute ln -s -f %{prefix}/bin/$script /usr/bin/$script
+    {% endif %}
     RC=$?
     _echo "\r"
     assert_rc
