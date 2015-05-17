@@ -4,6 +4,7 @@
 # %pre  $1 == 1 $1 == 2 (N/A)
 
 {% include 'header.bash' %}
+{% include '_echo.bash' %}
 
 LONG_BIT="$(getconf LONG_BIT)"
 
@@ -33,15 +34,15 @@ if test -d %{prefix}; then
         # if source directory exists, we need to delete since the files of the old package
         # will be deleted only after the %post
         if test -d src; then
-            echo -en "\rRemoving stale cache files, this may take a few minutes"
+            _echo "\rRemoving stale cache files, this may take a few minutes"
             execute rm -rf src
-            echo -en "\r"
+            _echo "\r"
         fi
 
         # delete old eggs
-        echo -en "\rRemoving temporary files, this may take a few minutes"
+        _echo "\rRemoving temporary files, this may take a few minutes"
         execute rm -rvf eggs
-        echo -en "\r"
+        _echo "\r"
 
         execute popd
     fi
