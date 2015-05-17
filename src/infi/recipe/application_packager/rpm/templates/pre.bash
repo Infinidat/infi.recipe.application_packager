@@ -40,7 +40,7 @@ if test -d %{prefix}; then
         fi
 
         # delete old eggs
-        _echo "\rRemoving temporary files, this may take a few minutes"
+        _echo "\rRemoving temporary files, this may take a few minutes  "
         execute rm -rvf eggs
         _echo "\r"
 

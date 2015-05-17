@@ -12,14 +12,14 @@ execute pushd .
 execute cd %{prefix}
 
 # bootstrap
-_echo "Bootstrapping, this may take a few minutes"
+_echo "Bootstrapping, this may take a few minutes             "
 execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/ez_setup.py --index=http://256.256.256.256/
 RC=$?
 _echo "\r"
 assert_rc
 
 # buildout
-_echo "Bootstrapping, this may take a few minutes"
+_echo "Bootstrapping, this may take a few minutes             "
 execute bin/buildout -U
 RC=$?
 _echo "\r"
@@ -37,7 +37,7 @@ for script in *; do
     if test -n "%{pre_uninstall_script_name}" -a "$script" == "%{pre_uninstall_script_name}"; then
         continue;
     fi
-    _echo "Bootstrapping, this may take a few minutes"
+    _echo "Bootstrapping, this may take a few minutes             "
     execute ln -s -f %{prefix}/bin/$script %{_bindir}/$script
     {% if aix %}
     execute ln -s -f %{prefix}/bin/$script /usr/bin/$script
