@@ -5,23 +5,24 @@
 #  %post    $1 == 1 $1 == 2 (N/A)
 
 {% include 'header.bash' %}
+{% include '_echo.bash' %}
 
 # start
 execute pushd .
 execute cd %{prefix}
 
 # bootstrap
-echo -en "Bootstrapping, this may take a few minutes"
+_echo "Bootstrapping, this may take a few minutes             "
 execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/ez_setup.py --index=http://256.256.256.256/
 RC=$?
-echo -en "\r"
+_echo "\r"
 assert_rc
 
 # buildout
-echo -en "Bootstrapping, this may take a few minutes"
+_echo "Bootstrapping, this may take a few minutes             "
 execute bin/buildout -U
 RC=$?
-echo -en "\r"
+_echo "\r"
 assert_rc
 
 # link binaries to /usr/bin
@@ -36,10 +37,13 @@ for script in *; do
     if test -n "%{pre_uninstall_script_name}" -a "$script" == "%{pre_uninstall_script_name}"; then
         continue;
     fi
-    echo -en "Bootstrapping, this may take a few minutes"
+    _echo "Bootstrapping, this may take a few minutes             "
     execute ln -s -f %{prefix}/bin/$script %{_bindir}/$script
+    {% if aix %}
+    execute ln -s -f %{prefix}/bin/$script /usr/bin/$script
+    {% endif %}
     RC=$?
-    echo -en "\r"
+    _echo "\r"
     assert_rc
 done
 cd ..
