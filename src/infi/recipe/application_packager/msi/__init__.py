@@ -52,18 +52,36 @@ class Recipe(PackagingRecipe):
             utils.download_buildout(self.get_download_cache_dist())
             utils.download_setuptools(self.get_download_cache_dist())
             silent_launcher = self.get_silent_launcher()
-            if self.get_add_remove_programs_icon():
+            if self.get_add_remove_programs_icon() and not self.icons_already_set():
                 self.set_icon_in_all_executables_in_project()
                 utils.rcedit.set_icon_in_executable(silent_launcher, self.get_add_remove_programs_icon())
-            if self.should_sign_files():
+                self.mark_icons_set()
+            if self.should_sign_files() and not self.already_signed():
                 self.sign_all_executables_in_project()
                 self.signtool.sign_file(silent_launcher)
+                self.mark_signed()
             package = self.build_package(silent_launcher)
             logger.debug("Built {}".format(package))
             if self.should_sign_files():
                 self.signtool.sign_file(package)
                 logger.debug("Signed {}".format(package))
             return [package, ]
+
+    def _touch(self, filepath):
+        with open(filepath, 'w'):
+            pass
+
+    def mark_icons_set(self):
+        self._touch(path.join(self.get_download_cache(), 'icons-added'))
+
+    def mark_signed(self):
+        self._touch(path.join(self.get_download_cache(), 'executables-signed'))
+
+    def icons_already_set(self):
+        return path.exists(path.join(self.get_download_cache(), 'icons-added'))
+
+    def alrady_signed(self):
+        return path.exists(path.join(self.get_download_cache(), 'executables-signed'))
 
     def get_silent_launcher(self):
         from tempfile import mkstemp
