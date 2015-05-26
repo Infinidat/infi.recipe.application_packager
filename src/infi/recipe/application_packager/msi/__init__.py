@@ -80,7 +80,7 @@ class Recipe(PackagingRecipe):
     def icons_already_set(self):
         return path.exists(path.join(self.get_download_cache(), 'icons-added'))
 
-    def alrady_signed(self):
+    def already_signed(self):
         return path.exists(path.join(self.get_download_cache(), 'executables-signed'))
 
     def get_silent_launcher(self):
