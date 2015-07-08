@@ -18,10 +18,10 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'pfx-file': '~/.authenticode/certificate.pfx',
                    'pfx-password-file': '~/.authenticode/certificate-password.txt',
                    'timestamp-url':  "http://timestamp.verisign.com/scripts/timstamp.dll",
-                   'add-remove-programs-icon': None,
-                   'shortcuts-icon': None,
-                   'msi-banner-bmp': None,
-                   'msi-dialog-bmp': None,
+                   'add-remove-programs-icon': "~/.msi-ui/icon.ico",
+                   'shortcuts-icon': "~/.msi-ui/icon.exe",
+                   'msi-banner-bmp': "~/.msi-ui/WixUIBanner.bmp",
+                   'msi-dialog-bmp': "~/.msi-ui/WixUIDialog.bmp",
                    'startmenu-shortcuts': [],
                    'eula-rtf': None,
                    'documentation-url': None,
@@ -213,7 +213,7 @@ class PackagingRecipe(object):
 
     def _get_resource_file_from_recipe_section(self, name):
         from os.path import exists, expanduser, abspath
-        resource_file = self.get_recipe_section().get(name, None)
+        resource_file = self.get_recipe_section().get(name, RECIPE_DEFAULTS.get(name, None))
         if resource_file is None:
             return None
         resource_file = abspath(expanduser(resource_file))

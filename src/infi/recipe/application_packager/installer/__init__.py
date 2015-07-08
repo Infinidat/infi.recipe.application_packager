@@ -161,7 +161,7 @@ class MsiInstaller(Installer):
         for user in filter(lambda user: user.has_key(os.path.join('Products')), userdata.values()):
             for product in user['Products'].values():
                 display_name = product['InstallProperties'].values_store['DisplayName'].to_python_object()
-                log.debug("product found found: {!r}".format(display_name))
+                log.debug("product found: {!r}".format(display_name))
                 if display_name == self.product_name:
                     log.debug("Product is indeed installed")
                     return product
