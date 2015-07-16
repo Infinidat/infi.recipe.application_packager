@@ -15,8 +15,8 @@ from tempfile import NamedTemporaryFile
 log = logging.getLogger(__name__)
 
 INSTALLER_USERDATA = os.path.join('SOFTWARE', 'Microsoft', 'Windows', 'CurrentVersion', 'Installer', 'UserData')
-PYPI_HOSTS = ["127.0.0.1    pypi01.infinidat.com",
-              "127.0.0.1    pypi01",
+PYPI_HOSTS = ["127.0.0.1    pypi.infinidat.com",
+              "127.0.0.1    pypi",
               "127.0.0.1    pypi.python.org", ]
 
 HOSTS_FILE = os.path.join('/', 'etc', 'hosts') if os.name != 'nt' else \

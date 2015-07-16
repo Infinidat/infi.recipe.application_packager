@@ -7,9 +7,9 @@ from ConfigParser import NoSectionError, NoOptionError
 class PyPITestCase(unittest.TestCase):
     def test_custom_pypi(self):
         with patch("ConfigParser.ConfigParser") as ConfigParser:
-            ConfigParser().get.return_value = "http://pypi01.infinidat.com/simple"
+            ConfigParser().get.return_value = "http://pypi.infinidat.com/simple"
             url = utils._get_package_url("setuptools")
-            self.assertIn("pypi01.infinidat.com//media/", url)
+            self.assertIn("pypi.infinidat.com//media/", url)
             self.assertNotIn("#", url)
 
     @unittest.parameters.iterate("exception_class", [NoSectionError, NoOptionError])
