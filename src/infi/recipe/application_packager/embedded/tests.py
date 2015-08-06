@@ -1,6 +1,6 @@
 from unittest import SkipTest
 from infi import unittest
-from mock import patch, ANY
+from mock import patch
 from glob import glob
 from os import path, makedirs
 
@@ -24,7 +24,7 @@ class UnitTestCase(unittest.TestCase):
         source_url = "http://python.infinidat.com/python/sources/Python-2.7.6.tgz"
         args = Download(buildout_section)(source_url)[0], 'r:gz'
         tarfile_open.assert_called_with(*args)
-        tarfile_open(*args).extractall.assert_called_with(ANY)
+        tarfile_open(*args).extract_all.assert_called()
         self.assertEquals(actual, path.join(path.curdir, 'build', 'Python-2.7.6'))
 
     def test_setup_wrapper(self):
