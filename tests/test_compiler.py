@@ -20,7 +20,7 @@ class CompilerTestCase(unittest.TestCase):
         return compiler
 
     def test_compile_async(self):
-        archive_to_compile = get_archive_path("psutil-3.0.4.tar.gz")
+        archive_to_compile = get_archive_path("psutil-3.1.2.1.tar.gz")
         compiler = self.get_compiler()
         with compiler.extract_archive(archive_to_compile):
             compiler.add_import_setuptools_to_setup_py()
@@ -31,7 +31,8 @@ class CompilerTestCase(unittest.TestCase):
         expected = [get_archive_path("coverage-3.7.1.tar.gz"),
                     get_archive_path("gitdb-0.6.4.tar.gz"),
                     get_archive_path("MarkupSafe-0.23.tar.gz"),
-                    get_archive_path("psutil-3.0.4.tar.gz")]
+                    get_archive_path("psutil-3.1.2.1.tar.gz"),
+                    get_archive_path("mock-1.3.0.tar.gz")]
         actual = self.get_compiler().get_packages_to_install()
         self.assertEquals(set(actual), set(expected))
 
