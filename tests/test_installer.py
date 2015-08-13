@@ -229,7 +229,7 @@ class Base(unittest.TestCase):
     def _run_the_installed_script_in_the_background(self):
         from time import sleep
         timeout = 3600
-        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
+        pid = execute_async([os.path.join(self.targetdir, "bin", "packager_sleep" + EXTENSION), str(timeout)])
         # we need to give the process time to start, checking it didn't return 1 because of an error
         sleep(10)
         self.assertFalse(pid.is_finished())
