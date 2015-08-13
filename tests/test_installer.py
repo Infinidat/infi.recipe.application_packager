@@ -44,7 +44,7 @@ def cleanup_buildout_logs():
     print_buildout_logs()
     delete_buildout_logs()
 
-CONSOLE_SCRIPTS = ["hello", "sample", "post_install", "pre_uninstall", "sleep"]
+CONSOLE_SCRIPTS = ["packager_hello", "packager_sample", "post_install", "pre_uninstall", "packager_sleep"]
 
 def create_console_scripts():
     from infi.execute import execute_assert_success
