@@ -44,7 +44,7 @@ def cleanup_buildout_logs():
     print_buildout_logs()
     delete_buildout_logs()
 
-CONSOLE_SCRIPTS = ["hello", "sample", "post_install", "pre_uninstall", "sleep"]
+CONSOLE_SCRIPTS = ["packager_hello", "packager_sample", "post_install", "pre_uninstall", "packager_sleep"]
 
 def create_console_scripts():
     from infi.execute import execute_assert_success
@@ -229,7 +229,7 @@ class Base(unittest.TestCase):
     def _run_the_installed_script_in_the_background(self):
         from time import sleep
         timeout = 3600
-        pid = execute_async([os.path.join(self.targetdir, "bin", "sleep" + EXTENSION), str(timeout)])
+        pid = execute_async([os.path.join(self.targetdir, "bin", "packager_sleep" + EXTENSION), str(timeout)])
         # we need to give the process time to start, checking it didn't return 1 because of an error
         sleep(10)
         self.assertFalse(pid.is_finished())

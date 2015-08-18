@@ -5,7 +5,7 @@ from logging import getLogger
 from ..base import PackagingRecipe, RECIPE_DEFAULTS
 from .. import utils
 from os import path, curdir, makedirs, listdir, walk, stat
-from shutil import rmtree, copy
+from shutil import copy
 from pkg_resources import resource_filename
 
 

@@ -14,7 +14,7 @@ INSTALLDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), #scripts
 
 from .refactoring import before
 
-def hello(argv=argv):
+def packager_hello(argv=argv):
     before()
     print('hello world')
 
@@ -29,11 +29,11 @@ def post_install(argv=argv):
 def pre_uninstall(argv=argv):
     _write_file(os.path.join(INSTALLDIR, os.path.pardir, 'pre_uninstall'))
 
-def sample(argv=argv):
+def packager_sample(argv=argv):
     before()
     raw_input('sample, hit enter to exit')
 
-def sleep(argv=argv):
+def packager_sleep(argv=argv):
     before()
     t0 = time.time()
     timeout = int(argv[-1])

@@ -24,7 +24,7 @@ def scan_for_python_files(dirpath, prefix=None):
     return python_files
 
 
-def _setup(name, package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs):
+def _setup(package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs):
     python_files, c_extensions = [], []
     previous_package = '*'
     for package in packages:

@@ -4,8 +4,7 @@ from logging import getLogger
 from ..base import PackagingRecipe, RECIPE_DEFAULTS
 from .. import utils
 from os import path, curdir, makedirs, listdir, remove
-from shutil import rmtree, copy
-from pkg_resources import resource_filename
+from shutil import copy
 
 logger = getLogger(__name__)
 
