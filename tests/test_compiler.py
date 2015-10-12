@@ -31,7 +31,9 @@ class CompilerTestCase(unittest.TestCase):
         expected = [get_archive_path("coverage-3.7.1.tar.gz"),
                     get_archive_path("gitdb-0.6.4.tar.gz"),
                     get_archive_path("MarkupSafe-0.23.tar.gz"),
-                    get_archive_path("psutil-3.1.2.1.tar.gz")]
+                    get_archive_path("psutil-3.1.2.1.tar.gz"),
+                    get_archive_path("Logbook-0.11.2.tar.gz"),
+                    ]
         actual = self.get_compiler().get_packages_to_install()
         self.assertEquals(set(actual), set(expected))
 
