@@ -28,8 +28,9 @@ class CompilerTestCase(unittest.TestCase):
             self.assertTrue(path.exists(built_egg))
 
     def test_get_packages_to_install(self):
-        expected = [get_archive_path("coverage-3.7.1.tar.gz"),
+        expected = [get_archive_path("coverage-4.0.1.tar.gz"),
                     get_archive_path("gitdb-0.6.4.tar.gz"),
+                    get_archive_path("path.py-8.1.2.tar.gz"),
                     get_archive_path("MarkupSafe-0.23.tar.gz"),
                     get_archive_path("psutil-3.1.2.1.tar.gz"),
                     get_archive_path("Logbook-0.11.2.tar.gz"),
