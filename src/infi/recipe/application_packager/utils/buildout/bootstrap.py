@@ -280,5 +280,6 @@ if not [a for a in args if '=' not in a]:
 if options.config_file is not None:
     args[0:0] = ['-c', options.config_file]
 
+args.insert(0, '-U')
 zc.buildout.buildout.main(args)
 shutil.rmtree(tmpeggs)
