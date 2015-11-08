@@ -277,6 +277,7 @@ class PackagingRecipe(object):
                     for distname, version in distributions.items()]):
                 continue
 
+            logger.info("shrinking cache-dist and removing {}".format(filepath))
             remove(filepath)
 
     @contextmanager

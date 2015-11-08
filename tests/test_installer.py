@@ -271,6 +271,22 @@ class Base(unittest.TestCase):
     def platform_specific_cleanup(cls):
         raise NotImplementedError()
 
+    def test_broken_buildout_default_cfg(self):
+        # HOSTDEV-2247
+        cfg_path = os.path.expanduser("~/.buildout/default.cfg")
+        backup_path = cfg_path + ".bak"
+        if os.path.exists(cfg_path):
+            shutil.move(cfg_path, backup_path)
+        with open(cfg_path, "w") as fd:
+            fd.write("this is a corrupt cfg file from packager testing. check the .bak file for backup")
+        try:
+            self.install_package()
+            self.assert_product_was_installed_successfully(True)
+        finally:
+            os.remove(cfg_path)
+            if os.path.exists(backup_path):
+                shutil.move(backup_path, cfg_path)
+
 
 class MsiTestCase(Base, MsiInstaller):
     def __init__(self, *args, **kwargs):
