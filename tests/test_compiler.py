@@ -33,7 +33,7 @@ class CompilerTestCase(unittest.TestCase):
                     get_archive_path("path.py-8.1.2.tar.gz"),
                     get_archive_path("MarkupSafe-0.23.tar.gz"),
                     get_archive_path("psutil-3.2.2.2.tar.gz"),
-                    get_archive_path("Logbook-0.11.2.tar.gz"),
+                    get_archive_path("Logbook-0.12.3.tar.gz"),
                     ]
         actual = self.get_compiler().get_packages_to_install()
         self.assertEquals(set(actual), set(expected))
