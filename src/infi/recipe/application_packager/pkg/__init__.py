@@ -147,6 +147,7 @@ class Recipe(PackagingRecipe):
     def _write_templates(self):
         self._write_template_file(PKGINFO_FILENAME, {'package_name': self.get_package_name(),
                                                      'package_version': self.get_project_version__short(),
+                                                     'package_revision': self._get_package_revision(),
                                                      'package_arch': self.get_platform_arch(),
                                                      'company': self.get_company_name(),
                                                      'product_description': self.get_description(),
@@ -178,7 +179,6 @@ class Recipe(PackagingRecipe):
         directories_to_clean.reverse()
         self._write_template_file(PREUNINST_FILENAME, {'package_name': self.get_package_name(),
                                                        'package_version': self.get_project_version__short(),
-                                                       'package_revision': self._get_package_revision(),
                                                        'prefix': self.get_install_prefix(),
                                                        'close_on_upgrade_or_removal' : '1' if \
                                                             self.should_close_app_on_upgrade_or_removal() else '0',
