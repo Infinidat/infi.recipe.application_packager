@@ -199,8 +199,8 @@ class Recipe(PackagingRecipe):
 
         try:
             with open(filepath) as fd:
-            exec fd.read()
-            return _prettify(locals()['git_commit_date'])
+                exec fd.read()
+                return _prettify(locals()['git_commit_date'])
         except:
             return _prettify(todays_date)
 
