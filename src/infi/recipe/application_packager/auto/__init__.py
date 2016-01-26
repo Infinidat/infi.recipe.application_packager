@@ -19,6 +19,6 @@ def get_platform_specific_recipe():
         from .. import rpm
         return rpm.Recipe
     else:
-        return None
+        raise NotImplementedError("no packaging recipe available for this platform")
 
 Recipe = get_platform_specific_recipe()
