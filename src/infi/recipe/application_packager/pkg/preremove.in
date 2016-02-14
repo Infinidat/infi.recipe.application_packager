@@ -32,7 +32,6 @@ if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" = "1" -o -e /tmp
     DEBUG=1
     set -xv
 fi
-if
 
 # bypass custom actions
 if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0" -o -e /tmp/INFINIDAT_NO_CUSTOM_ACTIONS ; then
