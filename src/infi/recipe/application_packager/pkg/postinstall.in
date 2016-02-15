@@ -28,13 +28,13 @@ function execute() {
 
 # debugging
 DEBUG=0
-if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
+if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" = "1" -o -e /tmp/INFINIDAT_DEBUG_CUSTOM_ACTIONS ; then
     DEBUG=1
     set -xv
 fi
 
 # bypass custom actions
-if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0"; then
+if test -n "$$NO_CUSTOM_ACTIONS" -a "$$NO_CUSTOM_ACTIONS" != "0" -o -e /tmp/INFINIDAT_NO_CUSTOM_ACTIONS ; then
     exit 0
 fi
 
@@ -64,13 +64,13 @@ assert_rc
 # link binaries to /usr/bin
 execute cd bin
 for script in *; do
-    if test "$$script" == "buildout"; then
+    if test "$$script" = "buildout"; then
         continue;
     fi
-    if test -n "$post_install_script_name" -a "$$script" == "$post_install_script_name"; then
+    if test -n "$post_install_script_name" -a "$$script" = "$post_install_script_name"; then
         continue;
     fi
-    if test -n "$pre_uninstall_script_name" -a "$$script" == "$pre_uninstall_script_name"; then
+    if test -n "$pre_uninstall_script_name" -a "$$script" = "$pre_uninstall_script_name"; then
         continue;
     fi
     execute ln -s -f $prefix/bin/$$script /usr/bin/$$script

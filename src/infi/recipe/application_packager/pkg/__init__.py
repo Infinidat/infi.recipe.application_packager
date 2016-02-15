@@ -147,6 +147,7 @@ class Recipe(PackagingRecipe):
     def _write_templates(self):
         self._write_template_file(PKGINFO_FILENAME, {'package_name': self.get_package_name(),
                                                      'package_version': self.get_project_version__short(),
+                                                     'package_revision': self._get_package_revision(),
                                                      'package_arch': self.get_platform_arch(),
                                                      'company': self.get_company_name(),
                                                      'product_description': self.get_description(),
@@ -187,6 +188,21 @@ class Recipe(PackagingRecipe):
                                                        'pre_uninstall_script_args': pre_uninstall_script_args,
                                                        'directories_to_clean': ' '.join(directories_to_clean),
                                                        }, '755')
+
+    def _get_package_revision(self):
+        from datetime import datetime
+        from os import path
+
+        _prettify = lambda date_string: date_string.split()[0].replace('-', '.')
+        todays_date = datetime.now().isoformat(' ')
+        filepath = path.join(self.get_buildout_dir(), self.get_project_section().get('version_file'))
+
+        try:
+            with open(filepath) as fd:
+                exec fd.read()
+                return _prettify(locals()['git_commit_date'])
+        except:
+            return _prettify(todays_date)
 
     def _write_working_directory(self):
         self._write_prototype_file()
