@@ -33,7 +33,6 @@ class CompilerTestCase(unittest.TestCase):
                     get_archive_path("MarkupSafe"),
                     get_archive_path("psutil"),
                     get_archive_path("Logbook"),
-                    get_archive_path("rcssmin"),
                     ]
         actual = self.get_compiler().get_packages_to_install()
         self.assertEquals(set(actual), set(expected))
