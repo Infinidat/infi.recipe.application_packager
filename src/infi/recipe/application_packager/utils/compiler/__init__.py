@@ -2,7 +2,7 @@
 from contextlib import contextmanager
 from logging import getLogger
 from glob import glob
-from os import path
+from os import path, linesep
 from itertools import chain
 
 logger = getLogger(__name__)
