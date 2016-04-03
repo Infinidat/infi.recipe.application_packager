@@ -2,7 +2,7 @@
 from contextlib import contextmanager
 from logging import getLogger
 from glob import glob
-from os import path
+from os import path, linesep
 from itertools import chain
 
 logger = getLogger(__name__)
@@ -42,8 +42,11 @@ class BinaryDistributionsCompiler(object):
     def add_import_setuptools_to_setup_py(self):
         with open("setup.py") as fd:
             content = fd.read()
-        content = content.replace("distutils.core", "setuptools")
-        content = content.replace("from distutils import core", "import setuptools as core")
+        if 'distutils' in content:
+            content = content.replace("distutils.core", "setuptools")
+            content = content.replace("from distutils import core", "import setuptools as core")
+        else:
+            content = 'import setuptools' + linesep + content
         with open("setup.py", 'w') as fd:
             fd.write(content)
 
