@@ -89,6 +89,7 @@ class Recipe(PackagingRecipe):
         self._add_directory(path.join(self.get_buildout_dir(), 'parts', 'python'), parts)
         self._add_directory(path.join(self.get_buildout_dir(), 'src'), self.get_install_prefix())
         self._add_directory(path.join(self.get_buildout_dir(), 'eggs'), self.get_install_prefix(), True, True)
+        self.add_aditional_directories()
 
     def _get_pkg_filename(self):
         return "{}-{}-{}.pkg".format(self.get_package_name(), self.get_project_version__long(), self.get_os_string())

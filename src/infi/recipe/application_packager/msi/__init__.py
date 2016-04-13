@@ -195,6 +195,7 @@ class Recipe(PackagingRecipe):
         wix.add_directory(path.join(self.get_buildout_dir(), 'parts', 'python'), parts)
         wix.add_directory(path.join(self.get_buildout_dir(), 'src'), wix.installdir)
         wix.add_directory(path.join(self.get_buildout_dir(), 'eggs'), wix.installdir, True, True)
+        self.add_aditional_directories()
         return silent_launcher_file_id
 
     def _append_os_removedirs_eggs(self, wix, silent_launcher_file_id):

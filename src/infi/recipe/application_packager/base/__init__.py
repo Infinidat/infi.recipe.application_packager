@@ -22,11 +22,12 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'shortcuts-icon': "~/.msi-ui/icon.exe",
                    'msi-banner-bmp': "~/.msi-ui/WixUIBanner.bmp",
                    'msi-dialog-bmp': "~/.msi-ui/WixUIDialog.bmp",
-                   'startmenu-shortcuts': [],
+                   'startmenu-shortcuts': '[]',
                    'eula-rtf': None,
                    'documentation-url': None,
                    '_target_arch': None,
-                   'close-on-upgrade-or-removal' : 'true'
+                   'close-on-upgrade-or-removal' : 'true',
+                   'additional-directories': '[]'
                   }
 
 PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
@@ -237,6 +238,9 @@ class PackagingRecipe(object):
     def get_startmenu_shortcuts(self):
         return self._get_recipe_atribute("startmenu-shortcuts")
 
+    def get_additional_directories(slef):
+        return slef._get_recipe_atribute("additional-directories")
+
     def write_bootstrap_for_production(self):
         from ..utils.buildout import write_bootstrap_for_production
         write_bootstrap_for_production()
@@ -295,3 +299,10 @@ class PackagingRecipe(object):
         certificate = recipe.get("pfx-file", RECIPE_DEFAULTS['pfx-file'])
         password_file = recipe.get("pfx-password-file", RECIPE_DEFAULTS['pfx-password-file'])
         return utils.signtool.Signtool(timestamp_url, certificate, password_file)
+
+    def add_aditional_directories(self):
+        from os import path
+        for d in eval(self.get_additional_directories()):
+            dirname = path.dirname(d.rstrip('/\\'))
+            dest_dir = path.join(self.get_install_prefix(), dirname)
+            self._add_directory(path.join(self.get_buildout_dir(), d), dest_dir)
