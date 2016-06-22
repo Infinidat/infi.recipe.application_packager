@@ -139,6 +139,7 @@ class Recipe(PackagingRecipe):
         self._add_directory(path.join(self.get_buildout_dir(), 'parts', 'python'), parts)
         self._add_directory(path.join(self.get_buildout_dir(), 'src'), self.get_install_prefix())
         self._add_directory(path.join(self.get_buildout_dir(), 'eggs'), self.get_install_prefix(), True, True)
+        self.add_aditional_directories()
 
     def get_rpm_filename(self):
         return "{}-{}-{}.rpm".format(self.get_package_name(), self.get_project_version__long(),

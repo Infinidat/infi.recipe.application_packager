@@ -20,5 +20,4 @@ class PyPITestCase(unittest.TestCase):
             except TypeError:
                 ConfigParser().get.side_effect = exception_class("x", "y")
             url = utils._get_package_url("zc.buildout")
-            self.assertIn("pypi.python.org/packages/source", url)
             self.assertNotIn("#", url)
