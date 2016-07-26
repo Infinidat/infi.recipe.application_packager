@@ -29,7 +29,7 @@ class CompilerTestCase(unittest.TestCase):
 
     def test_get_packages_to_install(self):
         expected = [get_archive_path("coverage"),
-                    get_archive_path("path"),
+                    get_archive_path("path.py"),
                     get_archive_path("MarkupSafe"),
                     get_archive_path("psutil"),
                     get_archive_path("Logbook"),
