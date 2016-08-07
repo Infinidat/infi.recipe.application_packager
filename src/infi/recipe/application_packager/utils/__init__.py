@@ -117,14 +117,15 @@ def get_dependencies(name):
     distribution = get_distribution(name)
     queue = deque()
     queue.extend(distribution.requires())
-    dependencies = set()
+    requirements = set()
     while queue:
-        depenency = queue.popleft().project_name
-        if depenency in dependencies:
+        requirement = queue.popleft()
+        depenency = requirement.project_name
+        if requirement in requirements:
             continue
-        dependencies.add(depenency)
-        queue.extend(get_distribution(depenency).requires())
-    return dependencies
+        requirements.add(requirement)
+        queue.extend(get_distribution(depenency).requires(extras=requirement.extras))
+    return {requirement.project_name for requirement in requirements}
 
 def get_distributions_from_dependencies(dependencies):
     """:returns a dict of {distname:version}"""
