@@ -8,7 +8,11 @@ import hashlib
 import stat
 
 from contextlib import contextmanager
-from ConfigParser import ConfigParser
+try:
+    from ConfigParser import ConfigParser
+except:
+    from configparser import ConfigParser
+
 from tempfile import NamedTemporaryFile
 
 
