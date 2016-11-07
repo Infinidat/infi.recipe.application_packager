@@ -5,12 +5,12 @@ from logging import getLogger
 from . import buildout, compiler, execute, signtool, rcedit
 try:
     from urllib import urlretrieve
-except:
+except ImportError:
     from urllib.request import urlretrieve
 
 try:
     from ConfigParser import ConfigParser, NoOptionError, NoSectionError
-except:
+except ImportError:
     from configparser import ConfigParser, NoOptionError, NoSectionError
 
 

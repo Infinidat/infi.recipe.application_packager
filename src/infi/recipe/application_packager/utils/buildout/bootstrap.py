@@ -29,7 +29,7 @@ from optparse import OptionParser
 
 try:
     from urllib import pathname2url
-except:
+except ImportError:
     from urllib.request import pathname2url
 
 tmpeggs = tempfile.mkdtemp()

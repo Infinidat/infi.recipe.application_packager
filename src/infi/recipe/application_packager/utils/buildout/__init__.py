@@ -6,7 +6,7 @@ logger = getLogger(__name__)
 
 try:
     from ConfigParser import ConfigParser
-except:
+except ImportError:
     from configparser import ConfigParser
 
 BUILDOUT_IN = """
