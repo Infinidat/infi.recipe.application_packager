@@ -232,7 +232,7 @@ class Executable(Recipe):
         :returns: a script_name: (module_name, callable_name) dictionary
         """
         from pkg_resources import iter_entry_points
-        packages_in_production = self.get_dependencies_for_embedding().keys() + [self.get_python_module_name()]
+        packages_in_production = list(self.get_dependencies_for_embedding().keys()) + [self.get_python_module_name()]
         return {item.name: (item.module_name, item.attrs[0])
                 for item in iter_entry_points('console_scripts')
                 if any(item.module_name.startswith(package_name)

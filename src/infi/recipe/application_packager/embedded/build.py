@@ -8,7 +8,7 @@ from infi.recipe.application_packager.utils import chdir as chdir_context
 from logging import getLogger
 
 logger = getLogger(__name__)
-SETUP_PY_MOCK = resource_string('infi.recipe.application_packager.embedded', 'setup.py')
+SETUP_PY_MOCK = resource_string('infi.recipe.application_packager.embedded', 'setup.py').decode('ascii')
 PYTHON_SCRIPT = path.abspath(path.join(path.curdir, 'bin', 'python'))
 PYTHON_EXECUTABLE = path.abspath(path.join(path.curdir, 'parts', 'python', 'bin', 'python'))
 
