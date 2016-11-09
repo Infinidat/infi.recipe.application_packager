@@ -8,6 +8,13 @@ is_windows = name == 'nt'
 
 BUILDOUT_DIRECTORY = path.abspath(path.join(path.dirname(__file__), pardir))
 
+import sys
+if sys.version_info > (3, 0):
+    patched_open_qualified_name = "builtins.open"
+else:
+    patched_open_qualified_name = "__builtin__.open"
+
+
 class CompilerTestCase(unittest.TestCase):
     def setUp(self):
         if is_windows:
@@ -46,9 +53,9 @@ class CompilerTestCase(unittest.TestCase):
     def test_setup_requires(self):
         with mock.patch.object(utils.compiler.BinaryDistributionsCompiler, 'extract_archive'):
             with open(path.join('tests', 'file_with_setup_requires')) as fd:
-                xreadlines = iter(fd.readlines())
-                with mock.patch('__builtin__.open') as _open:
-                    _open('setup.py').__enter__.return_value.xreadlines = lambda: xreadlines
+                patched_xreadlines = iter(fd)
+                with mock.patch(patched_open_qualified_name) as _open:
+                    _open('setup.py').__enter__.return_value.__iter__.return_value = patched_xreadlines
                     instance = utils.compiler.BinaryDistributionsCompiler(buildout_directory=BUILDOUT_DIRECTORY,
                                                                           archives_directory=path.join(".cache", "dist"),
                                                                           eggs_directory='eggs'

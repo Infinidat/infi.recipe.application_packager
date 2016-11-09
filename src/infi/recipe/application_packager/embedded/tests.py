@@ -110,7 +110,7 @@ def prepare_package_mock():
     with open(path.join('src', 'hello', 'world', 'foo.py'), 'w') as fd:
         pass
     with open('setup.py', 'w') as fd:
-        fd.write(resource_string('infi.recipe.application_packager.embedded', 'setup.py.example'))
+        fd.write(resource_string('infi.recipe.application_packager.embedded', 'setup.py.example').decode('ascii'))
     python_files = [{u'name': u'hello',
                      u'package': True,
                      u'source': path.abspath(path.join(path.curdir, 'src', 'hello', '__init__.py'))},
