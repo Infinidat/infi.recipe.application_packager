@@ -55,12 +55,15 @@ class UnitTestCase(unittest.TestCase):
 
     def test_build_dependency(self):
         from . import build
-        tgz = glob(path.join('.cache', 'dist', '*.tar.gz'))[0]
-        egg = glob(path.join('.cache', 'dist', '*.egg'))[0]
-        _zip = glob(path.join('.cache', 'dist', '*.zip'))[0]
-        build.build_dependency(path.abspath(tgz))
-        build.build_dependency(path.abspath(egg))
-        build.build_dependency(path.abspath(_zip))
+        tgzs = glob(path.join('.cache', 'dist', '*.tar.gz'))
+        eggs = glob(path.join('.cache', 'dist', '*.egg'))
+        _zips = glob(path.join('.cache', 'dist', '*.zip'))
+        if len(tgzs) > 0:
+            build.build_dependency(path.abspath(tgzs[0]))
+        if len(eggs) > 0:
+            build.build_dependency(path.abspath(eggs[0]))
+        if len(_zips) > 0:
+            build.build_dependency(path.abspath(_zips[0]))
 
 
 class MockedRecipeTestCase(unittest.TestCase):
