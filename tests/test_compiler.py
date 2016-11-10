@@ -35,7 +35,8 @@ class CompilerTestCase(unittest.TestCase):
             self.assertTrue(path.exists(built_egg))
 
     def test_get_packages_to_install(self):
-        expected = [get_archive_path("MarkupSafe"),
+        expected = [get_archive_path("coverage"),
+                    get_archive_path("MarkupSafe"),
                     get_archive_path("psutil"),
                     get_archive_path("Logbook"),
                     ]

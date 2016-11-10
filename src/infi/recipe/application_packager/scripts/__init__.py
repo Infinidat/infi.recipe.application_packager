@@ -12,7 +12,7 @@ INSTALLDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), #scripts
                                           os.path.pardir, #src
                                           os.path.pardir))
 
-from infi.recipe.application_packager.scripts.refactoring import before
+from .refactoring import before, after
 
 def packager_hello(argv=argv):
     before()
