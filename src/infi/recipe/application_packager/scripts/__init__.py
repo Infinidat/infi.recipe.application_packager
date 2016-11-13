@@ -12,7 +12,7 @@ INSTALLDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), #scripts
                                           os.path.pardir, #src
                                           os.path.pardir))
 
-from .refactoring import before, after
+from .refactoring import before
 
 def packager_hello(argv=argv):
     before()
