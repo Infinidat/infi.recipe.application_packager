@@ -37,7 +37,10 @@ class UnitTestCase(unittest.TestCase):
             self.assertTrue(path.exists('_embed_recipe.json'))
             with open('_embed_recipe.json') as fd:
                 data = load(fd)
-        self.assertEquals(sorted(data['python_files']), sorted(expected_data['python_files']))
+        def get_source_key(dct):
+            return dct['source']
+        self.assertEquals(sorted(data['python_files'], key=get_source_key),
+                          sorted(expected_data['python_files'], key=get_source_key))
         self.assertEquals(sorted([sorted(extension.items()) for extension in data['c_extensions']]),
                           sorted([sorted(extension.items()) for extension in expected_data['c_extensions']]))
 

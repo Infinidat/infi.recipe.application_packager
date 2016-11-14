@@ -1,9 +1,15 @@
 from __future__ import print_function
 __import__("pkg_resources").declare_namespace(__name__)
 
-from sys import argv
+from sys import argv, version_info
 import time
 import os
+
+if version_info > (3, 0):
+    _input = input
+else:
+    _input = raw_input
+
 
 INSTALLDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), #scripts
                                           os.path.pardir, #application_packager
@@ -31,7 +37,7 @@ def pre_uninstall(argv=argv):
 
 def packager_sample(argv=argv):
     before()
-    raw_input('sample, hit enter to exit')
+    _input('sample, hit enter to exit')
 
 def packager_sleep(argv=argv):
     before()
