@@ -35,7 +35,7 @@ class CompilerTestCase(unittest.TestCase):
                 built_egg = compiler.build_binary_egg()
                 self.assertTrue(path.exists(built_egg))
         except:
-            raise unittest.SkipTest("This test must be run on a fresh install")
+            raise unittest.SkipTest("This test must be run before test_installer")
 
     def test_get_packages_to_install(self):
         try:
@@ -47,7 +47,7 @@ class CompilerTestCase(unittest.TestCase):
             actual = self.get_compiler().get_packages_to_install()
             self.assertEquals(set(actual), set(expected))
         except:
-            raise unittest.SkipTest("This test must be run on a fresh install")
+            raise unittest.SkipTest("This test must be run before test_installer")
 
     @long_one
     def test_compile_all(self):
