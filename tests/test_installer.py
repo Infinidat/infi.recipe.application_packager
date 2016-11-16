@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from unittest import SkipTest
 import infi.unittest as unittest
 from infi.os_info import get_platform_string
@@ -40,7 +38,7 @@ def delete_buildout_logs():
 def print_buildout_logs():
     for filepath in get_buildout_logs():
         with open(filepath) as fd:
-            print(fd.read())
+            print fd.read()
 
 def cleanup_buildout_logs():
     print_buildout_logs()
@@ -78,7 +76,7 @@ def create_package(recipe_parameters=None):
         wxs = os.path.join("parts", "product.wxs")
         if os.name == 'nt' and os.path.exists(wxs):
             with open(wxs) as fd:
-                print(fd.read())
+                print fd.read()
 
 def do_an_empty_commit():
     from gitpy import LocalRepository
@@ -374,7 +372,7 @@ class DebTestCase(Posix, DebInstaller, X86_package_on_X64_machine):
         return 'ubuntu' in get_platform_string() or 'debian' in get_platform_string()
 
     def _assert_invalid_arch_message(self, stderr):
-        self.assertIn(b"package architecture (i386) does not match system (amd64)", stderr)
+        self.assertIn("package architecture (i386) does not match system (amd64)", stderr)
 
 
 class PkgTestCase(Posix, PkgInstaller):

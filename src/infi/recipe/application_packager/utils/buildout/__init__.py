@@ -4,11 +4,6 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
-
 BUILDOUT_IN = """
 [buildout]
 include-site-packages = true
@@ -39,6 +34,7 @@ recipe = infi.recipe.close_application
 
 @contextmanager
 def open_buildout_configfile(filepath="buildout.cfg", write_on_exit=False):
+    from ConfigParser import ConfigParser
     parser = ConfigParser()
     parser.read(filepath)
     try:
@@ -61,6 +57,7 @@ def write_bootstrap_for_production():
 def write_buildout_configuration_file_for_production(dependent_scripts, minimal_packages, eggs, scripts,
                                                      gui_scripts, require_admin, gui_require_admin):
     from textwrap import dedent
+    from ConfigParser import ConfigParser
     with open("buildout.in", 'w') as fd:
         fd.write(dedent(BUILDOUT_IN))
     with open_buildout_configfile("buildout.in", True) as buildout:

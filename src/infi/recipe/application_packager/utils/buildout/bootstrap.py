@@ -27,11 +27,6 @@ import re
 
 from optparse import OptionParser
 
-try:
-    from urllib import pathname2url
-except ImportError:
-    from urllib.request import pathname2url
-
 tmpeggs = tempfile.mkdtemp()
 
 usage = '''\
@@ -48,6 +43,7 @@ this script from going over the network.
 
 def normalize_to_url(option, opt_str, value, parser):
     # copied from zc.buildout-1.x bootstrap.py
+    from urllib import pathname2url
     if value:
         if '://' not in value:  # It doesn't smell like a URL.
             value = 'file://%s' % (

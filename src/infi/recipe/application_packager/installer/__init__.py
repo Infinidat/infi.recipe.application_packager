@@ -8,11 +8,7 @@ import hashlib
 import stat
 
 from contextlib import contextmanager
-try:
-    from ConfigParser import ConfigParser, NoOptionError
-except:
-    from configparser import ConfigParser, NoOptionError
-
+from ConfigParser import ConfigParser
 from tempfile import NamedTemporaryFile
 
 
@@ -84,10 +80,7 @@ class Installer(object):
 
     @property
     def product_name(self):
-        try:
-            return self._parser.get('project', 'product_name')
-        except NoOptionError:
-            return self._parser.get('project', 'name')
+        return self._parser.get('project', 'product_name', self._parser.get('project', 'name'))
 
     @property
     def project_name(self):
@@ -99,10 +92,7 @@ class Installer(object):
 
     @property
     def company(self):
-        try:
-            return self._parser.get('project', 'company')
-        except NoOptionError:
-            return self._parser.get('project', 'None')
+        return self._parser.get('project', 'company', 'None')
 
     @property
     def targetdir(self):
@@ -193,7 +183,7 @@ class MsiInstaller(Installer):
                 execute_assert_success(args)
             finally:
                 with open(logfile) as fd:
-                    print(fd.read())
+                    print fd.read()
 
     def uninstall_package(self, with_custom_actions=True):
         logfile = self.get_package() + '.uninstall.log'
@@ -208,7 +198,7 @@ class MsiInstaller(Installer):
             execute_assert_success(args)
         finally:
             with open(logfile) as fd:
-                print(fd.read())
+                print fd.read()
 
 
 class RpmInstaller(Installer):
@@ -238,7 +228,7 @@ class DebInstaller(Installer):
 
     def is_product_installed(self):
         output = execute_assert_success(["dpkg", "--list", self.package_name], allowed_return_codes=[0, 1]).get_stdout().splitlines()
-        return any([line.startswith(b'ii') and self.package_name in line.decode('ascii') for line in output])
+        return any([line.startswith('ii') and self.package_name in line for line in output])
 
     def install_package(self, with_custom_actions=True):
         env = os.environ.copy()

@@ -1,3 +1,4 @@
+
 from contextlib import contextmanager
 from logging import getLogger
 from glob import glob
@@ -51,13 +52,10 @@ class BinaryDistributionsCompiler(object):
 
     @contextmanager
     def extract_archive(self, archive_path):
-        import tarfile
-        from zipfile import ZipFile
+        from archive import extract
         from .. import temporary_directory_context, chdir
-        archive_opener = tarfile.open if archive_path.endswith('gz') else ZipFile
         with temporary_directory_context() as tempdir:
-            with archive_opener(archive_path) as open_archive:
-                open_archive.extractall(tempdir)
+            extract(archive_path, tempdir)
             archive_files = glob('*')
             if len(archive_files) == 1: # all files are under a sub-directory
                 with chdir(archive_files[0]):
@@ -88,7 +86,7 @@ class BinaryDistributionsCompiler(object):
         # however, just checking if this keyword is in the setup.py file is good enough
         with self.extract_archive(filepath) as extracted_dir:
             with open('setup.py') as fd:
-                return any ('setup_requires' in line and not line.strip().startswith('#') for line in fd)
+                return any ('setup_requires' in line and not line.strip().startswith('#') for line in fd.xreadlines())
 
     def get_packages_to_install(self):
         source_archives = {self.extract_package_name_from_source_filepath(filename):
@@ -100,7 +98,7 @@ class BinaryDistributionsCompiler(object):
         for key in list(keys_for_install_binary_archives):
             keys_for_install_binary_archives.add(key.replace('_', '-'))
 
-        packages_with_setup_requires = {package_name for package_name, filename in source_archives.items() if
+        packages_with_setup_requires = {package_name for package_name, filename in source_archives.iteritems() if
                                         self.does_setup_py_uses_setup_requires(filename)}
         packages_require_to_get_build = set.union(keys_for_install_binary_archives, packages_with_setup_requires)
 

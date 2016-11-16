@@ -8,13 +8,6 @@ is_windows = name == 'nt'
 
 BUILDOUT_DIRECTORY = path.abspath(path.join(path.dirname(__file__), pardir))
 
-import sys
-if sys.version_info > (3, 0):
-    patched_open_qualified_name = "builtins.open"
-else:
-    patched_open_qualified_name = "__builtin__.open"
-
-
 class CompilerTestCase(unittest.TestCase):
     def setUp(self):
         if is_windows:
@@ -27,27 +20,21 @@ class CompilerTestCase(unittest.TestCase):
         return compiler
 
     def test_compile_async(self):
-        try:
-            archive_to_compile = get_archive_path("psutil")
-            compiler = self.get_compiler()
-            with compiler.extract_archive(archive_to_compile):
-                compiler.add_import_setuptools_to_setup_py()
-                built_egg = compiler.build_binary_egg()
-                self.assertTrue(path.exists(built_egg))
-        except RuntimeError:
-            raise unittest.SkipTest("This test must be run before test_installer")
+        archive_to_compile = get_archive_path("psutil")
+        compiler = self.get_compiler()
+        with compiler.extract_archive(archive_to_compile):
+            compiler.add_import_setuptools_to_setup_py()
+            built_egg = compiler.build_binary_egg()
+            self.assertTrue(path.exists(built_egg))
 
     def test_get_packages_to_install(self):
-        try:
-            expected = [get_archive_path("coverage"),
-                        get_archive_path("MarkupSafe"),
-                        get_archive_path("psutil"),
-                        get_archive_path("Logbook"),
-                        ]
-            actual = self.get_compiler().get_packages_to_install()
-            self.assertEquals(set(actual), set(expected))
-        except RuntimeError:
-            raise unittest.SkipTest("This test must be run before test_installer")
+        expected = [get_archive_path("coverage"),
+                    get_archive_path("MarkupSafe"),
+                    get_archive_path("psutil"),
+                    get_archive_path("Logbook"),
+                    ]
+        actual = self.get_compiler().get_packages_to_install()
+        self.assertEquals(set(actual), set(expected))
 
     @long_one
     def test_compile_all(self):
@@ -59,8 +46,9 @@ class CompilerTestCase(unittest.TestCase):
     def test_setup_requires(self):
         with mock.patch.object(utils.compiler.BinaryDistributionsCompiler, 'extract_archive'):
             with open(path.join('tests', 'file_with_setup_requires')) as fd:
-                with mock.patch(patched_open_qualified_name) as _open:
-                    _open('setup.py').__enter__.return_value.__iter__.return_value = iter(fd)
+                xreadlines = iter(fd.readlines())
+                with mock.patch('__builtin__.open') as _open:
+                    _open('setup.py').__enter__.return_value.xreadlines = lambda: xreadlines
                     instance = utils.compiler.BinaryDistributionsCompiler(buildout_directory=BUILDOUT_DIRECTORY,
                                                                           archives_directory=path.join(".cache", "dist"),
                                                                           eggs_directory='eggs'

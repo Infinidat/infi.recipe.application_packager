@@ -10,7 +10,7 @@ def execute_assert_success(args, allowed_return_codes=[0], env=None, shell=False
     try:
         pid = execute.execute_assert_success(args, env=env, shell=shell)
         return pid
-    except ExecutionError as error:
+    except ExecutionError, error:
         return_code = error.result.get_returncode()
         if return_code in allowed_return_codes:
             logger.warning("running {!r} returned {}".format(args, return_code))
