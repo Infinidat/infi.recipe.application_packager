@@ -37,7 +37,10 @@ class UnitTestCase(unittest.TestCase):
             self.assertTrue(path.exists('_embed_recipe.json'))
             with open('_embed_recipe.json') as fd:
                 data = load(fd)
-        self.assertEquals(sorted(data['python_files']), sorted(expected_data['python_files']))
+        def get_source_key(dct):
+            return dct['source']
+        self.assertEquals(sorted(data['python_files'], key=get_source_key),
+                          sorted(expected_data['python_files'], key=get_source_key))
         self.assertEquals(sorted([sorted(extension.items()) for extension in data['c_extensions']]),
                           sorted([sorted(extension.items()) for extension in expected_data['c_extensions']]))
 
@@ -55,12 +58,15 @@ class UnitTestCase(unittest.TestCase):
 
     def test_build_dependency(self):
         from . import build
-        tgz = glob(path.join('.cache', 'dist', '*.tar.gz'))[0]
-        egg = glob(path.join('.cache', 'dist', '*.egg'))[0]
-        _zip = glob(path.join('.cache', 'dist', '*.zip'))[0]
-        build.build_dependency(path.abspath(tgz))
-        build.build_dependency(path.abspath(egg))
-        build.build_dependency(path.abspath(_zip))
+        tgzs = glob(path.join('.cache', 'dist', '*.tar.gz'))
+        eggs = glob(path.join('.cache', 'dist', '*.egg'))
+        _zips = glob(path.join('.cache', 'dist', '*.zip'))
+        if len(tgzs) > 0:
+            build.build_dependency(path.abspath(tgzs[0]))
+        if len(eggs) > 0:
+            build.build_dependency(path.abspath(eggs[0]))
+        if len(_zips) > 0:
+            build.build_dependency(path.abspath(_zips[0]))
 
 
 class MockedRecipeTestCase(unittest.TestCase):
@@ -110,7 +116,7 @@ def prepare_package_mock():
     with open(path.join('src', 'hello', 'world', 'foo.py'), 'w') as fd:
         pass
     with open('setup.py', 'w') as fd:
-        fd.write(resource_string('infi.recipe.application_packager.embedded', 'setup.py.example'))
+        fd.write(resource_string('infi.recipe.application_packager.embedded', 'setup.py.example').decode('ascii'))
     python_files = [{u'name': u'hello',
                      u'package': True,
                      u'source': path.abspath(path.join(path.curdir, 'src', 'hello', '__init__.py'))},

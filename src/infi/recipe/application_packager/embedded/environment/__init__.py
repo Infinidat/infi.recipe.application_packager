@@ -99,7 +99,7 @@ def ParseFlags(*flags):
         if not arg:
             return
 
-        if not isinstance(arg, basestring):
+        if not isinstance(arg, str):
             for t in arg: do_parse(t)
             return
 

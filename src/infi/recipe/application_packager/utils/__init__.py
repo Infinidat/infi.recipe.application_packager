@@ -3,6 +3,16 @@ from pkg_resources import resource_filename
 from contextlib import contextmanager
 from logging import getLogger
 from . import buildout, compiler, execute, signtool, rcedit
+try:
+    from urllib import urlretrieve
+except ImportError:
+    from urllib.request import urlretrieve
+
+try:
+    from ConfigParser import ConfigParser, NoOptionError, NoSectionError
+except ImportError:
+    from configparser import ConfigParser, NoOptionError, NoSectionError
+
 
 logger = getLogger(__name__)
 ez_setup_txt = resource_filename(__name__, "ez_setup.txt")
@@ -45,7 +55,6 @@ def _get_install_package_verion(package_name):
     return pkg_info.version
 
 def get_pypi_index_url():
-    from ConfigParser import ConfigParser, NoOptionError, NoSectionError
     from os import path
     pydistutils_files = [path.expanduser(path.join("~", basename)) for basename in ['.pydistutils.cfg', 'pydistutils.cfg']]
     pydistutils = ConfigParser()
@@ -73,7 +82,6 @@ def _get_package_url(package_name):
     return pypi.get_source_distribution_url_of_specific_release_version(package_name, pkg_info.version).split("#")[0]
 
 def download_buildout(destination_dir):
-    from urllib import urlretrieve
     buildout_url = _get_package_url("zc.buildout")
     buildout_filepath = buildout_url.split('/')[-1]
     with chdir(destination_dir):
@@ -89,14 +97,12 @@ def write_ez_setup_py(destination_dir):
             fd.write(content)
 
 def download_distribute(destination_dir):
-    from urllib import urlretrieve
     distribute_url = _get_package_url("distribute")
     distribute_filepath = distribute_url.split('/')[-1]
     with chdir(destination_dir):
         urlretrieve(distribute_url, distribute_filepath)
 
 def download_setuptools(destination_dir):
-    from urllib import urlretrieve
     distribute_url = _get_package_url("setuptools")
     distribute_filepath = distribute_url.split('/')[-1]
     with chdir(destination_dir):
@@ -104,7 +110,6 @@ def download_setuptools(destination_dir):
     write_ez_setup_py(destination_dir)
 
 def download_package_source(package_name, destination_dir):
-    from urllib import urlretrieve
     url = _get_package_url(package_name)
     filepath = url.split('/')[-1]
     with chdir(destination_dir):
