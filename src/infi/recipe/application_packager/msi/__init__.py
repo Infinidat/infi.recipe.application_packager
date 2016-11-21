@@ -159,10 +159,12 @@ class Recipe(PackagingRecipe):
 
     @contextmanager
     def wix_context(self):
-        from archive import extract
+        from zipfile import ZipFile
         with utils.temporary_directory_context() as tempdir:
             wix_archive = self.get_wix35_binaries_zip_from_the_internet()
-            extract(wix_archive)
+            with open(wix_archive, 'rb') as fd:
+                archive = ZipFile(fd, 'r')
+                archive.extractall(tempdir)
             yield tempdir
 
     def get_wix35_binaries_zip_from_the_internet(self):
