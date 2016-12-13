@@ -2,6 +2,7 @@ __import__("pkg_resources").declare_namespace(__name__)
 
 from infi.recipe.application_packager.utils import chdir as chdir_context
 from infi.recipe.application_packager.base import PackagingRecipe
+from infi.traceback import pretty_traceback_and_exit_decorator
 from pkg_resources import resource_string, ensure_directory, resource_filename
 from infi.execute import execute_assert_success
 from logging import getLogger
@@ -26,6 +27,7 @@ env.Program({{ repr(source) }})
 """
 
 
+@pretty_traceback_and_exit_decorator
 def pystick(args):
     import sys
     from pystick import pack
