@@ -23,8 +23,10 @@ OS_REQUIREMENTS_LAUNCH_CONDITION_MESSAGE = "The operating system is not adequate
 OS_32BIT_ON_64BIT_LAUNCH_CONDITION_MESSAGE = "[ProductName] installation on a 64-bit operating system requires the 64-bit installation package. Please get the 64-bit package and try again."
 OPERATING_SYSTEMS = {
                      # OS Name: (allow-install, condition)
-                     "Windows 8.1": (False, '(VersionNT=603 And (MsiNTProductType=1))'),
-                     "Windows Server 2012 R2": (True, '(VersionNT=603 And (MsiNTProductType=2 Or MsiNTProductType=3))'),
+                     "Windows 10": (False, '(VersionNT=603 And WindowsBuild>="9600" And (MsiNTProductType=1))'),
+                     "Windows Server 2016": (True, '(VersionNT=603 And WindowsBuild>="9600" And (MsiNTProductType=2 Or MsiNTProductType=3))'),
+                     "Windows 8.1": (False, '(VersionNT=603 And WindowsBuild<"9600" And (MsiNTProductType=1))'),
+                     "Windows Server 2012 R2": (True, '(VersionNT=603 And WindowsBuild<"9600" And (MsiNTProductType=2 Or MsiNTProductType=3))'),
                      "Windows Server 2012": (True, '(VersionNT=602 And (MsiNTProductType=2 Or MsiNTProductType=3))'),
                      "Windows 8": (False, '(VersionNT=602 And (MsiNTProductType=1))'),
                      "Windows Server 2008 R2": (True,
