@@ -245,10 +245,6 @@ class PackagingRecipe(object):
         from ..utils.buildout import write_bootstrap_for_production
         write_bootstrap_for_production()
 
-    def write_get_pip_for_production(self):
-        from ..utils.buildout import write_get_pip_for_production
-        write_get_pip_for_production()
-
     def write_buildout_configuration_file_for_production(self):
         from .. import utils, assertions
         method = utils.buildout.write_buildout_configuration_file_for_production

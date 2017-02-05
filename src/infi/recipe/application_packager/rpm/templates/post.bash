@@ -13,8 +13,7 @@ execute cd %{prefix}
 
 # bootstrap
 _echo "Bootstrapping, this may take a few minutes             "
-execute parts/python/bin/python get-pip --force-reinstall --ignore-installed --upgrade --isolated --no-index --find-links .cache/dist setuptools zc.buildout
-execute parts/python/bin/buildout bootstrap
+execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/ez_setup.py --index=http://256.256.256.256/
 RC=$?
 _echo "\r"
 assert_rc

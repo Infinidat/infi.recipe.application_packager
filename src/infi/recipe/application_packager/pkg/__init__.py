@@ -23,7 +23,7 @@ class Recipe(PackagingRecipe):
     def install(self):
         with self.with_most_mortem():
             self.delete_non_production_packages_from_cache_dist()
-            self.write_get_pip_for_production()
+            self.write_bootstrap_for_production()
             self.write_buildout_configuration_file_for_production()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),
@@ -76,7 +76,7 @@ class Recipe(PackagingRecipe):
     def _put_all_files(self):
         makedirs("{}{}".format(path.abspath(curdir), self.get_install_prefix()))
         self._mkdir(self.get_install_prefix(), path.sep, True)
-        self._add_file('get-pip.py', self.get_install_prefix())
+        self._add_file('bootstrap.py', self.get_install_prefix())
         self._add_file('buildout.in', self.get_install_prefix(), 'buildout.cfg')
         self._add_file('setup.py', self.get_install_prefix())
         cachedir = self._mkdir('.cache', self.get_install_prefix())

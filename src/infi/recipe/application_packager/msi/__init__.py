@@ -49,7 +49,7 @@ class Recipe(PackagingRecipe):
         with self.with_most_mortem():
             self.delete_non_production_packages_from_cache_dist()
             self.signtool = self.get_signtool()
-            self.write_get_pip_for_production()
+            self.write_bootstrap_for_production()
             self.write_buildout_configuration_file_for_production()
             utils.download_buildout(self.get_download_cache_dist())
             utils.download_setuptools(self.get_download_cache_dist())
@@ -186,7 +186,7 @@ class Recipe(PackagingRecipe):
         wix.add_environment_variable('Path', r'[INSTALLDIR]bin', component)
 
     def _put_all_files(self, wix, silent_launcher):
-        wix.add_file('get-pip.py', wix.installdir)
+        wix.add_file('bootstrap.py', wix.installdir)
         wix.add_file('buildout.in', wix.installdir, 'buildout.cfg')
         wix.add_file('setup.py', wix.installdir)
         cachedir = wix.mkdir('.cache', wix.installdir)
@@ -210,26 +210,16 @@ class Recipe(PackagingRecipe):
                                                                   text="Removing temporary files, this may take a few minutes")
         return action.id
 
-    def _append_get_pip_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" get-pip.py ' + \
-                      r'--force-reinstall --ignore-installed --upgrade --isolated --no-index ' + \
-                      r'--find-links "[INSTALLDIR].cache\dist" ' + \
-                      r'setuptools zc.buildout'
-        action = wix.add_deferred_in_system_context_custom_action('get-pip', commandline,
-                                                                  after=os_removedirs_eggs_id,
-                                                                  condition=CONDITION_DURING_INSTALL_OR_REPAIR,
-                                                                  silent_launcher_file_id=silent_launcher_file_id,
-                                                                  text="Running get-pip.py, this may take a few minutes")
-
-        return action.id
-
     def _append_bootstrap_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]parts\python\bin\buildout.exe" bootstrap '
+        commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" bootstrap.py ' + \
+                      r'--download-base="[INSTALLDIR].cache\dist" ' + \
+                      r'--setup-source="[INSTALLDIR].cache\dist\ez_setup.py" ' + \
+                      r'--index-url=http://256.256.256.256/'
         action = wix.add_deferred_in_system_context_custom_action('bootstrap', commandline,
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
                                                                   silent_launcher_file_id=silent_launcher_file_id,
-                                                                  text="Running buildout bootstrap, this may take a few minutes")
+                                                                  text="Bootstrapping, this may take a few minutes")
 
         return action.id
 
@@ -253,10 +243,9 @@ class Recipe(PackagingRecipe):
 
     def _append_custom_actions(self, wix, silent_launcher_file_id):
         os_removedirs_eggs_id = self._append_os_removedirs_eggs(wix, silent_launcher_file_id)
-        get_pip_id = self._append_get_pip_custom_action(wix, os_removedirs_eggs_id, silent_launcher_file_id)
-        bootstrap_id = self._append_bootstrap_custom_action(wix, get_pip_id, silent_launcher_file_id)
-        buildout_id = self._append_buildout_custom_action(wix, bootstrap_id, silent_launcher_file_id)
-        self._append_close_application_action(wix, buildout_id, silent_launcher_file_id)
+        bootstrap_id = self._append_bootstrap_custom_action(wix, os_removedirs_eggs_id, silent_launcher_file_id)
+        self._append_buildout_custom_action(wix, bootstrap_id, silent_launcher_file_id)
+        self._append_close_application_action(wix, bootstrap_id, silent_launcher_file_id)
 
     def _add_launch_conditions(self, wix):
         self._add_os_requirements_launch_condition(wix)

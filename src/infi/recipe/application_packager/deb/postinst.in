@@ -46,8 +46,7 @@ if test -d src; then
 fi
 
 # bootstrap
-execute parts/python/bin/python get-pip --force-reinstall --ignore-installed --upgrade --isolated --no-index --find-links .cache/dist setuptools zc.buildout
-execute parts/python/bin/buildout bootstrap
+execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/ez_setup.py --index=http://256.256.256.256/
 RC=$$?
 assert_rc
 
