@@ -117,6 +117,7 @@ Using the installers
 The basic flow of the installer is as follows:
 
 * Copy all the files to the target directory. The target directory is either `/opt/<company>/<product name>` or `%ProgramFiles%\<company>\<product name>
+* Run get-pip
 * Run bootstrap
 * Create the executable scripts
 * Run the user-defined post install script, if was defined in `buildout.cfg`
