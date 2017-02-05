@@ -110,7 +110,7 @@ class Recipe(PackagingRecipe):
                   'pre_uninstall_script_name': self.get_script_name("pre_uninstall") or "''",
                   'files': "\n".join(self._files),
                   'directories': "\n".join(["%dir {}/".format(item) for item in self._directories]),
-                  'directories_to_clean': ' '.join(directories_to_clean),
+                  'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
                   'aix': self._is_aix
                   }
         post_install_script_args = self.get_script_args("post_install")

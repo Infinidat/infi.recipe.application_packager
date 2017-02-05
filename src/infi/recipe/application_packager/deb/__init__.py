@@ -148,7 +148,7 @@ class Recipe(PackagingRecipe):
                                                'post_install_script_args': post_install_script_args,
                                                'pre_uninstall_script_name': pre_uninstall_script_name,
                                                'pre_uninstall_script_args': pre_uninstall_script_args,
-                                               'directories_to_clean': ' '.join(directories_to_clean),
+                                               'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
                                                }, '755')
         self._write_template_file('preinst.in', {'target_arch': self.get_target_arch(),
                                                  }, '755')
