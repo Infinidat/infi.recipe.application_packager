@@ -69,6 +69,10 @@ for script in *; do
 done
 cd ..
 
+
+# setuptools has filenames with spaces, and solaris pkg does not support this
+find . -name '* *' -exec rm -vf {} \;
+
 # clean installed directories
 # this also deletes installed files
 for dirname in $directories_to_clean; do
