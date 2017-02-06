@@ -224,7 +224,7 @@ class Recipe(PackagingRecipe):
         return action.id
 
     def _append_bootstrap_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]parts\python\bin\buildout.exe" -U bootstrap '
+        commandline = r'"[INSTALLDIR]parts\python\Scripts\buildout.exe" -U bootstrap '
         action = wix.add_deferred_in_system_context_custom_action('bootstrap', commandline,
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
