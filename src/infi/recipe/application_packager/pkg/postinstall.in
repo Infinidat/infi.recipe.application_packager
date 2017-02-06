@@ -53,7 +53,7 @@ fi
 
 # bootstrap
 execute parts/python/bin/python get-pip.py --force-reinstall --ignore-installed --upgrade --isolated --no-index --find-links .cache/dist setuptools zc.buildout
-execute parts/python/bin/buildout bootstrap -U
+execute parts/python/bin/buildout -U bootstrap
 RC=$$?
 assert_rc
 
