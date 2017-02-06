@@ -122,6 +122,8 @@ def do_a_refactoring_change():
 from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
 from infi.recipe.application_packager.utils import chdir
 from infi.recipe.application_packager.installer import Installer, MsiInstaller, DebInstaller, RpmInstaller, PkgInstaller
+from infi.recipe.application_packager import scripts
+
 
 class Base(unittest.TestCase):
     @classmethod
