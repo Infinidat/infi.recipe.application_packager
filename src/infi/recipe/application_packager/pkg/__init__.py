@@ -139,11 +139,11 @@ class Recipe(PackagingRecipe):
                     fullpath = path.join(root, f)
                     if path.abspath(fullpath) == dst_filename:
                         continue
-                    write_line(['f', 'none', relpath, oct(stat(fullpath).st_mode)[-3:], 'root', 'root'])
+                    write_line(['f', 'none', '"{}"'.format(relpath), oct(stat(fullpath).st_mode)[-3:], 'root', 'root'])
                 for f in dirnames:
                     relpath = path.join(path.sep, root[len(walk_root):], f)
                     fullpath = path.join(root, f)
-                    write_line(['d', 'none', relpath, oct(stat(fullpath).st_mode)[-3:], 'root', 'root'])
+                    write_line(['d', 'none', '"{}"'.format(relpath), oct(stat(fullpath).st_mode)[-3:], 'root', 'root'])
 
     def _write_templates(self):
         self._write_template_file(PKGINFO_FILENAME, {'package_name': self.get_package_name(),
