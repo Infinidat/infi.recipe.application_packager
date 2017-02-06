@@ -201,10 +201,13 @@ class Base(unittest.TestCase):
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
     def test_upgrade(self, with_custom_actions=True):
+        from infi.execute import execute_assert_success
         self.assertFalse(self.is_product_installed())
         self.install_package(with_custom_actions)
         self.assert_product_was_installed_successfully(with_custom_actions)
         delete_existing_builds()
+        head = execute_assert_success(['git', 'describe', '--tags']).get_stdout().strip()
+        self.addCleanup(execute_assert_success, ['git', 'reset', '--hard', head])
         do_a_refactoring_change()
         # HOSTDEV-1781
         devenv_build()
