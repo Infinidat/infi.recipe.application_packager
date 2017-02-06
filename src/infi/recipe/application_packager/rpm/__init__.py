@@ -108,8 +108,8 @@ class Recipe(PackagingRecipe):
                   'build_root': self._buildroot,
                   'post_install_script_name': self.get_script_name("post_install") or "''",
                   'pre_uninstall_script_name': self.get_script_name("pre_uninstall") or "''",
-                  'files': "\n".join(self._files),
-                  'directories': "\n".join(["%dir {!r}/".format(item) for item in self._directories]),
+                  'files': "\n".join(['"{}"'.format(i) for i in self._files]),
+                  'directories': "\n".join(['%dir "{}/"'.format(item) for item in self._directories]),
                   'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
                   'aix': self._is_aix
                   }
