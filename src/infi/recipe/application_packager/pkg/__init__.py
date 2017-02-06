@@ -142,6 +142,7 @@ class Recipe(PackagingRecipe):
                     if ' ' in relpath:
                         # setuptools has filenames with spaces, and solaris pkg does not support this
                         remove(fullpath)
+                        continue
                     write_line(['f', 'none', relpath, oct(stat(fullpath).st_mode)[-3:], 'root', 'root'])
                 for f in dirnames:
                     relpath = path.join(path.sep, root[len(walk_root):], f)
