@@ -71,7 +71,7 @@ def build_dependency(filepath):
     with chdir_context(build_dir):
         basename = path.basename(filepath)
         logger.info("building {}".format(basename))
-        if basename.endswith('egg') or basename.endswith('whl'):
+        if basename.endswith('egg'):
             # we assume that all the egg sources are pure-python and don't contain binaries
             # people obviosuly don't upload binary eggs for POSIX systems to PyPI
             # but on Windows they do, and therefore we already downloaded their source districutions
