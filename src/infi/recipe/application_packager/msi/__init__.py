@@ -51,6 +51,14 @@ class Recipe(PackagingRecipe):
             self.signtool = self.get_signtool()
             self.write_get_pip_for_production()
             self.write_buildout_configuration_file_for_production()
+
+            # its true we have pre-compiled eggs for Windows
+            # but we need to deal with pure-python packages that use setup_requires
+            # and specifically pbr
+            utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
+                                                        self.get_download_cache_dist(),
+                                                        self.get_eggs_directory())
+
             utils.download_buildout(self.get_download_cache_dist())
             utils.download_setuptools(self.get_download_cache_dist())
             silent_launcher = self.get_silent_launcher()
