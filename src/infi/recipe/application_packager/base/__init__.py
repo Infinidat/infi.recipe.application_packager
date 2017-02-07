@@ -32,7 +32,10 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
 
 PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
                                      "infi.recipe.console_scripts",
-                                     "infi.recipe.close_application"]
+                                     "infi.recipe.close_application",
+                                     "setuptools",
+                                     "pip",
+                                     "zc.buildout"]
 
 class PackagingRecipe(object):
     def __init__(self, buildout, name, options):
