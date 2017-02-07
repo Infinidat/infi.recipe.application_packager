@@ -67,8 +67,10 @@ def create_console_scripts():
 
 def create_package(recipe_parameters=None):
     from infi.execute import execute_assert_success
+    python = os.path.join('bin', 'python{}'.format('.exe' if os.name == 'nt' else ''))
+    buildout_script = os.path.join('bin', 'buildout{}'.format('-script.py' if os.name == 'nt' else ''))
     try:
-        cmdline = [os.path.join('bin', 'buildout'), '-v']
+        cmdline = [python, buildout_script, '-v']
         if recipe_parameters:
             cmdline += recipe_parameters
         cmdline += ['install', 'pack']
