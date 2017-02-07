@@ -34,6 +34,7 @@ PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
                                      "infi.recipe.console_scripts",
                                      "infi.recipe.close_application",
                                      "zc.buildout"]
+SCRIPTS_BY_PACKAGING = ["buildout"]
 ADDITIONAL_PACKAGES_WE_NEED_TO_PACK = ["setuptools",
                                        "pip"]
 
@@ -258,9 +259,11 @@ class PackagingRecipe(object):
         method = utils.buildout.write_buildout_configuration_file_for_production
         eggs = self.get_eggs_for_production() or self.get_python_module_name()
         eggs = "\n".join(eggs.split() + PYTHON_PACKAGES_USED_BY_PACKAGING)
+        scripts = self.get_console_scripts_for_production()
+        scripts = "\n".join(scripts.split() + SCRIPTS_BY_PACKAGING)
         return method(self.get_dependent_scripts(), self.get_minimal_packages(),
                       eggs,
-                      self.get_console_scripts_for_production(),
+                      scripts,
                       self.get_gui_scripts_for_production(),
                       self.get_require_administrative_privileges(),
                       self.get_require_administrative_privileges_gui())
