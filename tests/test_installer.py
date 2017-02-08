@@ -70,7 +70,8 @@ def make_some_changes_to_improve_coverage():
     python = os.path.join('bin', 'python{}'.format('.exe' if os.name == 'nt' else ''))
     projector_script = os.path.join('bin', 'projector{}'.format('-script.py' if os.name == 'nt' else ''))
     execute_assert_success([python, projector_script, 'requirements', 'add', 'infinisdk', '--commit-changes'])
-    execute_assert_success([python, projector_script, 'devenv', 'build'])
+    execute_assert_success([python, projector_script, 'requirements', 'add', 'nose', '--commit-changes'])
+    execute([python, projector_script, 'devenv', 'build', '--use-isolated-python'])
 
 def create_package(recipe_parameters=None):
     from infi.execute import execute_assert_success
