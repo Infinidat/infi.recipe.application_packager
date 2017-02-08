@@ -68,9 +68,9 @@ def create_console_scripts():
 def make_some_changes_to_improve_coverage():
     from infi.execute import execute_assert_success
     python = os.path.join('bin', 'python{}'.format('.exe' if os.name == 'nt' else ''))
-    buildout_script = os.path.join('bin', 'buildout{}'.format('-script.py' if os.name == 'nt' else ''))
-    execute_assert_success([python, buildout_script, '-v', 'requirements', 'add', 'infinisdk'])
-    execute_assert_success([python, buildout_script, '-v', 'devenv', 'build', '--no-scripts'])
+    projector_script = os.path.join('bin', 'projector{}'.format('-script.py' if os.name == 'nt' else ''))
+    execute_assert_success([python, projector_script, '-v', 'requirements', 'add', 'infinisdk'])
+    execute_assert_success([python, projector_script, '-v', 'devenv', 'build', '--no-scripts'])
 
 def create_package(recipe_parameters=None):
     from infi.execute import execute_assert_success
