@@ -255,7 +255,7 @@ class Recipe(PackagingRecipe):
                                                                      condition=CONDITION_DURING_INSTALL_OR_REPAIR,
                                                                      silent_launcher_file_id=silent_launcher_file_id,
                                                                      text="Removing temporary files, this may take a few minutes")
-        return action.id
+        return after.id
 
     def _append_close_application_action(self, wix, silent_launcher_file_id):
         commandline = r'"[INSTALLDIR]bin\buildout.exe" -U install debug-logging close-application '
