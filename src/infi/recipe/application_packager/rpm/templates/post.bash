@@ -24,7 +24,7 @@ assert_rc
 execute cd bin
 for script in *; do
     for basename in console-script-test gui-script-test replace_console_script script-launcher pip* easy_install*; do
-        rm "$basename"
+        rm -f "$basename"
     done
     if test "$script" == "buildout"; then
         continue;
