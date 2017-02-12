@@ -65,12 +65,6 @@ def create_console_scripts():
         execute_assert_success([os.path.join('bin', 'projector'),
                                "devenv", "build", "--no-scripts"])
 
-def make_some_changes_to_improve_coverage():
-    from infi.execute import execute_assert_success
-    python = os.path.join('bin', 'python{}'.format('.exe' if os.name == 'nt' else ''))
-    projector_script = os.path.join('bin', 'projector{}'.format('-script.py' if os.name == 'nt' else ''))
-    execute([python, projector_script, 'devenv', 'build', '--use-isolated-python'])
-
 def create_package(recipe_parameters=None):
     from infi.execute import execute_assert_success
     python = os.path.join('bin', 'python{}'.format('.exe' if os.name == 'nt' else ''))
@@ -144,7 +138,6 @@ class Base(unittest.TestCase):
         delete_buildout_logs()
         with chdir(TESTCASE_DIR):
             delete_existing_builds()
-            make_some_changes_to_improve_coverage()
             create_console_scripts()
             create_package()
 
