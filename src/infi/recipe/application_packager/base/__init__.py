@@ -260,7 +260,8 @@ class PackagingRecipe(object):
         eggs = self.get_eggs_for_production() or self.get_python_module_name()
         eggs = "\n".join(eggs.split() + PYTHON_PACKAGES_USED_BY_PACKAGING)
         scripts = self.get_console_scripts_for_production()
-        scripts = "\n".join(scripts.split() + SCRIPTS_BY_PACKAGING)
+        if scripts:
+            scripts = "\n".join(scripts.split() + SCRIPTS_BY_PACKAGING)
         return method(self.get_dependent_scripts(), self.get_minimal_packages(),
                       eggs,
                       scripts,
