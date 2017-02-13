@@ -13,7 +13,7 @@ class Recipe(PackagingRecipe):
     def install(self):
         with self.with_most_mortem():
             self.delete_non_production_packages_from_cache_dist()
-            self.write_bootstrap_for_production()
+            self.write_get_pip_for_production()
             self.write_buildout_configuration_file_for_production()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),
@@ -63,7 +63,7 @@ class Recipe(PackagingRecipe):
     def _put_all_files(self):
         makedirs("{}{}".format(path.abspath(curdir), self.get_install_prefix()))
         self._mkdir(self.get_install_prefix(), path.sep, True)
-        self._add_file('bootstrap.py', self.get_install_prefix())
+        self._add_file('get-pip.py', self.get_install_prefix())
         self._add_file('buildout.in', self.get_install_prefix(), 'buildout.cfg')
         self._add_file('setup.py', self.get_install_prefix())
         cachedir = self._mkdir('.cache', self.get_install_prefix())
@@ -148,7 +148,7 @@ class Recipe(PackagingRecipe):
                                                'post_install_script_args': post_install_script_args,
                                                'pre_uninstall_script_name': pre_uninstall_script_name,
                                                'pre_uninstall_script_args': pre_uninstall_script_args,
-                                               'directories_to_clean': ' '.join(directories_to_clean),
+                                               'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
                                                }, '755')
         self._write_template_file('preinst.in', {'target_arch': self.get_target_arch(),
                                                  }, '755')

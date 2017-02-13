@@ -13,20 +13,20 @@ execute cd %{prefix}
 
 # bootstrap
 _echo "Bootstrapping, this may take a few minutes             "
-execute parts/python/bin/python bootstrap.py --download-base=.cache/dist --setup-source=.cache/dist/ez_setup.py --index=http://256.256.256.256/
-RC=$?
-_echo "\r"
-assert_rc
-
-# buildout
-_echo "Bootstrapping, this may take a few minutes             "
-execute bin/buildout -U
+export PYTHONPATH=
+execute parts/python/bin/python get-pip.py -v --force-reinstall --ignore-installed --upgrade --isolated --no-index --find-links .cache/dist setuptools zc.buildout
+execute parts/python/bin/python parts/python/bin/buildout -U
 RC=$?
 _echo "\r"
 assert_rc
 
 # link binaries to /usr/bin
 execute cd bin
+for script in *; do
+    for basename in console-script-test gui-script-test replace_console_script script-launcher pip* easy_install*; do
+        rm -f "$basename"
+    done
+done
 for script in *; do
     if test "$script" == "buildout"; then
         continue;

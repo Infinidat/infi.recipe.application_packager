@@ -49,9 +49,9 @@ cd ..
 # this also deletes installed files
 for dirname in {{ directories_to_clean }}; do
 {% if aix %}
-    execute rm -rf $dirname
+    execute rm -rf "$dirname"
 {% else %}
-    execute find $dirname -maxdepth 1 -mindepth 1 -delete
+    execute find "$dirname" -maxdepth 1 -mindepth 1 -delete
 {% endif %}
 done
 

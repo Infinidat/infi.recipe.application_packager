@@ -50,11 +50,11 @@ def open_buildout_configfile(filepath="buildout.cfg", write_on_exit=False):
             parser.write(fd)
 
 
-def write_bootstrap_for_production():
+def write_get_pip_for_production():
     from pkg_resources import resource_filename
-    with open(resource_filename(__name__, 'bootstrap.py')) as fd:
+    with open(resource_filename(__name__, 'get-pip.py')) as fd:
         contents = fd.read()
-        with open('bootstrap.py', 'w') as fd:
+        with open('get-pip.py', 'w') as fd:
             fd.write(contents)
 
 

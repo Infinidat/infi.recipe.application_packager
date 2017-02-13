@@ -4,7 +4,7 @@ __import__("pkg_resources").declare_namespace(__name__)
 from logging import getLogger
 from ..base import PackagingRecipe, RECIPE_DEFAULTS
 from .. import utils
-from os import path, curdir, makedirs, listdir, walk, stat
+from os import path, curdir, makedirs, listdir, walk, stat, remove
 from shutil import copy
 from pkg_resources import resource_filename
 
@@ -23,7 +23,7 @@ class Recipe(PackagingRecipe):
     def install(self):
         with self.with_most_mortem():
             self.delete_non_production_packages_from_cache_dist()
-            self.write_bootstrap_for_production()
+            self.write_get_pip_for_production()
             self.write_buildout_configuration_file_for_production()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),
@@ -76,7 +76,7 @@ class Recipe(PackagingRecipe):
     def _put_all_files(self):
         makedirs("{}{}".format(path.abspath(curdir), self.get_install_prefix()))
         self._mkdir(self.get_install_prefix(), path.sep, True)
-        self._add_file('bootstrap.py', self.get_install_prefix())
+        self._add_file('get-pip.py', self.get_install_prefix())
         self._add_file('buildout.in', self.get_install_prefix(), 'buildout.cfg')
         self._add_file('setup.py', self.get_install_prefix())
         cachedir = self._mkdir('.cache', self.get_install_prefix())
@@ -139,6 +139,10 @@ class Recipe(PackagingRecipe):
                     fullpath = path.join(root, f)
                     if path.abspath(fullpath) == dst_filename:
                         continue
+                    if ' ' in relpath:
+                        # setuptools has filenames with spaces, and solaris pkg does not support this
+                        remove(fullpath)
+                        continue
                     write_line(['f', 'none', relpath, oct(stat(fullpath).st_mode)[-3:], 'root', 'root'])
                 for f in dirnames:
                     relpath = path.join(path.sep, root[len(walk_root):], f)
@@ -187,7 +191,7 @@ class Recipe(PackagingRecipe):
                                                        'post_install_script_args': post_install_script_args,
                                                        'pre_uninstall_script_name': pre_uninstall_script_name,
                                                        'pre_uninstall_script_args': pre_uninstall_script_args,
-                                                       'directories_to_clean': ' '.join(directories_to_clean),
+                                                       'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
                                                        }, '755')
 
     def _get_package_revision(self):

@@ -79,11 +79,13 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | timestamp-url                         | msi                                       | http://timestamp.verisign.com/scripts/timstamp.dll           | Timestamp server                                                         |
 | require-administrative-privileges     | msi                                       | false                                                        |                                                                          |
 | require-administrative-privileges-gui | msi                                       | false                                                        |                                                                          |
+| install-on-windows-server-2016        | msi                                       | true                                                         |                                                                          |
 | install-on-windows-server-2012-r2     | msi                                       | true                                                         |                                                                          |
 | install-on-windows-server-2012        | msi                                       | true                                                         |                                                                          |
 | install-on-windows-server-2008-r2     | msi                                       | true                                                         |                                                                          |
 | install-on-windows-server-2008        | msi                                       | true                                                         |                                                                          |
 | install-on-windows-server-2003        | msi                                       | false                                                        |                                                                          |
+| install-on-windows-10                 | msi                                       | false                                                        |                                                                          |
 | install-on-windows-8                  | msi                                       | false                                                        |                                                                          |
 | install-on-windows-8.1                | msi                                       | false                                                        |                                                                          |
 | install-on-windows-7                  | msi                                       | false                                                        |                                                                          |
@@ -115,6 +117,7 @@ Using the installers
 The basic flow of the installer is as follows:
 
 * Copy all the files to the target directory. The target directory is either `/opt/<company>/<product name>` or `%ProgramFiles%\<company>\<product name>
+* Run get-pip
 * Run bootstrap
 * Create the executable scripts
 * Run the user-defined post install script, if was defined in `buildout.cfg`

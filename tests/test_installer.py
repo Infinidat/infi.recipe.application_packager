@@ -67,8 +67,10 @@ def create_console_scripts():
 
 def create_package(recipe_parameters=None):
     from infi.execute import execute_assert_success
+    python = os.path.join('bin', 'python{}'.format('.exe' if os.name == 'nt' else ''))
+    buildout_script = os.path.join('bin', 'buildout{}'.format('-script.py' if os.name == 'nt' else ''))
     try:
-        cmdline = [os.path.join('bin', 'buildout'), '-v']
+        cmdline = [python, buildout_script, '-v']
         if recipe_parameters:
             cmdline += recipe_parameters
         cmdline += ['install', 'pack']
@@ -122,6 +124,7 @@ def do_a_refactoring_change():
 from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
 from infi.recipe.application_packager.utils import chdir
 from infi.recipe.application_packager.installer import Installer, MsiInstaller, DebInstaller, RpmInstaller, PkgInstaller
+
 
 class Base(unittest.TestCase):
     @classmethod
@@ -200,10 +203,13 @@ class Base(unittest.TestCase):
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
     def test_upgrade(self, with_custom_actions=True):
+        from infi.execute import execute_assert_success
         self.assertFalse(self.is_product_installed())
         self.install_package(with_custom_actions)
         self.assert_product_was_installed_successfully(with_custom_actions)
         delete_existing_builds()
+        head = execute_assert_success(['git', 'describe', '--tags']).get_stdout().strip()
+        self.addCleanup(execute_assert_success, ['git', 'reset', '--hard', head])
         do_a_refactoring_change()
         # HOSTDEV-1781
         devenv_build()

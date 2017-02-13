@@ -32,7 +32,12 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
 
 PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
                                      "infi.recipe.console_scripts",
-                                     "infi.recipe.close_application"]
+                                     "infi.recipe.close_application",
+                                     "zc.buildout"]
+SCRIPTS_BY_PACKAGING = ["buildout"]
+ADDITIONAL_PACKAGES_WE_NEED_TO_PACK = ["setuptools",
+                                       "pip"]
+
 
 class PackagingRecipe(object):
     def __init__(self, buildout, name, options):
@@ -245,14 +250,21 @@ class PackagingRecipe(object):
         from ..utils.buildout import write_bootstrap_for_production
         write_bootstrap_for_production()
 
+    def write_get_pip_for_production(self):
+        from ..utils.buildout import write_get_pip_for_production
+        write_get_pip_for_production()
+
     def write_buildout_configuration_file_for_production(self):
         from .. import utils, assertions
         method = utils.buildout.write_buildout_configuration_file_for_production
         eggs = self.get_eggs_for_production() or self.get_python_module_name()
         eggs = "\n".join(eggs.split() + PYTHON_PACKAGES_USED_BY_PACKAGING)
+        scripts = self.get_console_scripts_for_production()
+        if scripts:
+            scripts = "\n".join(scripts.split() + SCRIPTS_BY_PACKAGING)
         return method(self.get_dependent_scripts(), self.get_minimal_packages(),
                       eggs,
-                      self.get_console_scripts_for_production(),
+                      scripts,
                       self.get_gui_scripts_for_production(),
                       self.get_require_administrative_privileges(),
                       self.get_require_administrative_privileges_gui())
@@ -265,6 +277,7 @@ class PackagingRecipe(object):
             return
         eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
         eggs.extend(PYTHON_PACKAGES_USED_BY_PACKAGING)
+        eggs.extend(ADDITIONAL_PACKAGES_WE_NEED_TO_PACK)
         dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
         distributions = get_distributions_from_dependencies(dependencies)
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):

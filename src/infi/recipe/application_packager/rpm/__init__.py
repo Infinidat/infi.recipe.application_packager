@@ -12,7 +12,7 @@ class Recipe(PackagingRecipe):
     def install(self):
         with self.with_most_mortem():
             self.delete_non_production_packages_from_cache_dist()
-            self.write_bootstrap_for_production()
+            self.write_get_pip_for_production()
             self.write_buildout_configuration_file_for_production()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),
@@ -108,9 +108,9 @@ class Recipe(PackagingRecipe):
                   'build_root': self._buildroot,
                   'post_install_script_name': self.get_script_name("post_install") or "''",
                   'pre_uninstall_script_name': self.get_script_name("pre_uninstall") or "''",
-                  'files': "\n".join(self._files),
-                  'directories': "\n".join(["%dir {}/".format(item) for item in self._directories]),
-                  'directories_to_clean': ' '.join(directories_to_clean),
+                  'files': "\n".join(['"{}"'.format(i) for i in self._files]),
+                  'directories': "\n".join(['%dir "{}/"'.format(item) for item in self._directories]),
+                  'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
                   'aix': self._is_aix
                   }
         post_install_script_args = self.get_script_args("post_install")
@@ -126,7 +126,7 @@ class Recipe(PackagingRecipe):
     def _put_all_files(self):
         makedirs("{}{}".format(self._buildroot, self.get_install_prefix()))
         self._mkdir(self.get_install_prefix(), path.sep, True)
-        self._add_file('bootstrap.py', self.get_install_prefix())
+        self._add_file('get-pip.py', self.get_install_prefix())
         self._add_file('buildout.in', self.get_install_prefix(), 'buildout.cfg')
         self._add_file('setup.py', self.get_install_prefix())
         cachedir = self._mkdir('.cache', self.get_install_prefix())

@@ -91,8 +91,8 @@ def write_ez_setup_py(destination_dir):
     with chdir(destination_dir):
         with open(ez_setup_txt) as fd:
             content = fd.read()
-        content = content.replace("0.8", _get_install_package_verion("setuptools"))
-        content = content.replace("https://pypi.io/packages/source/s/setuptools/", ".cache/dist/")
+        content = content.replace("REPLACE_DEFAULT_VERSION", _get_install_package_verion("setuptools"))
+        content = content.replace("REPLACE_DEFAULT_URL", ".cache/dist/")
         with open("ez_setup.py", "w") as fd:
             fd.write(content)
 

@@ -139,7 +139,9 @@ class Installer(object):
     def create_package(self):
         from ..utils import chdir
         with chdir(os.path.dirname(self._buildout_path)):
-            stdout = execute_assert_success([os.path.join('bin', 'buildout'), '-v', 'install', 'pack']).get_stdout()
+            python = os.path.join('bin', 'python{}'.format('.exe' if os.name == 'nt' else ''))
+            buildout_script = os.path.join('bin', 'buildout{}'.format('-script.py' if os.name == 'nt' else ''))
+            stdout = execute_assert_success([python, buildout_script, '-v', 'install', 'pack']).get_stdout()
             log.debug('package created, stdout: {}'.format(stdout))
 
     def is_product_installed(self):

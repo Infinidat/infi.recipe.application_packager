@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
     <Product Id='*' Name='{{ product_name }}' Language='1033' Version='{{ product_version }}' Manufacturer='{{ company_name }}' UpgradeCode='{{ upgrade_code }}'>
-        <Package Description='{{ description }}' Manufacturer='{{ company_name }}' InstallScope='perMachine' InstallerVersion='301' Compressed='yes'/>
+        <Package Description='{{ description }}' Manufacturer='{{ company_name }}' InstallScope='perMachine' InstallerVersion='400' Compressed='yes'/>
         <Media Id='1' Cabinet='everything.cab' EmbedCab='yes'/>
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='{% if architecture == "x64" %}ProgramFiles64Folder{% else %}ProgramFilesFolder{% endif %}' >
