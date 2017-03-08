@@ -59,8 +59,7 @@ class Recipe(PackagingRecipe):
                                                         self.get_download_cache_dist(),
                                                         self.get_eggs_directory())
 
-            utils.download_buildout(self.get_download_cache_dist())
-            utils.download_setuptools(self.get_download_cache_dist())
+            self.download_python_packages_used_by_packaging()
             silent_launcher = self.get_silent_launcher()
             if self.get_add_remove_programs_icon() and not self.icons_already_set():
                 self.set_icon_in_all_executables_in_project()
@@ -222,7 +221,7 @@ class Recipe(PackagingRecipe):
         commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" get-pip.py ' + \
                       r'--force-reinstall --ignore-installed --upgrade --isolated --no-index ' + \
                       r'--find-links "[INSTALLDIR].cache\dist" ' + \
-                      r'setuptools zc.buildout'
+                      r'pip setuptools zc.buildout buildout.wheel'
         action = wix.add_deferred_in_system_context_custom_action('get-pip', commandline,
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,

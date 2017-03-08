@@ -15,6 +15,7 @@ include-site-packages = true
 install-from-cache = true
 relative-paths = false
 unzip = true
+extensions = buildout.wheel
 newest = true
 download-cache = .cache
 develop = .

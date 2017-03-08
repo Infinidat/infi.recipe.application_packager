@@ -73,20 +73,6 @@ def get_pypi_index_url():
 def is_official_pypi(url):
     return 'python.org' in url
 
-def _get_package_url(package_name):
-    import pkg_resources
-    from infi.pypi_manager import DjangoPyPI, PyPI
-    pypi_url = get_pypi_index_url().replace("/simple", "")
-    pkg_info = pkg_resources.get_distribution(package_name)
-    pypi = PyPI() if is_official_pypi(pypi_url) else DjangoPyPI(pypi_url)
-    return pypi.get_source_distribution_url_of_specific_release_version(package_name, pkg_info.version).split("#")[0]
-
-def download_buildout(destination_dir):
-    buildout_url = _get_package_url("zc.buildout")
-    buildout_filepath = buildout_url.split('/')[-1]
-    with chdir(destination_dir):
-        urlretrieve(buildout_url, buildout_filepath)
-
 def write_ez_setup_py(destination_dir):
     with chdir(destination_dir):
         with open(ez_setup_txt) as fd:
@@ -95,26 +81,6 @@ def write_ez_setup_py(destination_dir):
         content = content.replace("REPLACE_DEFAULT_URL", ".cache/dist/")
         with open("ez_setup.py", "w") as fd:
             fd.write(content)
-
-def download_distribute(destination_dir):
-    distribute_url = _get_package_url("distribute")
-    distribute_filepath = distribute_url.split('/')[-1]
-    with chdir(destination_dir):
-        urlretrieve(distribute_url, distribute_filepath)
-
-def download_setuptools(destination_dir):
-    distribute_url = _get_package_url("setuptools")
-    distribute_filepath = distribute_url.split('/')[-1]
-    with chdir(destination_dir):
-        urlretrieve(distribute_url, distribute_filepath)
-    write_ez_setup_py(destination_dir)
-
-def download_package_source(package_name, destination_dir):
-    url = _get_package_url(package_name)
-    filepath = url.split('/')[-1]
-    with chdir(destination_dir):
-        urlretrieve(url, filepath)
-    return filepath
 
 def get_dependencies(name):
     from pkg_resources import get_distribution
