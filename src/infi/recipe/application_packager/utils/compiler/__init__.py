@@ -74,7 +74,7 @@ class BinaryDistributionsCompiler(object):
         executable = [os.path.join(self.buildout_directory, 'parts', 'python', 'bin',
                                    'python{}'.format('.exe' if is_windows() else ''))]
         env = os.environ.copy()
-        env['PYTHONPATH'] = os.path.pathsep.join([path for path in sys.path])
+        env['PYTHONPATH'] = ''
         execute_assert_success(executable + args, env=env)
 
     def execute_with_isolated_pip(self, commandline_or_args):
@@ -86,7 +86,7 @@ class BinaryDistributionsCompiler(object):
         executable = [os.path.join(self.buildout_directory, 'parts', 'python', 'bin',
                                    'pip{}'.format('.exe' if is_windows() else ''))]
         env = os.environ.copy()
-        env['PYTHONPATH'] = os.path.pathsep.join([path for path in sys.path])
+        env['PYTHONPATH'] = ''
         execute_assert_success(executable + args, env=env)
 
     def build_binary_egg(self, setup_script="setup.py"):
