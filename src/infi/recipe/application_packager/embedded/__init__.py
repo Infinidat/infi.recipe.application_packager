@@ -73,9 +73,9 @@ class Recipe(PackagingRecipe):
         from .. import utils
         from buildout.wheel import unload, load
         assert path.exists(self.isolated_python_dirpath)
-        unload(self.buildout)
+        unload(self.buildout['buildout'])
         self.download_python_packages_used_by_packaging(source=True)
-        load(self.buildout)
+        load(self.buildout['buildout'])
         return python_source.get_python_source(self.buildout, self.options)
 
     def build_embedded_python(self, python_source_path):
@@ -184,7 +184,8 @@ class Recipe(PackagingRecipe):
         from buildout.wheel import unload, load
         from ..utils import get_dependencies
 
-        unload(self.buildout)
+        distributions = self.get_dependencies_for_embedding()
+        unload(self.buildout['buildout'])
         eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
         dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
 
@@ -211,7 +212,7 @@ class Recipe(PackagingRecipe):
                     pass
                 yield path.abspath(filepath)
 
-        load(self.buildout)
+        load(self.buildout['buildout'])
 
 
 class BuildEnvironment(Recipe):

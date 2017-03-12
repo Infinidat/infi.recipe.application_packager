@@ -26,6 +26,11 @@ function execute() {
     fi
 }
 
+function cleanup_site_packages_and_eggs_directory() {
+    execute rm -rf parts/python/lib/python*/site-packages/buildout*
+    execute rm -rf eggs/*ovo
+}
+
 # debugging
 DEBUG=0
 if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" = "1" -o -e /tmp/INFINIDAT_DEBUG_CUSTOM_ACTIONS ; then
@@ -72,6 +77,8 @@ cd ..
 
 # setuptools has filenames with spaces, and solaris pkg does not support this
 find . -name '* *' -exec rm -vf {} \;
+
+cleanup_site_packages_and_eggs_directory
 
 # clean installed directories
 # this also deletes installed files

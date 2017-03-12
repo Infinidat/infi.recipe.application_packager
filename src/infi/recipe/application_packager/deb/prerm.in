@@ -16,6 +16,11 @@ function execute() {
     fi
 }
 
+function cleanup_site_packages_and_eggs_directory() {
+    execute rm -rf parts/python/lib/python*/site-packages/buildout*
+    execute rm -rf eggs/*ovo
+}
+
 # debugging
 DEBUG=0
 if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" == "1"; then
@@ -70,6 +75,8 @@ for script in *; do
     fi
 done
 cd ..
+
+cleanup_site_packages_and_eggs_directory
 
 # clean installed directories
 # this also deletes installed files

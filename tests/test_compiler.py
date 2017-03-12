@@ -39,12 +39,17 @@ class CompilerTestCase(unittest.TestCase):
 
     def test_get_packages_to_install(self):
         try:
-            expected = [get_archive_path("coverage"),
+            actual = self.get_compiler().get_packages_to_install()
+            expected = [get_archive_path("mock"),
+                        get_archive_path("infi.recipe.python"),
+                        get_archive_path("buildout.wheel"),
+                        get_archive_path("pbr"),
+                        get_archive_path("funcsigs"),
+                        get_archive_path("scandir"),
                         get_archive_path("MarkupSafe"),
                         get_archive_path("psutil"),
                         get_archive_path("Logbook"),
                         ]
-            actual = self.get_compiler().get_packages_to_install()
             self.assertEquals(set(actual), set(expected))
         except RuntimeError:
             raise unittest.SkipTest("This test must be run before test_installer")

@@ -258,12 +258,20 @@ class Recipe(PackagingRecipe):
 
     def _append_close_application_action(self, wix, silent_launcher_file_id):
         commandline = r'"[INSTALLDIR]bin\buildout.exe" -U install debug-logging close-application '
-        condition = CONDITION_DURING_UPGRADE_AND_UNINSTALL
         action = wix.add_deferred_in_system_context_custom_action('close_application', commandline,
                                                                   after='InstallInitialize',
-                                                                  condition=condition,
+                                                                  condition=CONDITION_DURING_UPGRADE_AND_UNINSTALL,
                                                                   silent_launcher_file_id=silent_launcher_file_id,
                                                                   text="Closing open applications, this may take a few minutes")
+        return action.id
+
+    def _append_pip_uninstall_buildout_stuff(self, wix, close_application_id, silent_launcher_file_id):
+        commandline = r'''"[INSTALLDIR]parts\python\bin\python.exe" "-m" "pip" "uninstall" "zc.buildout" "buildout.wheel"'''
+        action = wix.add_deferred_in_system_context_custom_action('os_removedirs_eggs', commandline,
+                                                                  after=close_application_id,
+                                                                  condition=CONDITION_DURING_UPGRADE_AND_UNINSTALL,
+                                                                  silent_launcher_file_id=silent_launcher_file_id,
+                                                                  text="Removing temporary files, this may take a few minutes")
         return action.id
 
     def _append_custom_actions(self, wix, silent_launcher_file_id):
@@ -271,7 +279,8 @@ class Recipe(PackagingRecipe):
         get_pip_id = self._append_get_pip_custom_action(wix, os_removedirs_eggs_id, silent_launcher_file_id)
         bootstrap_id = self._append_bootstrap_custom_action(wix, get_pip_id, silent_launcher_file_id)
         delete_executables_id = self._append_delete_extra_executables_custom_action(wix, bootstrap_id, silent_launcher_file_id)
-        self._append_close_application_action(wix, silent_launcher_file_id)
+        close_application_id = self._append_close_application_action(wix, silent_launcher_file_id)
+        self._append_pip_uninstall_buildout_stuff(wix, close_application_id, silent_launcher_file_id)
 
     def _add_launch_conditions(self, wix):
         self._add_os_requirements_launch_condition(wix)
