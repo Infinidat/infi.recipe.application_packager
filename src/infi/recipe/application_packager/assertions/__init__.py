@@ -1,7 +1,7 @@
 from sys import maxsize
 from os import path, name, curdir
 from gitpy import LocalRepository
-from infi.pyutils.decorators import wraps
+from functools import wraps
 
 from logging import getLogger
 logger = getLogger(__name__)

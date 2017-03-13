@@ -1,5 +1,5 @@
 import unittest
-from infi.pyutils.decorators import wraps
+from functools import wraps
 from os import environ, path, curdir, listdir
 
 def get_archive_path(package_name):

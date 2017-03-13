@@ -1,4 +1,4 @@
-from infi.pyutils.contexts import contextmanager
+from contextlib import contextmanager
 from infi.recipe.application_packager import utils
 from zc.buildout.download import Download
 from logging import getLogger
