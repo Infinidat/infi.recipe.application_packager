@@ -65,35 +65,6 @@ class BinaryDistributionsCompiler(object):
             else:
                 yield tempdir
 
-    def execute_with_isolated_python(self, commandline_or_args):
-        import sys
-        import os
-        from infi.recipe.application_packager.utils.execute import execute_assert_success, parse_args
-        from infi.recipe.application_packager.assertions import is_windows
-        args = parse_args(commandline_or_args)
-        executable = [os.path.join(self.buildout_directory, 'parts', 'python', 'bin',
-                                   'python{}'.format('.exe' if is_windows() else ''))]
-        env = os.environ.copy()
-        env['PYTHONPATH'] = ''
-        execute_assert_success(executable + args, env=env)
-
-    def execute_with_isolated_pip(self, commandline_or_args):
-        import sys
-        import os
-        from infi.recipe.application_packager.utils.execute import execute_assert_success, parse_args
-        from infi.recipe.application_packager.assertions import is_windows
-        args = parse_args(commandline_or_args)
-        executable = [os.path.join(self.buildout_directory, 'parts', 'python', 'bin',
-                                   'pip{}'.format('.exe' if is_windows() else ''))]
-        env = os.environ.copy()
-        env['PYTHONPATH'] = ''
-        execute_assert_success(executable + args, env=env)
-
-    def build_binary_egg(self, setup_script="setup.py"):
-        self.execute_with_isolated_python([setup_script, "bdist_egg"])
-        [egg] = glob(path.join('dist', '*.egg'))
-        return egg
-
     def does_setup_py_uses_setup_requires(self, filepath):
         # to make sure setup is actually called with setup_requires,
         # we can refactor and use the code in the embedded module
@@ -142,12 +113,31 @@ class BinaryDistributionsCompiler(object):
         with chdir(self.archives_directory):
             for archive in self.get_source_archives():
                 logger.info("Compiling wheel for {}".format(archive))
-                self.execute_with_isolated_pip(["wheel", "--no-deps", archive])
+                execute_with_isolated_python(self.buildout_directory, ["-m" "pip", "wheel", "--no-deps", archive])
                 remove(archive)
 
     def compile(self):
         return self.compile_wheels()
 
 
+def execute_with_isolated_python(buildout_directory, commandline_or_args, **kwargs):
+    import sys
+    import os
+    from infi.recipe.application_packager.utils.execute import execute_assert_success, parse_args
+    from infi.recipe.application_packager.assertions import is_windows
+    args = parse_args(commandline_or_args)
+    executable = [os.path.join(buildout_directory, 'parts', 'python', 'bin',
+                               'python{}'.format('.exe' if is_windows() else ''))]
+    env = kwargs.pop('env', os.environ.copy())
+    env['PYTHONPATH'] = ''
+    execute_assert_success(executable + args, env=env, **kwargs)
+
+
 def compile_binary_distributions(buildout_directory, archives_directory, eggs_directory):
     BinaryDistributionsCompiler(buildout_directory, archives_directory, eggs_directory).compile()
+
+
+def byte_compile_lib(buildout_directory):
+    execute_with_isolated_python(buildout_directory,
+                                 ["-m", "compileall", path.join("parts", "python", "lib")],
+                                 allowed_return_codes=[0, 1])

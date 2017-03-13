@@ -286,7 +286,7 @@ class PackagingRecipe(object):
         pkg_info.as_requirement()
         installer = self._get_installer()
         dist = installer._obtain(pkg_info.as_requirement(), source)
-        return installer._fetch(dist, self.get_download_cache_dist(), self.get_download_cache_dist())
+        return installer._fetch(dist, self.get_download_cache_dist(), None)
 
     def _get_installer(self):
         from zc.buildout.easy_install import Installer

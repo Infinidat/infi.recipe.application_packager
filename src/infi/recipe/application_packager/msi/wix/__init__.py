@@ -203,7 +203,7 @@ class Wix(object):
         self._add_delete_empty_folder_component_to_directory(directory)
         return directory
 
-    def add_directory(self, src, parent_directory, recursive=True, only_directory_tree=False):
+    def add_directory(self, src, parent_directory, recursive=True, only_directory_tree=False, include_pyc=False):
         from os import path, listdir
         src = path.abspath(src)
         source_dirname = path.basename(src)
@@ -211,11 +211,13 @@ class Wix(object):
         for filename in listdir(src):
             filepath = path.join(src, filename)
             if path.isfile(filepath):
-                if filename.endswith('pyc') or only_directory_tree:
+                if only_directory_tree:
+                    continue
+                if filename.endswith('.pyc') and not include_pyc:
                     continue
                 self.add_file(filepath, destination_directory)
             elif recursive:
-                self.add_directory(filepath, destination_directory, recursive, only_directory_tree)
+                self.add_directory(filepath, destination_directory, recursive, only_directory_tree, include_pyc)
 
     def add_file(self, source_filepath, destination_directory, destination_filename=None):
         from os import path, curdir
