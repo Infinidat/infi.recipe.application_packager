@@ -66,6 +66,9 @@ class PackagingRecipe(object):
     def get_download_cache(self):
         return self.get_buildout_section().get("download-cache")
 
+    def get_buildout_extensions(self):
+        return self.get_buildout_section().get("extensions")
+
     def get_download_cache_dist(self):
         from os import path
         return path.join(self.get_download_cache(), "dist")
@@ -269,7 +272,8 @@ class PackagingRecipe(object):
                       scripts,
                       self.get_gui_scripts_for_production(),
                       self.get_require_administrative_privileges(),
-                      self.get_require_administrative_privileges_gui())
+                      self.get_require_administrative_privileges_gui(),
+                      self.get_buildout_extensions())
 
     def download_python_packages_used_by_packaging(self, source=None):
         from ..utils import get_dependencies

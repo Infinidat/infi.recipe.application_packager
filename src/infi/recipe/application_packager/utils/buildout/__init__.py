@@ -15,7 +15,6 @@ include-site-packages = true
 install-from-cache = true
 relative-paths = false
 unzip = true
-extensions = buildout.wheel
 newest = true
 download-cache = .cache
 develop = .
@@ -60,7 +59,7 @@ def write_get_pip_for_production():
 
 
 def write_buildout_configuration_file_for_production(dependent_scripts, minimal_packages, eggs, scripts,
-                                                     gui_scripts, require_admin, gui_require_admin):
+                                                     gui_scripts, require_admin, gui_require_admin, extensions):
     from textwrap import dedent
     with open("buildout.in", 'w') as fd:
         fd.write(dedent(BUILDOUT_IN))
@@ -77,3 +76,5 @@ def write_buildout_configuration_file_for_production(dependent_scripts, minimal_
             buildout.set("production-gui-scripts", "scripts", gui_scripts)
         buildout.set("production-scripts" ,"require-administrative-privileges", require_admin)
         buildout.set("production-gui-scripts" ,"require-administrative-privileges", gui_require_admin)
+        if extensions:
+            buildout.set('buildout', 'extensions', 'buildout.wheel')
