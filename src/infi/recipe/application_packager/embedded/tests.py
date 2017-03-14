@@ -74,7 +74,11 @@ class MockedRecipeTestCase(unittest.TestCase):
         from infi.recipe.application_packager import embedded
         from ..utils import temporary_directory_context
         from . import environment
+        from munch import munchify
         buildout = dict(buildout={'directory': path.abspath(path.curdir),
+                                  'old_unpack_wheel': None,
+                                  'develop-eggs-directory': 'develop-eggs',
+                                  'eggs-directory': path.abspath(path.join(path.curdir, 'eggs')),
                                   'download-cache': path.abspath(path.join(path.curdir, '.cache'))},
                         project=dict(name='infi.pyutils'))
 
@@ -84,7 +88,7 @@ class MockedRecipeTestCase(unittest.TestCase):
                 with patch.object(embedded.Executable, "build_our_own_python_module") as build_our_own_python_module:
                     with patch.object(embedded, "run_in_another_process"):
                         build_our_own_python_module.return_value = [], []
-                        recipe = embedded.Executable(buildout, 'name', options)
+                        recipe = embedded.Executable(munchify(buildout), 'name', options)
                         recipe.install()
 
     def test_static_library(self):

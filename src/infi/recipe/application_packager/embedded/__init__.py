@@ -71,9 +71,11 @@ class Recipe(PackagingRecipe):
         """
         from . import python_source
         from .. import utils
+        from buildout.wheel import unload, load
         assert path.exists(self.isolated_python_dirpath)
-        utils.download_buildout(self.get_download_cache_dist())
-        utils.download_setuptools(self.get_download_cache_dist())
+        unload(self.buildout['buildout'])
+        self.download_python_packages_used_by_packaging(source=True)
+        load(self.buildout['buildout'])
         return python_source.get_python_source(self.buildout, self.options)
 
     def build_embedded_python(self, python_source_path):
@@ -179,7 +181,17 @@ class Recipe(PackagingRecipe):
         return path.join(dirpath, basename)
 
     def iter_archives_for_embedding(self):
+        from buildout.wheel import unload, load
+        from ..utils import get_dependencies
+
         distributions = self.get_dependencies_for_embedding()
+        unload(self.buildout['buildout'])
+        eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
+        dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
+
+        for package_name in dependencies:
+            filepath = self.download_python_package_to_cache_dist(package_name, source=True).location
+
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
             if path.isdir(filepath):
                 continue
@@ -199,6 +211,8 @@ class Recipe(PackagingRecipe):
                     filepath = self.download_source_instead_of_egg(filepath)
                     pass
                 yield path.abspath(filepath)
+
+        load(self.buildout['buildout'])
 
 
 class BuildEnvironment(Recipe):

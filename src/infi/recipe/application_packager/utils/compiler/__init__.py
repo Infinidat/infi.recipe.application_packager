@@ -65,23 +65,6 @@ class BinaryDistributionsCompiler(object):
             else:
                 yield tempdir
 
-    def execute_with_isolated_python(self, commandline_or_args):
-        import sys
-        import os
-        from infi.recipe.application_packager.utils.execute import execute_assert_success, parse_args
-        from infi.recipe.application_packager.assertions import is_windows
-        args = parse_args(commandline_or_args)
-        executable = [os.path.join(self.buildout_directory, 'parts', 'python', 'bin',
-                                   'python{}'.format('.exe' if is_windows() else ''))]
-        env = os.environ.copy()
-        env['PYTHONPATH'] = os.path.pathsep.join([path for path in sys.path])
-        execute_assert_success(executable + args, env=env)
-
-    def build_binary_egg(self, setup_script="setup.py"):
-        self.execute_with_isolated_python([setup_script, "bdist_egg"])
-        [egg] = glob(path.join('dist', '*.egg'))
-        return egg
-
     def does_setup_py_uses_setup_requires(self, filepath):
         # to make sure setup is actually called with setup_requires,
         # we can refactor and use the code in the embedded module
@@ -107,20 +90,54 @@ class BinaryDistributionsCompiler(object):
         return [source_archives[key]
                 for key in set.intersection(set(source_archives.keys()), packages_require_to_get_build)]
 
-    def compile(self):
+    def compile_eggs(self):
+         from ..execute import ExecutionError
+         from os import remove
+         from shutil import copy
+         for archive in self.get_packages_to_install():
+             logger.info("Compiling egg for {}".format(archive))
+             with self.extract_archive(archive) as extracted_dir:
+                 try:
+                     built_egg = self.build_binary_egg("setupegg.py" if path.exists("setupegg.py") else "setup.py")
+                 except ExecutionError:
+                     self.add_import_setuptools_to_setup_py()
+                     built_egg = self.build_binary_egg()
+                 copy(built_egg, self.archives_directory)
+                 remove(archive)
+
+    def compile_wheels(self):
         from ..execute import ExecutionError
+        from .. import chdir
         from os import remove
         from shutil import copy
-        for archive in self.get_packages_to_install():
-            logger.info("Compiling egg for {}".format(archive))
-            with self.extract_archive(archive) as extracted_dir:
-                try:
-                    built_egg = self.build_binary_egg("setupegg.py" if path.exists("setupegg.py") else "setup.py")
-                except ExecutionError:
-                    self.add_import_setuptools_to_setup_py()
-                    built_egg = self.build_binary_egg()
-                copy(built_egg, self.archives_directory)
+        with chdir(self.archives_directory):
+            for archive in self.get_source_archives():
+                logger.info("Compiling wheel for {}".format(archive))
+                execute_with_isolated_python(self.buildout_directory, ["-m" "pip", "wheel", "--no-deps", archive])
                 remove(archive)
+
+    def compile(self):
+        return self.compile_wheels()
+
+
+def execute_with_isolated_python(buildout_directory, commandline_or_args, **kwargs):
+    import sys
+    import os
+    from infi.recipe.application_packager.utils.execute import execute_assert_success, parse_args
+    from infi.recipe.application_packager.assertions import is_windows
+    args = parse_args(commandline_or_args)
+    executable = [os.path.join(buildout_directory, 'parts', 'python', 'bin',
+                               'python{}'.format('.exe' if is_windows() else ''))]
+    env = kwargs.pop('env', os.environ.copy())
+    env['PYTHONPATH'] = ''
+    execute_assert_success(executable + args, env=env, **kwargs)
+
 
 def compile_binary_distributions(buildout_directory, archives_directory, eggs_directory):
     BinaryDistributionsCompiler(buildout_directory, archives_directory, eggs_directory).compile()
+
+
+def byte_compile_lib(buildout_directory):
+    execute_with_isolated_python(buildout_directory,
+                                 ["-m", "compileall", path.join("parts", "python", "lib")],
+                                 allowed_return_codes=[0, 1])

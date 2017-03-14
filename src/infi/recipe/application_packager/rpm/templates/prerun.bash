@@ -5,6 +5,11 @@
 
 {% include 'header.bash' %}
 
+function cleanup_site_packages_and_eggs_directory() {
+    execute rm -rf parts/python/lib/python*/site-packages/buildout*
+    execute rm -rf eggs/*ovo
+}
+
 # start
 execute pushd .
 execute cd %{prefix}
@@ -44,6 +49,8 @@ for script in *; do
     fi
 done
 cd ..
+
+cleanup_site_packages_and_eggs_directory
 
 # clean installed directories
 # this also deletes installed files

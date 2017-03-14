@@ -355,6 +355,8 @@ class RpmTestCase(Posix, RpmInstaller, X86_package_on_X64_machine):
         env = os.environ.copy()
         env['NO_CUSTOM_ACTIONS'] = '1'
         execute_assert_success(['rpm', '-e', PACKAGE_NAME, '--noscripts'], env=env, allowed_return_codes=[0, 1, 2])
+        if os.path.exists(PREFIX):
+            shutil.rmtree(PREFIX)
 
     @classmethod
     def should_run(cls):
@@ -374,6 +376,8 @@ class DebTestCase(Posix, DebInstaller, X86_package_on_X64_machine):
         env = os.environ.copy()
         env['NO_CUSTOM_ACTIONS'] = '1'
         execute_assert_success(['dpkg', '-r', PACKAGE_NAME], env=env, allowed_return_codes=[0, 1, 2])
+        if os.path.exists(PREFIX):
+            shutil.rmtree(PREFIX)
 
     @classmethod
     def should_run(cls):
@@ -393,6 +397,8 @@ class PkgTestCase(Posix, PkgInstaller):
         env = os.environ.copy()
         env['NO_CUSTOM_ACTIONS'] = '1'
         execute_assert_success(['pkgrm', '-n', PACKAGE_NAME], env=env, allowed_return_codes=[0,])
+        if os.path.exists(PREFIX):
+            shutil.rmtree(PREFIX)
 
     @classmethod
     def should_run(cls):

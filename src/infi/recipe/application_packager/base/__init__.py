@@ -1,4 +1,4 @@
-from infi.pyutils.contexts import contextmanager
+from contextlib import contextmanager
 from infi.recipe.application_packager import utils
 from zc.buildout.download import Download
 from logging import getLogger
@@ -33,10 +33,12 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
 PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
                                      "infi.recipe.console_scripts",
                                      "infi.recipe.close_application",
-                                     "zc.buildout"]
+                                     "zc.buildout",
+                                     "pip",
+                                     "setuptools",
+                                     "buildout.wheel"]
+
 SCRIPTS_BY_PACKAGING = ["buildout"]
-ADDITIONAL_PACKAGES_WE_NEED_TO_PACK = ["setuptools",
-                                       "pip"]
 
 
 class PackagingRecipe(object):
@@ -269,6 +271,43 @@ class PackagingRecipe(object):
                       self.get_require_administrative_privileges(),
                       self.get_require_administrative_privileges_gui())
 
+    def download_python_packages_used_by_packaging(self, source=None):
+        from ..utils import get_dependencies
+        packages = set()
+        for package in PYTHON_PACKAGES_USED_BY_PACKAGING:
+            packages |= set([package])
+            packages |= set(get_dependencies(package))
+        for package in packages:
+            self.download_python_package_to_cache_dist(package, source)
+
+    def download_python_package_to_cache_dist(self, package_name, source=None):
+        import pkg_resources
+        pkg_info = pkg_resources.get_distribution(package_name)
+        pkg_info.as_requirement()
+        installer = self._get_installer()
+        dist = installer._obtain(pkg_info.as_requirement(), source)
+        return installer._fetch(dist, self.get_download_cache_dist(), None)
+
+    def _get_installer(self):
+        from zc.buildout.easy_install import Installer
+        import sys
+        dest = self.buildout['buildout']['eggs-directory']
+        links = self.buildout['buildout'].get('find-links', '').split()
+        index = self.buildout['buildout'].get('index')
+        always_unzip = None
+        path = [self.buildout['buildout']['develop-eggs-directory']]
+        allow_hosts = ('*',)
+        newest = True
+        versions = None
+        use_dependency_links = False
+        check_picked = True
+        installer = Installer(dest, links, index, sys.executable,
+                          always_unzip, path,
+                          newest, versions, use_dependency_links,
+                          allow_hosts=allow_hosts,
+                          check_picked=check_picked)
+        return installer
+
     def delete_non_production_packages_from_cache_dist(self):
         from ..utils import get_dependencies, get_distributions_from_dependencies
         from glob import glob
@@ -277,7 +316,6 @@ class PackagingRecipe(object):
             return
         eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
         eggs.extend(PYTHON_PACKAGES_USED_BY_PACKAGING)
-        eggs.extend(ADDITIONAL_PACKAGES_WE_NEED_TO_PACK)
         dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
         distributions = get_distributions_from_dependencies(dependencies)
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
