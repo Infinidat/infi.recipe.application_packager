@@ -70,7 +70,7 @@ class PackagingRecipe(object):
         return self.get_buildout_section().get("extensions")
 
     def using_wheels(self):
-        return self.get_buildout_extensions() and 'buildout.wheel' in self.get_buildout_extensions()id
+        return self.get_buildout_extensions() and 'buildout.wheel' in self.get_buildout_extensions()
 
     def get_download_cache_dist(self):
         from os import path
