@@ -26,17 +26,6 @@ class CompilerTestCase(unittest.TestCase):
                                                               eggs_directory='eggs')
         return compiler
 
-    def test_compile_async(self):
-        try:
-            archive_to_compile = get_archive_path("psutil")
-            compiler = self.get_compiler()
-            with compiler.extract_archive(archive_to_compile):
-                compiler.add_import_setuptools_to_setup_py()
-                built_egg = compiler.build_binary_egg()
-                self.assertTrue(path.exists(built_egg))
-        except RuntimeError:
-            raise unittest.SkipTest("This test must be run before test_installer")
-
     def test_get_packages_to_install(self):
         try:
             actual = self.get_compiler().get_packages_to_install()
