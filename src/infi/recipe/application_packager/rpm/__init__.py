@@ -16,7 +16,8 @@ class Recipe(PackagingRecipe):
             self.write_buildout_configuration_file_for_production()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),
-                                                        self.get_eggs_directory())
+                                                        self.get_eggs_directory(),
+                                                        self.using_wheels())
             self.download_python_packages_used_by_packaging()
             package = self.build_package()
             logger.debug("Built {}".format(package))

@@ -133,8 +133,12 @@ def execute_with_isolated_python(buildout_directory, commandline_or_args, **kwar
     execute_assert_success(executable + args, env=env, **kwargs)
 
 
-def compile_binary_distributions(buildout_directory, archives_directory, eggs_directory):
-    BinaryDistributionsCompiler(buildout_directory, archives_directory, eggs_directory).compile()
+def compile_binary_distributions(buildout_directory, archives_directory, eggs_directory, build_wheels):
+    compiler = BinaryDistributionsCompiler(buildout_directory, archives_directory, eggs_directory)
+    if build_wheels:
+        compiler.compile()
+    else:
+        compiler.compile_eggs()
 
 
 def byte_compile_lib(buildout_directory):
