@@ -25,6 +25,8 @@ def set_icon_for_executables_in_archive(archive_path, icon):
         with signtool.open_archive(archive_path) as archive:
             archive.extractall(tempdir)
         set_icon_for_executables_in_directory(tempdir, icon)
+        if archive_path.endswith('.whl'):
+            signtool.rewrite_record_file(tempdir)
         with signtool.open_archive(archive_path, write_mode) as archive:
             for item in listdir(tempdir):
                 archive.add(path.join(tempdir, item), item)
