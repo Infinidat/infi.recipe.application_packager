@@ -5,7 +5,7 @@
 
 {% include 'header.bash' %}
 
-function cleanup_site_packages_and_eggs_directory() {
+cleanup_site_packages_and_eggs_directory() {
     execute rm -rf parts/python/lib*/python*/site-packages/buildout*
     execute rm -rf eggs/*ovo
 }
