@@ -21,23 +21,6 @@ class BinaryDistributionsCompiler(object):
         all_sources = list(chain.from_iterable(all_sources))
         return all_sources
 
-    def extract_package_name_from_source_filepath(self, filepath):
-        [module_name] = [path.basename(filepath).replace(extension, '')
-                         for extension in self.SOURCE_EXTENSIONS
-                         if filepath.endswith(extension)]
-        return module_name
-
-    def get_installed_packages(self):
-        from platform import python_version_tuple
-        py_substring = 'py{}'.format('.'.join(python_version_tuple()[0:2]))
-        all_installed_packages = [dirpath for dirpath in glob(path.join(self.eggs_directory, '*'))
-                                  if path.isdir(dirpath) and not dirpath.endswith('{}.egg'.format(py_substring))]
-        return all_installed_packages
-
-    def extract_package_name_from_dirpath(self, dirpath):
-        dirname = path.basename(dirpath)
-        return dirname.split('-py')[0]
-
     def add_import_setuptools_to_setup_py(self):
         with open("setup.py") as fd:
             content = fd.read()
@@ -65,32 +48,7 @@ class BinaryDistributionsCompiler(object):
             else:
                 yield tempdir
 
-    def does_setup_py_uses_setup_requires(self, filepath):
-        # to make sure setup is actually called with setup_requires,
-        # we can refactor and use the code in the embedded module
-        # however, just checking if this keyword is in the setup.py file is good enough
-        with self.extract_archive(filepath) as extracted_dir:
-            with open('setup.py') as fd:
-                return any ('setup_requires' in line and not line.strip().startswith('#') for line in fd)
-
-    def get_packages_to_install(self):
-        source_archives = {self.extract_package_name_from_source_filepath(filename):
-                           filename for filename in self.get_source_archives()}
-        installed_binary_archives = {self.extract_package_name_from_dirpath(dirname): dirname
-                                     for dirname in self.get_installed_packages()}
-        # WORKAROUND python-cjson is installed as python_cjson
-        keys_for_install_binary_archives = set(installed_binary_archives.keys())
-        for key in list(keys_for_install_binary_archives):
-            keys_for_install_binary_archives.add(key.replace('_', '-'))
-
-        packages_with_setup_requires = {package_name for package_name, filename in source_archives.items() if
-                                        self.does_setup_py_uses_setup_requires(filename)}
-        packages_require_to_get_build = set.union(keys_for_install_binary_archives, packages_with_setup_requires)
-
-        return [source_archives[key]
-                for key in set.intersection(set(source_archives.keys()), packages_require_to_get_build)]
-
-    def build_binary_egg(self, setup_script="setup.py"):
+    def build_egg(self, setup_script="setup.py"):
         execute_with_isolated_python(self.buildout_directory, [setup_script, "bdist_egg"])
         [egg] = glob(path.join('dist', '*.egg'))
         return egg
@@ -99,14 +57,14 @@ class BinaryDistributionsCompiler(object):
          from ..execute import ExecutionError
          from os import remove
          from shutil import copy
-         for archive in self.get_packages_to_install():
+         for archive in self.get_source_archives():
              logger.info("Compiling egg for {}".format(archive))
              with self.extract_archive(archive) as extracted_dir:
                  try:
-                     built_egg = self.build_binary_egg("setupegg.py" if path.exists("setupegg.py") else "setup.py")
+                     built_egg = self.build_egg("setupegg.py" if path.exists("setupegg.py") else "setup.py")
                  except ExecutionError:
                      self.add_import_setuptools_to_setup_py()
-                     built_egg = self.build_binary_egg()
+                     built_egg = self.build_egg()
                  copy(built_egg, self.archives_directory)
                  remove(archive)
 
@@ -141,7 +99,7 @@ def execute_with_isolated_python(buildout_directory, commandline_or_args, **kwar
 def compile_binary_distributions(buildout_directory, archives_directory, eggs_directory, build_wheels):
     compiler = BinaryDistributionsCompiler(buildout_directory, archives_directory, eggs_directory)
     if build_wheels:
-        compiler.compile()
+        compiler.compile_wheels()
     else:
         compiler.compile_eggs()
 
