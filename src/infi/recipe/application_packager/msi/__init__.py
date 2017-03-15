@@ -57,10 +57,6 @@ class Recipe(PackagingRecipe):
             # and specifically pbr
             utils.compiler.byte_compile_lib(self.get_buildout_dir())
             self.download_python_packages_used_by_packaging()
-            utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
-                                                        self.get_download_cache_dist(),
-                                                        self.get_eggs_directory(),
-                                                        self.using_wheels())
             silent_launcher = self.get_silent_launcher()
             if self.get_add_remove_programs_icon() and not self.icons_already_set():
                 self.set_icon_in_all_executables_in_project()
@@ -70,6 +66,10 @@ class Recipe(PackagingRecipe):
                 self.sign_all_executables_in_project()
                 self.signtool.sign_file(silent_launcher)
                 self.mark_signed()
+            utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
+                                                        self.get_download_cache_dist(),
+                                                        self.get_eggs_directory(),
+                                                        self.using_wheels())
             package = self.build_package(silent_launcher)
             logger.debug("Built {}".format(package))
             if self.should_sign_files():
