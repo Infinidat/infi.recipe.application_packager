@@ -55,12 +55,12 @@ class Recipe(PackagingRecipe):
             # its true we have pre-compiled eggs for Windows
             # but we need to deal with pure-python packages that use setup_requires
             # and specifically pbr
+            utils.compiler.byte_compile_lib(self.get_buildout_dir())
+            self.download_python_packages_used_by_packaging()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),
                                                         self.get_eggs_directory(),
                                                         self.using_wheels())
-            utils.compiler.byte_compile_lib(self.get_buildout_dir())
-            self.download_python_packages_used_by_packaging()
             silent_launcher = self.get_silent_launcher()
             if self.get_add_remove_programs_icon() and not self.icons_already_set():
                 self.set_icon_in_all_executables_in_project()
