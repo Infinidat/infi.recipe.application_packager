@@ -172,14 +172,6 @@ class Recipe(PackagingRecipe):
     def is_this_a_precompiled_egg_on_windows(self, filepath):
         return system() and filepath.endswith("win-amd64.egg") or filepath.endswith("win32.egg")
 
-    def download_source_instead_of_egg(self, filepath):
-        # pyreadline-2.0-py2.7-win-amd64.egg
-        from .. import utils
-        package_name, release_version = path.basename(filepath).split('-py')[0].split('-')
-        dirpath = self.get_download_cache_dist()
-        basename = utils.download_package_source(package_name, dirpath)
-        return path.join(dirpath, basename)
-
     def iter_archives_for_embedding(self):
         from buildout.wheel import unload, load
         from ..utils import get_dependencies
@@ -192,22 +184,13 @@ class Recipe(PackagingRecipe):
         for package_name in dependencies:
             filepath = self.download_python_package_to_cache_dist(package_name, source=True).location
 
-        for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
-            if path.isdir(filepath):
-                continue
-            if filepath.endswith('.whl'):
-                continue
-            if filepath.endswith('.egg'):
-                continue
             basename = path.basename(filepath).lower()
             exclude_list = self.get_recipe_section().get('exclude-eggs', '').split()
             exclude_matches = [x for x in exclude_list if basename.startswith(x)]
             if exclude_matches:
                 logger.info("skipping {} because matched by exclude_eggs rule(s) {!r}".format(basename, exclude_matches))
                 continue
-            if any([distname.lower() in basename and version.replace('-', '_') in basename.replace('-', '_')
-                   for distname, version in distributions.items()]):
-                yield path.abspath(filepath)
+            yield path.abspath(filepath)
 
         load(self.buildout['buildout'])
 
