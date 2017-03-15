@@ -148,7 +148,7 @@ def compile_binary_distributions(buildout_directory, archives_directory, eggs_di
 
 def byte_compile_lib(buildout_directory):
     libdir = path.join("parts", "python", "lib64")
-    if not exists(libdir):
+    if not path.exists(libdir):
         libdir = path.join("parts", "python", "lib")
     execute_with_isolated_python(buildout_directory,
                                  ["-m", "compileall", libdir],
