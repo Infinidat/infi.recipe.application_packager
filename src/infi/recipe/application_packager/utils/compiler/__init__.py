@@ -118,7 +118,7 @@ class BinaryDistributionsCompiler(object):
         with chdir(self.archives_directory):
             for archive in self.get_source_archives():
                 logger.info("Compiling wheel for {}".format(archive))
-                execute_with_isolated_python(self.buildout_directory, ["-m" "pip", "wheel", "--no-deps", archive])
+                execute_with_isolated_python(self.buildout_directory, ["-m", "pip", "wheel", "--no-deps", archive])
                 remove(archive)
 
     def compile(self):
