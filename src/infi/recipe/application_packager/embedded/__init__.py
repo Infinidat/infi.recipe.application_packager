@@ -195,9 +195,9 @@ class Recipe(PackagingRecipe):
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
             if path.isdir(filepath):
                 continue
-            if 'zc.' in filepath:
-                continue
             if filepath.endswith('.whl'):
+                continue
+            if filepath.endswith('.egg'):
                 continue
             basename = path.basename(filepath).lower()
             exclude_list = self.get_recipe_section().get('exclude-eggs', '').split()
@@ -207,9 +207,6 @@ class Recipe(PackagingRecipe):
                 continue
             if any([distname.lower() in basename and version.replace('-', '_') in basename.replace('-', '_')
                    for distname, version in distributions.items()]):
-                if self.is_this_a_precompiled_egg_on_windows(filepath):
-                    filepath = self.download_source_instead_of_egg(filepath)
-                    pass
                 yield path.abspath(filepath)
 
         load(self.buildout['buildout'])
