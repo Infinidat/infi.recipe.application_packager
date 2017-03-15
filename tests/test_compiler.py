@@ -26,23 +26,6 @@ class CompilerTestCase(unittest.TestCase):
                                                               eggs_directory='eggs')
         return compiler
 
-    def test_get_packages_to_install(self):
-        try:
-            actual = self.get_compiler().get_packages_to_install()
-            expected = [get_archive_path("mock"),
-                        get_archive_path("infi.recipe.python"),
-                        get_archive_path("buildout.wheel"),
-                        get_archive_path("pbr"),
-                        get_archive_path("funcsigs"),
-                        get_archive_path("scandir"),
-                        get_archive_path("MarkupSafe"),
-                        get_archive_path("psutil"),
-                        get_archive_path("Logbook"),
-                        ]
-            self.assertEquals(set(actual), set(expected))
-        except RuntimeError:
-            raise unittest.SkipTest("This test must be run before test_installer")
-
     @long_one
     def test_compile_all(self):
         with mock.patch("os.remove"), mock.patch("shutil.copy"):
