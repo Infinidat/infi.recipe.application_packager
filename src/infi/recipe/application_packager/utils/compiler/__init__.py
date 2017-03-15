@@ -90,6 +90,11 @@ class BinaryDistributionsCompiler(object):
         return [source_archives[key]
                 for key in set.intersection(set(source_archives.keys()), packages_require_to_get_build)]
 
+    def build_binary_egg(self, setup_script="setup.py"):
+        self.execute_with_isolated_python(self.buildout_directory, [setup_script, "bdist_egg"])
+        [egg] = glob(path.join('dist', '*.egg'))
+        return egg
+
     def compile_eggs(self):
          from ..execute import ExecutionError
          from os import remove
