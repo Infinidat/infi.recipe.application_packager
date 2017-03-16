@@ -36,6 +36,7 @@ PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
                                      "zc.buildout",
                                      "pip",
                                      "setuptools",
+                                     "pythonpy",
                                      "buildout.wheel"]
 
 SCRIPTS_BY_PACKAGING = ["buildout"]
@@ -286,6 +287,7 @@ class PackagingRecipe(object):
             packages |= set(get_dependencies(package))
         for package in packages:
             self.download_python_package_to_cache_dist(package, source)
+        self.convert_pythonpy_egg_to_wheel() # pip install pythonpy and cannot install an egg
 
     def download_python_package_to_cache_dist(self, package_name, source=None):
         import pkg_resources
@@ -294,6 +296,16 @@ class PackagingRecipe(object):
         installer = self._get_installer()
         dist = installer._obtain(pkg_info.as_requirement(), source)
         return installer._fetch(dist, self.get_download_cache_dist(), None)
+
+    def convert_pythonpy_egg_to_wheel(self):
+        from infi.recipe.application_packager.utils.compiler import execute_with_isolated_python
+        from glob import glob
+        from os import path
+        cache_dist = path.join(self.get_buildout_dir(), '.cache', 'dist')
+        if glob(path.join('.cache', 'dist', 'pythonpy*.whl')):
+            return
+        for egg in glob(path.join('.cache', 'dist', 'pythonpy*.egg')):
+            execute_with_isolated_python(self.get_buildout_dir(), ['-m', 'wheel', 'convert', '--dest-dir', cache_dist, egg])
 
     def _get_installer(self):
         from zc.buildout.easy_install import Installer
