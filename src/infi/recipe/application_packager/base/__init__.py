@@ -280,32 +280,37 @@ class PackagingRecipe(object):
                       self.get_buildout_extensions())
 
     def download_python_packages_used_by_packaging(self, source=None):
+        packages = self.get_python_packages_used_by_packaging()
+        for package in packages:
+            self.download_python_package_to_cache_dist(package, source)
+
+    def get_python_packages_used_by_packaging(self):
         from ..utils import get_dependencies
         packages = set()
         for package in PYTHON_PACKAGES_USED_BY_PACKAGING:
             packages |= set([package])
             packages |= set(get_dependencies(package))
-        for package in packages:
-            self.download_python_package_to_cache_dist(package, source)
-        self.convert_pythonpy_egg_to_wheel() # pip install pythonpy and cannot install an egg
+        return packages
 
     def download_python_package_to_cache_dist(self, package_name, source=None):
         import pkg_resources
         pkg_info = pkg_resources.get_distribution(package_name)
         pkg_info.as_requirement()
         installer = self._get_installer()
+        installer._download_cache = None
         dist = installer._obtain(pkg_info.as_requirement(), source)
         return installer._fetch(dist, self.get_download_cache_dist(), None)
 
-    def convert_pythonpy_egg_to_wheel(self):
+    def convert_python_packages_used_by_packaging_to_wheels(self):
         from infi.recipe.application_packager.utils.compiler import execute_with_isolated_python
         from glob import glob
         from os import path
         cache_dist = path.join(self.get_buildout_dir(), '.cache', 'dist')
-        if glob(path.join('.cache', 'dist', 'pythonpy*.whl')):
-            return
-        for egg in glob(path.join('.cache', 'dist', 'pythonpy*.egg')):
-            execute_with_isolated_python(self.get_buildout_dir(), ['-m', 'wheel', 'convert', '--dest-dir', cache_dist, egg])
+        for package in self.get_python_packages_used_by_packaging():
+            if glob(path.join(cache_dist, '{}*.whl'.format(package))):
+                continue
+            for egg in glob(path.join(cache_dist, '{}*.egg'.format(package))):
+                execute_with_isolated_python(self.get_buildout_dir(), ['-m', 'wheel', 'convert', '--dest-dir', cache_dist, egg])
 
     def _get_installer(self):
         from zc.buildout.easy_install import Installer

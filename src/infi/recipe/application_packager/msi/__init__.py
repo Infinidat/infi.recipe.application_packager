@@ -70,6 +70,7 @@ class Recipe(PackagingRecipe):
                                                         self.get_download_cache_dist(),
                                                         self.get_eggs_directory(),
                                                         self.using_wheels())
+            self.convert_python_packages_used_by_packaging_to_wheels()
             package = self.build_package(silent_launcher)
             logger.debug("Built {}".format(package))
             if self.should_sign_files():
