@@ -191,6 +191,7 @@ class Recipe(PackagingRecipe):
             pass
         eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
         dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
+        dependencies.discard(self.get_project_name().replace('-', '_'))
 
         for package_name in dependencies:
             filepath = self.download_python_package_to_cache_dist(package_name, source=True).location
