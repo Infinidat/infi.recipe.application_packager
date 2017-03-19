@@ -73,9 +73,15 @@ class Recipe(PackagingRecipe):
         from .. import utils
         from buildout.wheel import unload, load
         assert path.exists(self.isolated_python_dirpath)
-        unload(self.buildout['buildout'])
+        loaded = False
+        try:
+            unload(self.buildout['buildout'])
+            loaded = True
+        except AttributeError:
+            pass
         self.download_python_packages_used_by_packaging(source=True)
-        load(self.buildout['buildout'])
+        if loaded:
+            load(self.buildout['buildout'])
         return python_source.get_python_source(self.buildout, self.options)
 
     def build_embedded_python(self, python_source_path):
