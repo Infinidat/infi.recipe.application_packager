@@ -183,7 +183,12 @@ class Recipe(PackagingRecipe):
         from ..utils import get_dependencies
 
         distributions = self.get_dependencies_for_embedding()
-        unload(self.buildout['buildout'])
+        loaded = False
+        try:
+            unload(self.buildout['buildout'])
+            loaded = True
+        except AttributeError:
+            pass
         eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
         dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
 
@@ -198,7 +203,8 @@ class Recipe(PackagingRecipe):
                 continue
             yield path.abspath(filepath)
 
-        load(self.buildout['buildout'])
+        if loaded:
+            load(self.buildout['buildout'])
 
 
 class BuildEnvironment(Recipe):
