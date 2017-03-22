@@ -169,7 +169,9 @@ class PackagingRecipe(object):
         arch_by_distro = {''}
         arch_by_os = {
                       "Windows": 'x64' if is_64 else 'x86',
-                      "Linux": ('x86_64' if is_rpm else 'amd64') if is_64 else \
+                      "Linux": ('ppc64le' if is_rpm else 'ppc64el') if processor() == 'ppc64le' else \
+                               ('ppc64' if is_rpm else 'powerpc') if processor() == 'ppc64' else \
+                               ('x86_64' if is_rpm else 'amd64') if is_64 else \
                                ('i686' if is_rpm else 'i386'),
                       "SunOS": 'sparc' if 'sparc' == processor() else ('amd64' if is_64 else 'i386'),
                       "AIX": "ppc",
