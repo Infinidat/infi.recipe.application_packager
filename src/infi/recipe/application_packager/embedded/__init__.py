@@ -71,9 +71,17 @@ class Recipe(PackagingRecipe):
         """
         from . import python_source
         from .. import utils
+        from buildout.wheel import unload, load
         assert path.exists(self.isolated_python_dirpath)
-        utils.download_buildout(self.get_download_cache_dist())
-        utils.download_setuptools(self.get_download_cache_dist())
+        loaded = False
+        try:
+            unload(self.buildout['buildout'])
+            loaded = True
+        except AttributeError:
+            pass
+        self.download_python_packages_used_by_packaging(source=True)
+        if loaded:
+            load(self.buildout['buildout'])
         return python_source.get_python_source(self.buildout, self.options)
 
     def build_embedded_python(self, python_source_path):
@@ -170,35 +178,34 @@ class Recipe(PackagingRecipe):
     def is_this_a_precompiled_egg_on_windows(self, filepath):
         return system() and filepath.endswith("win-amd64.egg") or filepath.endswith("win32.egg")
 
-    def download_source_instead_of_egg(self, filepath):
-        # pyreadline-2.0-py2.7-win-amd64.egg
-        from .. import utils
-        package_name, release_version = path.basename(filepath).split('-py')[0].split('-')
-        dirpath = self.get_download_cache_dist()
-        basename = utils.download_package_source(package_name, dirpath)
-        return path.join(dirpath, basename)
-
     def iter_archives_for_embedding(self):
+        from buildout.wheel import unload, load
+        from ..utils import get_dependencies
+
         distributions = self.get_dependencies_for_embedding()
-        for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
-            if path.isdir(filepath):
-                continue
-            if 'zc.' in filepath:
-                continue
-            if filepath.endswith('.whl'):
-                continue
+        loaded = False
+        try:
+            unload(self.buildout['buildout'])
+            loaded = True
+        except AttributeError:
+            pass
+        eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
+        dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
+        dependencies.discard(self.get_project_name().replace('-', '_'))
+
+        for package_name in dependencies:
+            filepath = self.download_python_package_to_cache_dist(package_name, source=True).location
+
             basename = path.basename(filepath).lower()
             exclude_list = self.get_recipe_section().get('exclude-eggs', '').split()
             exclude_matches = [x for x in exclude_list if basename.startswith(x)]
             if exclude_matches:
                 logger.info("skipping {} because matched by exclude_eggs rule(s) {!r}".format(basename, exclude_matches))
                 continue
-            if any([distname.lower() in basename and version.replace('-', '_') in basename.replace('-', '_')
-                   for distname, version in distributions.items()]):
-                if self.is_this_a_precompiled_egg_on_windows(filepath):
-                    filepath = self.download_source_instead_of_egg(filepath)
-                    pass
-                yield path.abspath(filepath)
+            yield path.abspath(filepath)
+
+        if loaded:
+            load(self.buildout['buildout'])
 
 
 class BuildEnvironment(Recipe):

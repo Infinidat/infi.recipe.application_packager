@@ -1,4 +1,4 @@
-from infi.pyutils.contexts import contextmanager
+from contextlib import contextmanager
 from infi.recipe.application_packager import utils
 from zc.buildout.download import Download
 from logging import getLogger
@@ -33,10 +33,13 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
 PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
                                      "infi.recipe.console_scripts",
                                      "infi.recipe.close_application",
-                                     "zc.buildout"]
+                                     "zc.buildout",
+                                     "pip",
+                                     "setuptools",
+                                     "pythonpy",
+                                     "buildout.wheel"]
+
 SCRIPTS_BY_PACKAGING = ["buildout"]
-ADDITIONAL_PACKAGES_WE_NEED_TO_PACK = ["setuptools",
-                                       "pip"]
 
 
 class PackagingRecipe(object):
@@ -63,6 +66,12 @@ class PackagingRecipe(object):
 
     def get_download_cache(self):
         return self.get_buildout_section().get("download-cache")
+
+    def get_buildout_extensions(self):
+        return self.get_buildout_section().get("extensions")
+
+    def using_wheels(self):
+        return self.get_buildout_extensions() and 'buildout.wheel' in self.get_buildout_extensions()
 
     def get_download_cache_dist(self):
         from os import path
@@ -160,7 +169,9 @@ class PackagingRecipe(object):
         arch_by_distro = {''}
         arch_by_os = {
                       "Windows": 'x64' if is_64 else 'x86',
-                      "Linux": ('x86_64' if is_rpm else 'amd64') if is_64 else \
+                      "Linux": ('ppc64le' if is_rpm else 'ppc64el') if processor() == 'ppc64le' else \
+                               ('ppc64' if is_rpm else 'powerpc') if processor() == 'ppc64' else \
+                               ('x86_64' if is_rpm else 'amd64') if is_64 else \
                                ('i686' if is_rpm else 'i386'),
                       "SunOS": 'sparc' if 'sparc' == processor() else ('amd64' if is_64 else 'i386'),
                       "AIX": "ppc",
@@ -267,7 +278,61 @@ class PackagingRecipe(object):
                       scripts,
                       self.get_gui_scripts_for_production(),
                       self.get_require_administrative_privileges(),
-                      self.get_require_administrative_privileges_gui())
+                      self.get_require_administrative_privileges_gui(),
+                      self.get_buildout_extensions())
+
+    def download_python_packages_used_by_packaging(self, source=None):
+        packages = self.get_python_packages_used_by_packaging()
+        for package in packages:
+            self.download_python_package_to_cache_dist(package, source)
+
+    def get_python_packages_used_by_packaging(self):
+        from ..utils import get_dependencies
+        packages = set()
+        for package in PYTHON_PACKAGES_USED_BY_PACKAGING:
+            packages |= set([package])
+            packages |= set(get_dependencies(package))
+        return packages
+
+    def download_python_package_to_cache_dist(self, package_name, source=None):
+        import pkg_resources
+        pkg_info = pkg_resources.get_distribution(package_name)
+        pkg_info.as_requirement()
+        installer = self._get_installer()
+        installer._download_cache = None
+        dist = installer._obtain(pkg_info.as_requirement(), source)
+        return installer._fetch(dist, self.get_download_cache_dist(), None)
+
+    def convert_python_packages_used_by_packaging_to_wheels(self):
+        from infi.recipe.application_packager.utils.compiler import execute_with_isolated_python
+        from glob import glob
+        from os import path
+        cache_dist = path.join(self.get_buildout_dir(), '.cache', 'dist')
+        for package in self.get_python_packages_used_by_packaging():
+            if glob(path.join(cache_dist, '{}*.whl'.format(package))):
+                continue
+            for egg in glob(path.join(cache_dist, '{}*.egg'.format(package))):
+                execute_with_isolated_python(self.get_buildout_dir(), ['-m', 'wheel', 'convert', '--dest-dir', cache_dist, egg])
+
+    def _get_installer(self):
+        from zc.buildout.easy_install import Installer
+        import sys
+        dest = self.buildout['buildout']['eggs-directory']
+        links = self.buildout['buildout'].get('find-links', '').split()
+        index = self.buildout['buildout'].get('index')
+        always_unzip = None
+        path = [self.buildout['buildout']['develop-eggs-directory']]
+        allow_hosts = ('*',)
+        newest = True
+        versions = None
+        use_dependency_links = False
+        check_picked = True
+        installer = Installer(dest, links, index, sys.executable,
+                          always_unzip, path,
+                          newest, versions, use_dependency_links,
+                          allow_hosts=allow_hosts,
+                          check_picked=check_picked)
+        return installer
 
     def delete_non_production_packages_from_cache_dist(self):
         from ..utils import get_dependencies, get_distributions_from_dependencies
@@ -277,7 +342,6 @@ class PackagingRecipe(object):
             return
         eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
         eggs.extend(PYTHON_PACKAGES_USED_BY_PACKAGING)
-        eggs.extend(ADDITIONAL_PACKAGES_WE_NEED_TO_PACK)
         dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
         distributions = get_distributions_from_dependencies(dependencies)
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):

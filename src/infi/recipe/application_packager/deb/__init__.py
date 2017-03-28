@@ -15,11 +15,12 @@ class Recipe(PackagingRecipe):
             self.delete_non_production_packages_from_cache_dist()
             self.write_get_pip_for_production()
             self.write_buildout_configuration_file_for_production()
+            self.download_python_packages_used_by_packaging()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),
-                                                        self.get_eggs_directory())
-            utils.download_buildout(self.get_download_cache_dist())
-            utils.download_setuptools(self.get_download_cache_dist())
+                                                        self.get_eggs_directory(),
+                                                        self.using_wheels())
+            self.convert_python_packages_used_by_packaging_to_wheels()
             package = self.build_package()
             logger.debug("Built {}".format(package))
             return [package, ]

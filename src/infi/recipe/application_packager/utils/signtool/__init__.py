@@ -27,6 +27,20 @@ def open_archive(archive_path, mode='r'):
     finally:
         archive.close()
 
+
+def rewrite_record_file(tempdir):
+    from glob import glob
+    from os import path, remove
+    from distutils.dist import Distribution
+    from wheel.bdist_wheel import bdist_wheel
+
+    [dist_info] = glob(path.join(tempdir, '*.dist-info'))
+    record_file = path.join(dist_info, 'RECORD')
+    remove(record_file)
+    wheel = bdist_wheel(Distribution())
+    wheel.write_record(tempdir, dist_info)
+
+
 class SigntoolError(Exception):
     pass
 
@@ -68,6 +82,8 @@ class Signtool(object):
             with open_archive(archive_path) as archive:
                 archive.extractall(tempdir)
             self.sign_executables_in_directory(tempdir)
+            if archive_path.endswith('.whl'):
+                rewrite_record_file(tempdir)
             with open_archive(archive_path, write_mode) as archive:
                 for item in listdir(tempdir):
                     archive.add(path.join(tempdir, item), item)

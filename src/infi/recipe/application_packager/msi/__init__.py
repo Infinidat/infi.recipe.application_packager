@@ -55,12 +55,8 @@ class Recipe(PackagingRecipe):
             # its true we have pre-compiled eggs for Windows
             # but we need to deal with pure-python packages that use setup_requires
             # and specifically pbr
-            utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
-                                                        self.get_download_cache_dist(),
-                                                        self.get_eggs_directory())
-
-            utils.download_buildout(self.get_download_cache_dist())
-            utils.download_setuptools(self.get_download_cache_dist())
+            utils.compiler.byte_compile_lib(self.get_buildout_dir())
+            self.download_python_packages_used_by_packaging()
             silent_launcher = self.get_silent_launcher()
             if self.get_add_remove_programs_icon() and not self.icons_already_set():
                 self.set_icon_in_all_executables_in_project()
@@ -70,6 +66,11 @@ class Recipe(PackagingRecipe):
                 self.sign_all_executables_in_project()
                 self.signtool.sign_file(silent_launcher)
                 self.mark_signed()
+            utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
+                                                        self.get_download_cache_dist(),
+                                                        self.get_eggs_directory(),
+                                                        self.using_wheels())
+            self.convert_python_packages_used_by_packaging_to_wheels()
             package = self.build_package(silent_launcher)
             logger.debug("Built {}".format(package))
             if self.should_sign_files():
@@ -204,25 +205,25 @@ class Recipe(PackagingRecipe):
         parts = wix.mkdir('parts', wix.installdir)
         wix.mkdir('buildout', parts)
         wix.mkdir('production-scripts', parts)
-        wix.add_directory(path.join(self.get_buildout_dir(), 'parts', 'python'), parts)
+        wix.add_directory(path.join(self.get_buildout_dir(), 'parts', 'python'), parts, include_pyc=True)
         wix.add_directory(path.join(self.get_buildout_dir(), 'src'), wix.installdir)
         wix.add_directory(path.join(self.get_buildout_dir(), 'eggs'), wix.installdir, True, True)
         self.add_aditional_directories()
         return silent_launcher_file_id
 
     def _append_os_removedirs_eggs(self, wix, silent_launcher_file_id):
-        commandline = r'''"[INSTALLDIR]parts\python\bin\python.exe" "-c" "from shutil import rmtree; rmtree('[INSTALLDIR]eggs', True)"'''
+        commandline = r'''"[INSTALLDIR]parts\python\bin\python.exe" -c "from shutil import rmtree; rmtree('eggs', True)"'''
         action = wix.add_deferred_in_system_context_custom_action('os_removedirs_eggs', commandline,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
                                                                   silent_launcher_file_id=silent_launcher_file_id,
-                                                                  text="Removing temporary files, this may take a few minutes")
+                                                                  text="Removing temporary egg directories, this may take a few minutes")
         return action.id
 
     def _append_get_pip_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
         commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" get-pip.py ' + \
                       r'--force-reinstall --ignore-installed --upgrade --isolated --no-index ' + \
-                      r'--find-links "[INSTALLDIR].cache\dist" ' + \
-                      r'setuptools zc.buildout'
+                      r'--find-links .cache\dist ' + \
+                      r'pip setuptools zc.buildout buildout.wheel pythonpy'
         action = wix.add_deferred_in_system_context_custom_action('get-pip', commandline,
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
@@ -232,7 +233,7 @@ class Recipe(PackagingRecipe):
         return action.id
 
     def _append_bootstrap_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]parts\python\Scripts\buildout.exe" -U '
+        commandline = r'''"[INSTALLDIR]parts\python\bin\python.exe" -m pythonpy "zc.buildout.buildout.main(list(('-U',)))"'''
         action = wix.add_deferred_in_system_context_custom_action('bootstrap', commandline,
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
@@ -246,7 +247,7 @@ class Recipe(PackagingRecipe):
         after = bootstrap_id
         scripts_to_delete = ["console-script-test", "gui-script-test", "replace_console_script", "script-launcher", "pip*", "easy_install*"]
         suffixes = ['.exe', '-script.py']
-        commandline = r'''"[INSTALLDIR]parts\python\bin\python.exe" "-c" "import glob, os; files = glob.glob(os.path.join('[INTALLDIR]', 'bin', '{}')); list(os.remove(filepath) for filepath in files);"'''
+        commandline = r'''"[INSTALLDIR]parts\python\bin\python.exe" -c "import glob, os; files = glob.glob(os.path.join('bin', '{}')); list(os.remove(filepath) for filepath in files);"'''
 
         for index, (prefix, suffix) in enumerate(product(scripts_to_delete, suffixes)):
             commands = ["import glob, os", ]
@@ -254,17 +255,34 @@ class Recipe(PackagingRecipe):
                                                                      after=bootstrap_id,
                                                                      condition=CONDITION_DURING_INSTALL_OR_REPAIR,
                                                                      silent_launcher_file_id=silent_launcher_file_id,
-                                                                     text="Removing temporary files, this may take a few minutes")
+                                                                     text="Removing temporary executables, this may take a few minutes")
         return after.id
 
     def _append_close_application_action(self, wix, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]bin\buildout.exe" -U install debug-logging close-application '
-        condition = CONDITION_DURING_UPGRADE_AND_UNINSTALL
+        commandline = r'"[INSTALLDIR]bin\buildout.exe" -U install debug-logging close-application'
         action = wix.add_deferred_in_system_context_custom_action('close_application', commandline,
                                                                   after='InstallInitialize',
-                                                                  condition=condition,
+                                                                  condition=CONDITION_DURING_UPGRADE_AND_UNINSTALL,
                                                                   silent_launcher_file_id=silent_launcher_file_id,
                                                                   text="Closing open applications, this may take a few minutes")
+        return action.id
+
+    def _append_pip_uninstall_buildout_stuff(self, wix, close_application_id, silent_launcher_file_id):
+        commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" -m pip uninstall zc.buildout buildout.wheel pythonpy --yes --isolated'
+        action = wix.add_deferred_in_system_context_custom_action('pip_uninstall', commandline,
+                                                                  after=close_application_id,
+                                                                  condition=CONDITION_DURING_UPGRADE_AND_UNINSTALL,
+                                                                  silent_launcher_file_id=silent_launcher_file_id,
+                                                                  text="Removing package temporary files, this may take a few minutes")
+        return action.id
+
+    def _append_os_removedirs_eggs_uninstall(self, wix, pip_uninstall_id, silent_launcher_file_id):
+        commandline = r'''"[INSTALLDIR]parts\python\bin\python.exe" "-c" "from shutil import rmtree; rmtree('eggs', True)"'''
+        action = wix.add_deferred_in_system_context_custom_action('os_removedirs_eggs_uninstall', commandline,
+                                                                  after=pip_uninstall_id,
+                                                                  condition=CONDITION_DURING_UPGRADE_AND_UNINSTALL,
+                                                                  silent_launcher_file_id=silent_launcher_file_id,
+                                                                  text="Removing temporary egg files, this may take a few minutes")
         return action.id
 
     def _append_custom_actions(self, wix, silent_launcher_file_id):
@@ -272,7 +290,9 @@ class Recipe(PackagingRecipe):
         get_pip_id = self._append_get_pip_custom_action(wix, os_removedirs_eggs_id, silent_launcher_file_id)
         bootstrap_id = self._append_bootstrap_custom_action(wix, get_pip_id, silent_launcher_file_id)
         delete_executables_id = self._append_delete_extra_executables_custom_action(wix, bootstrap_id, silent_launcher_file_id)
-        self._append_close_application_action(wix, silent_launcher_file_id)
+        close_application_id = self._append_close_application_action(wix, silent_launcher_file_id)
+        pip_uninstall_id = self._append_pip_uninstall_buildout_stuff(wix, close_application_id, silent_launcher_file_id)
+        os_removedirs_eggs_uninstall_id = self._append_os_removedirs_eggs_uninstall(wix, pip_uninstall_id, silent_launcher_file_id)
 
     def _add_launch_conditions(self, wix):
         self._add_os_requirements_launch_condition(wix)
