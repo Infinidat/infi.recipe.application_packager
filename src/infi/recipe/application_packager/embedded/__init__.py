@@ -195,6 +195,8 @@ class Recipe(PackagingRecipe):
 
         for package_name in dependencies:
             filepath = self.download_python_package_to_cache_dist(package_name, source=True).location
+            if filepath is None:
+                continue
 
             basename = path.basename(filepath).lower()
             exclude_list = self.get_recipe_section().get('exclude-eggs', '').split()
