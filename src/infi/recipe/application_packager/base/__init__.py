@@ -301,7 +301,8 @@ class PackagingRecipe(object):
         installer = self._get_installer()
         installer._download_cache = None
         dist = installer._obtain(pkg_info.as_requirement(), source)
-        return installer._fetch(dist, self.get_download_cache_dist(), None)
+        if dist:
+            return installer._fetch(dist, self.get_download_cache_dist(), None)
 
     def convert_python_packages_used_by_packaging_to_wheels(self):
         from infi.recipe.application_packager.utils.compiler import execute_with_isolated_python

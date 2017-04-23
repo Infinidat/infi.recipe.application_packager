@@ -194,8 +194,10 @@ class Recipe(PackagingRecipe):
         dependencies.discard(self.get_project_name().replace('-', '_'))
 
         for package_name in dependencies:
-            filepath = self.download_python_package_to_cache_dist(package_name, source=True).location
-
+            dist = self.download_python_package_to_cache_dist(package_name, source=True)
+            if dist is None:
+                continue
+            filepath = dist.location
             basename = path.basename(filepath).lower()
             exclude_list = self.get_recipe_section().get('exclude-eggs', '').split()
             exclude_matches = [x for x in exclude_list if basename.startswith(x)]
