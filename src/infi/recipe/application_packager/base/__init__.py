@@ -26,21 +26,18 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'eula-rtf': None,
                    'documentation-url': None,
                    '_target_arch': None,
-                   'close-on-upgrade-or-removal': 'true',
+                   'close-on-upgrade-or-removal' : 'true',
                    'additional-directories': '[]'
                   }
 
-PYTHON_PACKAGES_USED_BY_PACKAGING = [
-    "buildout.wheel",
-    "infi.recipe.buildout_logging",
-    "infi.recipe.close_application",
-    "infi.recipe.console_scripts",
-    "pip",
-    "pythonpy",
-    "setuptools",
-    "six",
-    "zc.buildout",
-]
+PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
+                                     "infi.recipe.console_scripts",
+                                     "infi.recipe.close_application",
+                                     "zc.buildout",
+                                     "pip",
+                                     "setuptools",
+                                     "pythonpy",
+                                     "buildout.wheel"]
 
 SCRIPTS_BY_PACKAGING = ["buildout"]
 
