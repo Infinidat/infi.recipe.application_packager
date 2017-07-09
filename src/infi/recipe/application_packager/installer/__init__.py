@@ -121,8 +121,13 @@ class Installer(object):
         return buildout_exists
 
     def are_there_remainings_of_previous_installations(self):
+        filepaths = []
         if os.path.exists(self.targetdir):
-            log.info("Files and directories under {!r}: {!r}".format(self.targetdir, os.listdir(self.targetdir)))
+            for root, dirs, files in os.walk(self.targetdir):
+                basedir = os.path.relpath(root, self.targetdir)
+                filepaths += [basedir + os.path.sep]
+                filepaths += [os.path.join(basedir, file) for file in files]
+            log.info("Files and directories under {!r}: {!r}".format(self.targetdir, filepaths))
         return os.path.exists(self.targetdir)
 
     def is_package_exists(self):
