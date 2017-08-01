@@ -25,6 +25,9 @@ def scan_for_python_files(dirpath, prefix=None):
 
 
 def _setup(package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs):
+    if kwargs.get('pbr'):
+        config = setuptools.config.read_configuration("setup.cfg")
+        packages = [config['metadata']['name']]
     python_files, c_extensions = [], []
     previous_package = '*'
     for package in packages:
