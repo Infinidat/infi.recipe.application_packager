@@ -29,7 +29,7 @@ def _generate_cython(filepath):
     before = glob.glob(filepath.replace('.pyx', '.*'))
     subprocess.check_call([os.environ['PYTHON_EXECUTABLE'], os.environ['PYTHON_SCRIPT'], '-m', 'cython', filepath])
     after = glob.glob(filepath.replace('.pyx', '.*'))
-    return ((set(after)-set(before)).pop()
+    return (set(after)-set(before)).pop()
 
 
 def _setup(package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs):
