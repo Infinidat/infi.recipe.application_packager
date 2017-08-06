@@ -32,6 +32,15 @@ def _generate_cython(filepath):
     return (set(after)-set(before)).pop()
 
 
+def _generate_cython_if_necssary(filepath):
+    if filepath.endswith('.pyx'):
+        return _generate_cython(filepath)
+    if not os.path.exists(os.path.abspath(filepath)):
+        if filepath.endswith('.c') or filepath.endswith('.cpp'):
+            return _generate_cython(filepath.rsplit('.',1)[0] + '.pyx')
+    return filepath
+
+
 def _setup(package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs):
     if kwargs.get('pbr'):
         config = setuptools.config.read_configuration("setup.cfg")
@@ -51,7 +60,7 @@ def _setup(package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs)
                    CCFLAGS=[repr(i) for i in ext_module.extra_compile_args])
         absolute_sources = [os.path.abspath(source) for source in ext_module.sources]
         absolute_roots = list(set([os.path.abspath(os.path.dirname(source)) for source in ext_module.sources]))
-        fixed_sources = [_generate_cython(item) if item.endswith('.pyx') else item for item in absolute_sources]
+        fixed_sources = [_generate_cython_if_necssary(item) for item in absolute_sources]
         c_extensions.append(dict(name=ext_module.name,
                                  sources=list(fixed_sources),
                                  roots=absolute_roots,
