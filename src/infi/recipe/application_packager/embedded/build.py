@@ -95,7 +95,7 @@ def scan_for_files_with_setup_py(build_dir, cleanup=False):
             with open(setup_py_mock, 'w') as fd:
                 fd.write(SETUP_PY_MOCK)
             env = environ.copy()
-            env.update(PYTHONPATH=path.abspath(path.curdir))
+            env.update(PYTHONPATH=path.abspath(path.curdir), PYTHON_EXECUTABLE=PYTHON_EXECUTABLE, PYTHON_SCRIPT=PYTHON_SCRIPT)
             cmd = [PYTHON_EXECUTABLE, PYTHON_SCRIPT, setup_py_mock, 'build'] if name != 'nt' else \
                   [PYTHON_SCRIPT, setup_py_mock, 'build']
             logger.info(' '.join(cmd))

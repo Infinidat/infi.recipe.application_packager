@@ -1,9 +1,10 @@
 import setuptools
+import subprocess
 import distutils.core
 import json
 import mock
+import glob
 import os
-
 
 def _iter_files(dirname, suffix=None):
     for dirpath, dirnames, filenames in os.walk(dirname):
@@ -22,6 +23,13 @@ def scan_for_python_files(dirpath, prefix=None):
             continue
         python_files.append(dict(package="__init__.py" in py, source=os.path.abspath(py), name=name))
     return python_files
+
+
+def _generate_cython(filepath):
+    before = glob.glob(filepath.replace('.pyx', '.*'))
+    subprocess.check_call([os.environ['PYTHON_EXECUTABLE', 'PYTHON_SCRIPT', '-m', 'cython', filepath]])
+    after = glob.glob(filepath.replace('.pyx', '.*'))
+    return ((set(after)-set(before)).pop()
 
 
 def _setup(package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs):
@@ -43,8 +51,7 @@ def _setup(package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs)
                    CCFLAGS=[repr(i) for i in ext_module.extra_compile_args])
         absolute_sources = [os.path.abspath(source) for source in ext_module.sources]
         absolute_roots = list(set([os.path.abspath(os.path.dirname(source)) for source in ext_module.sources]))
-        fixed_sources = [item.replace('.pyx', '.cpp') if os.path.exists(item.replace('.pyx', '.cpp')) else item
-                         for item in absolute_sources]
+        fixed_sources = [_generate_cython(item) if item.endswith('.pyx') else item for item in absolute_sources]
         c_extensions.append(dict(name=ext_module.name,
                                  sources=list(fixed_sources),
                                  roots=absolute_roots,
