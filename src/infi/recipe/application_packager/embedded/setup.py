@@ -27,7 +27,7 @@ def scan_for_python_files(dirpath, prefix=None):
 
 def _generate_cython(filepath):
     before = glob.glob(filepath.replace('.pyx', '.*'))
-    subprocess.check_call([os.environ['PYTHON_EXECUTABLE', 'PYTHON_SCRIPT', '-m', 'cython', filepath]])
+    subprocess.check_call([os.environ['PYTHON_EXECUTABLE'], os.environ['PYTHON_SCRIPT'], '-m', 'cython', filepath])
     after = glob.glob(filepath.replace('.pyx', '.*'))
     return ((set(after)-set(before)).pop()
 
