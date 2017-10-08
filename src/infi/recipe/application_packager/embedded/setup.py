@@ -1,8 +1,14 @@
 import setuptools
+import subprocess
 import distutils.core
 import json
 import mock
+import glob
 import os
+
+
+class SourceFileMissing(Exception):
+    pass
 
 
 def _iter_files(dirname, suffix=None):
@@ -24,7 +30,37 @@ def scan_for_python_files(dirpath, prefix=None):
     return python_files
 
 
+def _is_cython_importable():
+    try:
+        import Cython
+    except ImportError:
+        return False
+    return True
+
+
+def _generate_cython(filepath):
+    before = glob.glob(filepath.replace('.pyx', '.*'))
+    subprocess.check_call([os.environ['PYTHON_EXECUTABLE'], os.environ['PYTHON_SCRIPT'], '-m', 'cython', filepath])
+    after = glob.glob(filepath.replace('.pyx', '.*'))
+    return (set(after)-set(before)).pop()
+
+
+def _generate_cython_if_necssary(filepath):
+    if filepath.endswith('.pyx'):
+        return _generate_cython(filepath)
+    if not os.path.exists(os.path.abspath(filepath)):
+        if filepath.endswith('.c') or filepath.endswith('.cpp'):
+            if _is_cython_importable():
+                return _generate_cython(filepath.rsplit('.', 1)[0] + '.pyx')
+            else:
+                raise SourceFileMissing()
+    return filepath
+
+
 def _setup(package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs):
+    if kwargs.get('pbr'):
+        config = setuptools.config.read_configuration("setup.cfg")
+        packages = [config['metadata']['name']]
     python_files, c_extensions = [], []
     previous_package = '*'
     for package in packages:
@@ -40,8 +76,10 @@ def _setup(package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs)
                    CCFLAGS=[repr(i) for i in ext_module.extra_compile_args])
         absolute_sources = [os.path.abspath(source) for source in ext_module.sources]
         absolute_roots = list(set([os.path.abspath(os.path.dirname(source)) for source in ext_module.sources]))
-        fixed_sources = [item.replace('.pyx', '.cpp') if os.path.exists(item.replace('.pyx', '.cpp')) else item
-                         for item in absolute_sources]
+        try:
+            fixed_sources = [_generate_cython_if_necssary(item) for item in absolute_sources]
+        except SourceFileMissing:
+            continue
         c_extensions.append(dict(name=ext_module.name,
                                  sources=list(fixed_sources),
                                  roots=absolute_roots,
