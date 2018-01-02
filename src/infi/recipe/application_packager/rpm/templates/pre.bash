@@ -26,6 +26,7 @@ if test -d %{prefix}; then
 
         # close application before the upgrade
         if test -n "$CLOSE_ON_UPGRADE_OR_REMOVAL" -a "$CLOSE_ON_UPGRADE_OR_REMOVAL" != "0"; then
+            execute parts/python/bin/python get-pip.py -v --force-reinstall --ignore-installed --upgrade --isolated --no-index --find-links .cache/dist buildout.wheel
             execute bin/buildout -U install debug-logging close-application
             RC=$?
             assert_rc
