@@ -339,6 +339,7 @@ class PackagingRecipe(object):
         from ..utils import get_dependencies, get_distributions_from_dependencies
         from glob import glob
         from os import path, remove
+        import re
         if not self.should_shrink_cache_dist():
             return
         eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
@@ -356,6 +357,10 @@ class PackagingRecipe(object):
                 continue
             # in the post-pep-440 era, foo-2.0.0-pre8.tar.gz is parsed as 2.0.0rc8
             if any([distname.lower() in basename and version in basename.replace('-pre', 'rc')
+                    for distname, version in distributions.items()]):
+                continue
+            # fix "2018.2.3" in "regex-2018.02.03.tar.gz"
+            if any([distname.lower() in basename and version in re.sub("\.0+", ".", basename)
                     for distname, version in distributions.items()]):
                 continue
 
