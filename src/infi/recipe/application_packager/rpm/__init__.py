@@ -8,6 +8,16 @@ from shutil import copy
 
 logger = getLogger(__name__)
 
+
+def _use_rpmbuild():
+    return path.exists('/usr/bin/rpmbuild')
+
+
+def _call_rpmbuild(buildroot, specfile):
+    rpmbuild_executable = "rpmbuild" if _use_rpmbuild() else "rpm"
+    return utils.execute.execute_assert_success([rpmbuild_executable, '--verbose', '--buildroot', buildroot, '-bb', specfile]).get_stdout()
+
+
 class Recipe(PackagingRecipe):
     def install(self):
         with self.with_most_mortem():
@@ -28,7 +38,6 @@ class Recipe(PackagingRecipe):
         from re import search
         import platform
         self._is_aix = platform.system() == "AIX"
-        self._use_rpmbuild = self._use_rpmbuild()
         self._files = set()
         self._directories = set()
         self._directories_to_clean = set()
@@ -44,9 +53,6 @@ class Recipe(PackagingRecipe):
                     remove(self.rpm_filepath)
                 copy(rpm_wrote, self.rpm_filepath)
             return self.rpm_filepath
-
-    def _use_rpmbuild(self):
-        return path.exists('/usr/bin/rpmbuild')
 
     def _create_specfile(self):
         from jinja2 import Environment, PackageLoader
@@ -155,5 +161,4 @@ class Recipe(PackagingRecipe):
         return path.join(self.get_working_directory(), self.get_rpm_filename())
 
     def _call_rpmbuild(self, specfile):
-        rpmbuild_executable = "rpmbuild" if self._use_rpmbuild else "rpm"
-        return utils.execute.execute_assert_success([rpmbuild_executable, '--verbose', '--buildroot', self._buildroot, '-bb', specfile]).get_stdout()
+        return _call_rpmbuild(self._buildroot, specfile)
