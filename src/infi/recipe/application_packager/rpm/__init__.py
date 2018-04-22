@@ -8,6 +8,16 @@ from shutil import copy
 
 logger = getLogger(__name__)
 
+
+def _use_rpmbuild():
+    return path.exists('/usr/bin/rpmbuild')
+
+
+def _call_rpmbuild(buildroot, specfile):
+    rpmbuild_executable = "rpmbuild" if _use_rpmbuild() else "rpm"
+    return utils.execute.execute_assert_success([rpmbuild_executable, '--verbose', '--buildroot', buildroot, '-bb', specfile]).get_stdout()
+
+
 class Recipe(PackagingRecipe):
     def install(self):
         with self.with_most_mortem():
@@ -151,5 +161,4 @@ class Recipe(PackagingRecipe):
         return path.join(self.get_working_directory(), self.get_rpm_filename())
 
     def _call_rpmbuild(self, specfile):
-        rpmbuild_executable = "rpm" if self._is_aix else "rpmbuild"
-        return utils.execute.execute_assert_success([rpmbuild_executable, '--verbose', '--buildroot', self._buildroot, '-bb', specfile]).get_stdout()
+        return _call_rpmbuild(self._buildroot, specfile)
