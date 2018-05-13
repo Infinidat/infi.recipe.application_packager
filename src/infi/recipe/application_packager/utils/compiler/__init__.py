@@ -21,53 +21,6 @@ class BinaryDistributionsCompiler(object):
         all_sources = list(chain.from_iterable(all_sources))
         return all_sources
 
-    def add_import_setuptools_to_setup_py(self):
-        with open("setup.py") as fd:
-            content = fd.read()
-        if 'distutils' in content:
-            content = content.replace("distutils.core", "setuptools")
-            content = content.replace("from distutils import core", "import setuptools as core")
-        else:
-            content = 'import setuptools' + linesep + content
-        with open("setup.py", 'w') as fd:
-            fd.write(content)
-
-    @contextmanager
-    def extract_archive(self, archive_path):
-        import tarfile
-        from zipfile import ZipFile
-        from .. import temporary_directory_context, chdir
-        archive_opener = tarfile.open if archive_path.endswith('gz') else ZipFile
-        with temporary_directory_context() as tempdir:
-            with archive_opener(archive_path) as open_archive:
-                open_archive.extractall(tempdir)
-            archive_files = glob('*')
-            if len(archive_files) == 1: # all files are under a sub-directory
-                with chdir(archive_files[0]):
-                    yield archive_files[0]
-            else:
-                yield tempdir
-
-    def build_egg(self, setup_script="setup.py"):
-        execute_with_isolated_python(self.buildout_directory, [setup_script, "bdist_egg"])
-        [egg] = glob(path.join('dist', '*.egg'))
-        return egg
-
-    def compile_eggs(self):
-         from ..execute import ExecutionError
-         from os import remove
-         from shutil import copy
-         for archive in self.get_source_archives():
-             logger.info("Compiling egg for {}".format(archive))
-             with self.extract_archive(archive) as extracted_dir:
-                 try:
-                     built_egg = self.build_egg("setupegg.py" if path.exists("setupegg.py") else "setup.py")
-                 except ExecutionError:
-                     self.add_import_setuptools_to_setup_py()
-                     built_egg = self.build_egg()
-                 copy(built_egg, self.archives_directory)
-                 remove(archive)
-
     def compile_wheels(self):
         from ..execute import ExecutionError
         from .. import chdir
@@ -96,12 +49,9 @@ def execute_with_isolated_python(buildout_directory, commandline_or_args, **kwar
     execute_assert_success(executable + args, env=env, **kwargs)
 
 
-def compile_binary_distributions(buildout_directory, archives_directory, eggs_directory, build_wheels):
+def compile_binary_distributions(buildout_directory, archives_directory, eggs_directory):
     compiler = BinaryDistributionsCompiler(buildout_directory, archives_directory, eggs_directory)
-    if build_wheels:
-        compiler.compile_wheels()
-    else:
-        compiler.compile_eggs()
+    compiler.compile_wheels()
 
 
 def byte_compile_lib(buildout_directory):

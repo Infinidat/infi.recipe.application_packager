@@ -27,8 +27,7 @@ class Recipe(PackagingRecipe):
             self.download_python_packages_used_by_packaging()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),
-                                                        self.get_eggs_directory(),
-                                                        self.using_wheels())
+                                                        self.get_eggs_directory())
             self.convert_python_packages_used_by_packaging_to_wheels()
             package = self.build_package()
             logger.debug("Built {}".format(package))

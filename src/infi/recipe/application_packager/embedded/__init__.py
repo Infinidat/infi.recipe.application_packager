@@ -71,17 +71,8 @@ class Recipe(PackagingRecipe):
         """
         from . import python_source
         from .. import utils
-        from buildout.wheel import unload, load
         assert path.exists(self.isolated_python_dirpath)
-        loaded = False
-        try:
-            unload(self.buildout['buildout'])
-            loaded = True
-        except AttributeError:
-            pass
         self.download_python_packages_used_by_packaging(source=True)
-        if loaded:
-            load(self.buildout['buildout'])
         return python_source.get_python_source(self.buildout, self.options)
 
     def build_embedded_python(self, python_source_path):
@@ -179,16 +170,9 @@ class Recipe(PackagingRecipe):
         return system() and filepath.endswith("win-amd64.egg") or filepath.endswith("win32.egg")
 
     def iter_archives_for_embedding(self):
-        from buildout.wheel import unload, load
         from ..utils import get_dependencies
 
         distributions = self.get_dependencies_for_embedding()
-        loaded = False
-        try:
-            unload(self.buildout['buildout'])
-            loaded = True
-        except AttributeError:
-            pass
         eggs = self.get_eggs_for_production().split() or [self.get_python_module_name()]
         dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
         dependencies.discard(self.get_project_name().replace('-', '_'))
@@ -205,9 +189,6 @@ class Recipe(PackagingRecipe):
                 logger.info("skipping {} because matched by exclude_eggs rule(s) {!r}".format(basename, exclude_matches))
                 continue
             yield path.abspath(filepath)
-
-        if loaded:
-            load(self.buildout['buildout'])
 
 
 class BuildEnvironment(Recipe):
