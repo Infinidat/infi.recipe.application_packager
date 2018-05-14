@@ -267,7 +267,7 @@ class Recipe(PackagingRecipe):
         return action.id
 
     def _append_pip_uninstall_buildout_stuff(self, wix, close_application_id, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" -m pip uninstall zc.buildout pythonpy six --yes --isolated'
+        commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" -m pip uninstall zc.buildout pythonpy --yes --isolated'
         action = wix.add_deferred_in_system_context_custom_action('pip_uninstall', commandline,
                                                                   after=close_application_id,
                                                                   condition=CONDITION_DURING_UPGRADE_AND_UNINSTALL,
