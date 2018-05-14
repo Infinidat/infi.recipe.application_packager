@@ -51,6 +51,9 @@ CONSOLE_SCRIPTS = ["packager_hello", "packager_sample", "post_install", "pre_uni
 def create_console_scripts():
     from infi.execute import execute_assert_success
     from infi.projector.helper.utils import open_buildout_configfile
+    with open_buildout_configfile(filepath="buildout.cfg", write_on_exit=True) as buildout:
+        buildout.set("project", "post_install_script_name", "post_install")
+        buildout.set("project", "pre_uninstall_script_name", "pre_uninstall")
     for name in CONSOLE_SCRIPTS:
         with open_buildout_configfile(filepath="buildout.cfg", write_on_exit=True) as buildout:
             scripts = buildout.get("pack", "scripts").split() \
@@ -62,8 +65,9 @@ def create_console_scripts():
                                 "console-scripts", "add", name,
                                 "infi.recipe.application_packager.scripts:{0}".format(name),
                                 "--commit-changes"])
-        execute_assert_success([os.path.join('bin', 'projector'),
-                               "devenv", "build", "--no-scripts"])
+    execute_assert_success([os.path.join('bin', 'projector'),
+                           "devenv", "build", "--no-scripts"])
+
 
 def create_package(recipe_parameters=None):
     from infi.execute import execute_assert_success
