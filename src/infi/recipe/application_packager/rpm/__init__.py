@@ -47,7 +47,7 @@ class Recipe(PackagingRecipe):
             with utils.chdir(self.get_working_directory()):
                 specfile = self._create_specfile()
                 output = self._call_rpmbuild(specfile)
-                rpm_wrote = search("Wrote: (.*)", output).groups()[0]
+                rpm_wrote = search(b"Wrote: (.*)", output).groups()[0]
                 if path.exists(self.rpm_filepath):
                     remove(self.rpm_filepath)
                 copy(rpm_wrote, self.rpm_filepath)
