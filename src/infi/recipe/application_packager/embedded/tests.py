@@ -25,7 +25,7 @@ class UnitTestCase(unittest.TestCase):
         args = Download(buildout_section)(source_url)[0], 'r:gz'
         tarfile_open.assert_called_with(*args)
         tarfile_open(*args).extractall.assert_called_with(ANY)
-        self.assertEquals(actual, path.join(path.curdir, 'build', 'Python-2.7.6'))
+        self.assertEqual(actual, path.join(path.curdir, 'build', 'Python-2.7.6'))
 
     def test_setup_wrapper(self):
         from ..utils import temporary_directory_context
@@ -39,9 +39,9 @@ class UnitTestCase(unittest.TestCase):
                 data = load(fd)
         def get_source_key(dct):
             return dct['source']
-        self.assertEquals(sorted(data['python_files'], key=get_source_key),
+        self.assertEqual(sorted(data['python_files'], key=get_source_key),
                           sorted(expected_data['python_files'], key=get_source_key))
-        self.assertEquals(sorted([sorted(extension.items()) for extension in data['c_extensions']]),
+        self.assertEqual(sorted([sorted(extension.items()) for extension in data['c_extensions']]),
                           sorted([sorted(extension.items()) for extension in expected_data['c_extensions']]))
 
     def test_write_pystick_variable_file(self):
@@ -54,7 +54,7 @@ class UnitTestCase(unittest.TestCase):
             environment.write_pystick_variable_file(path.join(path.curdir, 'pystick_variable_filepath.scons'), [], [], {})
             with open('pystick_variable_filepath.scons') as fd:
                 actual = fd.read()
-        self.assertEquals(actual, EXPECTED_PYSTICK_ENVIRONMENT_FILE_CONTENTS)
+        self.assertEqual(actual, EXPECTED_PYSTICK_ENVIRONMENT_FILE_CONTENTS)
 
     def test_build_dependency(self):
         from . import build

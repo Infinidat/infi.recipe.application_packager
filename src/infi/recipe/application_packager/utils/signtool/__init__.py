@@ -91,6 +91,6 @@ class Signtool(object):
     def sign_executables_in_directory(self, tempdir):
         from os import walk, path
         for dirpath, dirnames, filenames in walk(tempdir):
-            for filename in filter(lambda filename: filename.endswith('exe'), filenames):
+            for filename in [filename for filename in filenames if filename.endswith('exe')]:
                 filepath = path.join(dirpath, filename)
                 self.sign_file(filepath)

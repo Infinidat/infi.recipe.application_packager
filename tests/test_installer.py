@@ -20,9 +20,9 @@ EXTENSION = '.exe' if os.name == 'nt' else ''
 
 def delete_existing_builds():
     items = glob.glob(os.path.join(TESTCASE_DIR, 'parts', '*'))
-    for path in filter(lambda path: os.path.isfile(path), items):
+    for path in [path for path in items if os.path.isfile(path)]:
         os.remove(path)
-    for path in filter(lambda path: os.path.isdir(path), items):
+    for path in [path for path in items if os.path.isdir(path)]:
         if path.endswith('python') or path.endswith('buildout') or path.endswith("scripts"):
             continue
         shutil.rmtree(path)
@@ -268,7 +268,7 @@ class Base(unittest.TestCase):
         # assert on upgrade
         cleanup_buildout_logs()
         pid.poll()
-        self.assertEquals(close_on_upgrade_or_removal, pid.is_finished())
+        self.assertEqual(close_on_upgrade_or_removal, pid.is_finished())
 
         # start process and uninstall
         pid = self._run_the_installed_script_in_the_background()
@@ -277,7 +277,7 @@ class Base(unittest.TestCase):
         # assert on removal
         cleanup_buildout_logs()
         pid.poll()
-        self.assertEquals(close_on_upgrade_or_removal, pid.is_finished())
+        self.assertEqual(close_on_upgrade_or_removal, pid.is_finished())
 
     @classmethod
     def platform_specific_cleanup(cls):
