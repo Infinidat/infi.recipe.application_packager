@@ -68,8 +68,7 @@ class Recipe(PackagingRecipe):
                 self.mark_signed()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),
-                                                        self.get_eggs_directory(),
-                                                        self.using_wheels())
+                                                        self.get_eggs_directory())
             self.convert_python_packages_used_by_packaging_to_wheels()
             package = self.build_package(silent_launcher)
             logger.debug("Built {}".format(package))
@@ -179,12 +178,11 @@ class Recipe(PackagingRecipe):
             yield tempdir
 
     def get_wix35_binaries_zip_from_the_internet(self):
-        from urllib import urlretrieve
         from tempfile import mkstemp
         from os import close
         fd, path = mkstemp(suffix='.zip')
         close(fd)
-        urlretrieve("http://python.infinidat.com/packages/main-stable/index/packages/wix/releases/3.5/distributions/other/architectures/x86/extensions/zip/wix-3.5-windows-x86.zip", path)
+        utils.urlretrieve("http://python.infinidat.com/packages/main-stable/index/packages/wix/releases/3.5/distributions/other/architectures/x86/extensions/zip/wix-3.5-windows-x86.zip", path)
         return path
 
     def _append_bindir_to_system_path(self, wix):
@@ -223,7 +221,7 @@ class Recipe(PackagingRecipe):
         commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" get-pip.py ' + \
                       r'--force-reinstall --ignore-installed --upgrade --isolated --no-index ' + \
                       r'--find-links .cache\dist ' + \
-                      r'pip setuptools zc.buildout buildout.wheel pythonpy'
+                      r'pip setuptools zc.buildout pythonpy'
         action = wix.add_deferred_in_system_context_custom_action('get-pip', commandline,
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
@@ -268,7 +266,7 @@ class Recipe(PackagingRecipe):
         return action.id
 
     def _append_pip_uninstall_buildout_stuff(self, wix, close_application_id, silent_launcher_file_id):
-        commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" -m pip uninstall zc.buildout buildout.wheel pythonpy six --yes --isolated'
+        commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" -m pip uninstall zc.buildout pythonpy --yes --isolated'
         action = wix.add_deferred_in_system_context_custom_action('pip_uninstall', commandline,
                                                                   after=close_application_id,
                                                                   condition=CONDITION_DURING_UPGRADE_AND_UNINSTALL,

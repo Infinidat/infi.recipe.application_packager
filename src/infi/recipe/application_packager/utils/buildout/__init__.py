@@ -76,5 +76,3 @@ def write_buildout_configuration_file_for_production(dependent_scripts, minimal_
             buildout.set("production-gui-scripts", "scripts", gui_scripts)
         buildout.set("production-scripts" ,"require-administrative-privileges", require_admin)
         buildout.set("production-gui-scripts" ,"require-administrative-privileges", gui_require_admin)
-        if extensions:
-            buildout.set('buildout', 'extensions', 'buildout.wheel')

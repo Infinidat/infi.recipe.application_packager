@@ -36,8 +36,7 @@ PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
                                      "zc.buildout",
                                      "pip",
                                      "setuptools",
-                                     "pythonpy",
-                                     "buildout.wheel"]
+                                     "pythonpy"]
 
 SCRIPTS_BY_PACKAGING = ["buildout"]
 
@@ -69,9 +68,6 @@ class PackagingRecipe(object):
 
     def get_buildout_extensions(self):
         return self.get_buildout_section().get("extensions")
-
-    def using_wheels(self):
-        return self.get_buildout_extensions() and 'buildout.wheel' in self.get_buildout_extensions()
 
     def get_download_cache_dist(self):
         from os import path

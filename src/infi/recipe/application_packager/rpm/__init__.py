@@ -27,8 +27,7 @@ class Recipe(PackagingRecipe):
             self.download_python_packages_used_by_packaging()
             utils.compiler.compile_binary_distributions(self.get_buildout_dir(),
                                                         self.get_download_cache_dist(),
-                                                        self.get_eggs_directory(),
-                                                        self.using_wheels())
+                                                        self.get_eggs_directory())
             self.convert_python_packages_used_by_packaging_to_wheels()
             package = self.build_package()
             logger.debug("Built {}".format(package))
@@ -48,7 +47,7 @@ class Recipe(PackagingRecipe):
             with utils.chdir(self.get_working_directory()):
                 specfile = self._create_specfile()
                 output = self._call_rpmbuild(specfile)
-                rpm_wrote = search("Wrote: (.*)", output).groups()[0]
+                rpm_wrote = search(b"Wrote: (.*)", output).groups()[0]
                 if path.exists(self.rpm_filepath):
                     remove(self.rpm_filepath)
                 copy(rpm_wrote, self.rpm_filepath)

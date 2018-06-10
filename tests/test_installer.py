@@ -20,9 +20,9 @@ EXTENSION = '.exe' if os.name == 'nt' else ''
 
 def delete_existing_builds():
     items = glob.glob(os.path.join(TESTCASE_DIR, 'parts', '*'))
-    for path in filter(lambda path: os.path.isfile(path), items):
+    for path in [path for path in items if os.path.isfile(path)]:
         os.remove(path)
-    for path in filter(lambda path: os.path.isdir(path), items):
+    for path in [path for path in items if os.path.isdir(path)]:
         if path.endswith('python') or path.endswith('buildout') or path.endswith("scripts"):
             continue
         shutil.rmtree(path)
@@ -51,6 +51,9 @@ CONSOLE_SCRIPTS = ["packager_hello", "packager_sample", "post_install", "pre_uni
 def create_console_scripts():
     from infi.execute import execute_assert_success
     from infi.projector.helper.utils import open_buildout_configfile
+    with open_buildout_configfile(filepath="buildout.cfg", write_on_exit=True) as buildout:
+        buildout.set("project", "post_install_script_name", "post_install")
+        buildout.set("project", "pre_uninstall_script_name", "pre_uninstall")
     for name in CONSOLE_SCRIPTS:
         with open_buildout_configfile(filepath="buildout.cfg", write_on_exit=True) as buildout:
             scripts = buildout.get("pack", "scripts").split() \
@@ -62,8 +65,9 @@ def create_console_scripts():
                                 "console-scripts", "add", name,
                                 "infi.recipe.application_packager.scripts:{0}".format(name),
                                 "--commit-changes"])
-        execute_assert_success([os.path.join('bin', 'projector'),
-                               "devenv", "build", "--no-scripts"])
+    execute_assert_success([os.path.join('bin', 'projector'),
+                           "devenv", "build", "--no-scripts"])
+
 
 def create_package(recipe_parameters=None):
     from infi.execute import execute_assert_success
@@ -264,7 +268,7 @@ class Base(unittest.TestCase):
         # assert on upgrade
         cleanup_buildout_logs()
         pid.poll()
-        self.assertEquals(close_on_upgrade_or_removal, pid.is_finished())
+        self.assertEqual(close_on_upgrade_or_removal, pid.is_finished())
 
         # start process and uninstall
         pid = self._run_the_installed_script_in_the_background()
@@ -273,7 +277,7 @@ class Base(unittest.TestCase):
         # assert on removal
         cleanup_buildout_logs()
         pid.poll()
-        self.assertEquals(close_on_upgrade_or_removal, pid.is_finished())
+        self.assertEqual(close_on_upgrade_or_removal, pid.is_finished())
 
     @classmethod
     def platform_specific_cleanup(cls):

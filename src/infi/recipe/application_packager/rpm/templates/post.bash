@@ -14,7 +14,7 @@ execute cd %{prefix}
 # bootstrap
 _echo "Bootstrapping, this may take a few minutes             "
 export PYTHONPATH=
-execute parts/python/bin/python get-pip.py -v --force-reinstall --ignore-installed --upgrade --isolated --no-index --find-links .cache/dist pip setuptools zc.buildout buildout.wheel
+execute parts/python/bin/python get-pip.py -v --force-reinstall --ignore-installed --upgrade --isolated --no-index --find-links .cache/dist pip setuptools zc.buildout
 execute parts/python/bin/python parts/python/bin/buildout -U
 RC=$?
 _echo "\r"
