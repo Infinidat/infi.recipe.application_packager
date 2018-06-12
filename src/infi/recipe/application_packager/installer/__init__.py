@@ -2,16 +2,10 @@ from infi.execute import execute
 import os
 import glob
 import logging
-import shutil
-import platform
-import hashlib
 import stat
 
 from contextlib import contextmanager
-try:
-    from ConfigParser import ConfigParser, NoOptionError
-except:
-    from configparser import ConfigParser, NoOptionError
+from six.moves.configparser import ConfigParser, NoOptionError
 
 from tempfile import NamedTemporaryFile
 
@@ -32,8 +26,17 @@ from infi.recipe.application_packager.utils.execute import execute_assert_succes
 
 def get_pypi_addresses():
     """:returns: a list of PyPI addresses being looked by easy_install and buildout"""
-    # TODO get the real list from pydistutils.cfg and buildout/default.cfg
-    return PYPI_HOSTS
+    hosts = PYPI_HOSTS
+    try:
+        from six.moves.urllib.parse import urlsplit
+        for cfg_path, section, index in [('~/.buildout/default.cfg', 'buildout', 'index'), ('~/.pydistutils.cfg', 'easy_install', 'index-url')]:
+            real_cfg_path = os.path.expanduser(cfg_path)
+            config = ConfigParser()
+            config.read(real_cfg_path)
+            index_domain = urlsplit(config.get(section, index)).netloc
+            hosts.append('127.0.0.1    ' + index_domain)
+    finally:
+        return hosts
 
 @contextmanager
 def prevent_access_to_pypi_servers():
@@ -72,7 +75,6 @@ def prevent_access_to_gcc():
 
 class Installer(object):
     package_extension = None
-    targetdir = None
     executable_extension = None
 
     def __init__(self, buildout_path='buildout.cfg'):
@@ -126,7 +128,7 @@ class Installer(object):
             for root, dirs, files in os.walk(self.targetdir):
                 basedir = os.path.relpath(root, self.targetdir)
                 filepaths += [basedir + os.path.sep]
-                filepaths += [os.path.join(basedir, file) for file in files]
+                filepaths += [os.path.join(basedir, f) for f in files]
             log.info("Files and directories under {!r}: {!r}".format(self.targetdir, filepaths))
         return os.path.exists(self.targetdir)
 

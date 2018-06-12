@@ -251,8 +251,8 @@ class Wix(object):
 
     def add_icon(self, icon_path):
         filename = os.path.basename(icon_path)
-        extension = '.' + filename.split('.')[-1]
-        icon_id = self.new_id(filename.replace(extension, '')) + extension
+        name, extension = os.path.splitext(filename)
+        icon_id = self.new_id(name) + extension
         self._context['icons'].append(WixIcon(icon_id, icon_path))
         return icon_id
 

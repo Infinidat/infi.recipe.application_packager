@@ -206,7 +206,7 @@ class Recipe(PackagingRecipe):
             with open(filepath) as fd:
                 exec(fd.read())
                 return _prettify(locals()['git_commit_date'])
-        except:
+        except Exception:
             return _prettify(todays_date)
 
     def _write_working_directory(self):

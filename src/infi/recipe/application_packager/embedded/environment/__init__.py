@@ -7,6 +7,7 @@ from pkg_resources import ensure_directory, resource_filename
 from platform import system
 from json import dumps
 from os import path, name as os_name
+from six import string_types
 
 SCONSCRIPT_TEMPLATE = """env = DefaultEnvironment()
 {%- for key, value in sorted(environment_variables.items()) %}
@@ -252,7 +253,7 @@ def _apply_project_specific_on_top_of_platform_defaults(variables, project_speci
         value = variables.get(key)
         if key in ("CC", "CXX", "!CC", "!CXX"):
             variables[key] = added_value
-        elif isinstance(value, basestring):
+        elif isinstance(value, string_types):
             variables[key] = [value, added_value]
         elif isinstance(value, list):
             variables[key].append(added_value)

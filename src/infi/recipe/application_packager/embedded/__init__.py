@@ -338,7 +338,7 @@ class StaticLibrary(Recipe):
         library_name = self.get_python_module_name().split('.')[-1]
         [src] = [item for item in glob(path.join('build', 'embedded', '*fpython*')) if
                  not item.endswith('.rsp')]
-        old_library_name = path.basename(src).split('.')[0].replace('lib', '')
+        old_library_name = path.basename(src).split('.')[0].replace(b'lib', b'')
         dst = path.join('dist', path.basename(src).replace(old_library_name, library_name))
         ensure_directory(dst)
         copy(src, dst)

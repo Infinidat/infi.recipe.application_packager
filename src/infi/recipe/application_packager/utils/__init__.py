@@ -3,16 +3,8 @@ from pkg_resources import resource_filename
 from contextlib import contextmanager
 from logging import getLogger
 from . import buildout, compiler, execute, signtool, rcedit
-try:
-    from urllib import urlretrieve
-except ImportError:
-    from urllib.request import urlretrieve
-
-try:
-    from ConfigParser import ConfigParser, NoOptionError, NoSectionError
-except ImportError:
-    from configparser import ConfigParser, NoOptionError, NoSectionError
-
+from six.moves.configparser import ConfigParser, NoOptionError, NoSectionError
+from six.moves.urllib.request import urlretrieve
 
 logger = getLogger(__name__)
 ez_setup_txt = resource_filename(__name__, "ez_setup.txt")
@@ -34,7 +26,7 @@ def chdir(destination_directory):
     finally:
         try:
             _chdir_and_log(current_dir)
-        except:
+        except Exception:
             logger.exception("Failed to change back to directory {}".format(current_dir))
 
 @contextmanager

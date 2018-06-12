@@ -250,8 +250,8 @@ class PackagingRecipe(object):
     def get_startmenu_shortcuts(self):
         return self._get_recipe_atribute("startmenu-shortcuts")
 
-    def get_additional_directories(slef):
-        return slef._get_recipe_atribute("additional-directories")
+    def get_additional_directories(self):
+        return self._get_recipe_atribute("additional-directories")
 
     def write_bootstrap_for_production(self):
         from ..utils.buildout import write_bootstrap_for_production
@@ -286,7 +286,7 @@ class PackagingRecipe(object):
         from ..utils import get_dependencies
         packages = set()
         for package in PYTHON_PACKAGES_USED_BY_PACKAGING:
-            packages |= set([package])
+            packages |= {package}
             packages |= set(get_dependencies(package))
         return packages
 

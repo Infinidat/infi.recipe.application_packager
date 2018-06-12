@@ -86,16 +86,16 @@ def _setup(package_dir={}, packages={}, ext_modules=[], py_modules=[], **kwargs)
                                  depends=ext_module.depends, env=env))
     for py_module in py_modules:
         python_files.append(dict(package=False, source=os.path.abspath(py_module + '.py'), name=py_module))
-    with open("_embed_recipe.json", 'w') as fd:
-        fd.write(json.dumps(dict(python_files=python_files, c_extensions=c_extensions), indent=4))
+    with open("_embed_recipe.json", 'w') as wfd:
+        wfd.write(json.dumps(dict(python_files=python_files, c_extensions=c_extensions), indent=4))
     return mock.MagicMock()
 
 
 def main():
     with mock.patch.object(setuptools, "setup", new=_setup):
         with mock.patch.object(distutils.core, "setup", new=_setup):
-            with open('setup.py') as fd:
-                exec(fd.read())
+            with open('setup.py') as rfd:
+                exec(rfd.read())
 
 
 if __name__ == "__main__":

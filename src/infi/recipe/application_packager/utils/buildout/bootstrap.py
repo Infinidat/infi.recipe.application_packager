@@ -26,11 +26,7 @@ import glob
 import re
 
 from optparse import OptionParser
-
-try:
-    from urllib import pathname2url
-except ImportError:
-    from urllib.request import pathname2url
+from six.moves.urllib.request import pathname2url
 
 tmpeggs = tempfile.mkdtemp()
 
@@ -142,15 +138,8 @@ def _cleanup_setuptools_and_distribute_modules():
 
 
 to_reload = False
-try:
-    from urlparse import urlparse
-except ImportError:
-    from urllib.parse import urlparse
-
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen
+from six.moves.urllib.parse import urlparse
+from six.moves.urllib.request import urlopen
 
 _cleanup_setuptools_and_distribute_modules()
 _cleanup_setuptools_and_distribute_modules()  # wtf need to run twice

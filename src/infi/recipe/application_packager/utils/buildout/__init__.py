@@ -1,13 +1,10 @@
 
 from contextlib import contextmanager
 from logging import getLogger
+from six.moves.configparser import ConfigParser
 
 logger = getLogger(__name__)
 
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
 
 BUILDOUT_IN = """
 [buildout]
@@ -54,8 +51,8 @@ def write_get_pip_for_production():
     from pkg_resources import resource_filename
     with open(resource_filename(__name__, 'get-pip.py')) as fd:
         contents = fd.read()
-        with open('get-pip.py', 'w') as fd:
-            fd.write(contents)
+        with open('get-pip.py', 'w') as wfd:
+            wfd.write(contents)
 
 
 def write_buildout_configuration_file_for_production(dependent_scripts, minimal_packages, eggs, scripts,
