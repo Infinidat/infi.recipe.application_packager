@@ -7,12 +7,18 @@
 {% include 'header.bash' %}
 {% include '_echo.bash' %}
 
+function cleanup_site_packages_and_eggs_directory() {
+    execute rm -rf parts/python/lib/python*/site-packages/*
+    execute rm -rf eggs/*ovo
+}
+
 # start
 execute pushd .
 execute cd %{prefix}
 
 # bootstrap
 _echo "Bootstrapping, this may take a few minutes             "
+cleanup_site_packages_and_eggs_directory    # clean for upgrades - HPT-2333
 export PYTHONPATH=
 execute parts/python/bin/python get-pip.py -v --force-reinstall --ignore-installed --upgrade --isolated --no-index --find-links .cache/dist pip setuptools zc.buildout
 execute parts/python/bin/python parts/python/bin/buildout -U
