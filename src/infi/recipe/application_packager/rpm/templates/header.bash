@@ -16,7 +16,7 @@ execute() {
 
 # debugging
 DEBUG=0
-if test -n "$DEBUG_CUSTOM_ACTIONS" -a "$DEBUG_CUSTOM_ACTIONS" == "1"; then
+if test -n "$$DEBUG_CUSTOM_ACTIONS" -a "$$DEBUG_CUSTOM_ACTIONS" = "1" -o -e /tmp/INFINIDAT_DEBUG_CUSTOM_ACTIONS ; then
     DEBUG=1
     set -xv
 fi
