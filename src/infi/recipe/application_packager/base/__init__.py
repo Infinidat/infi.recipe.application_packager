@@ -36,7 +36,8 @@ PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
                                      "zc.buildout",
                                      "pip",
                                      "setuptools",
-                                     "pythonpy"]
+                                     "pythonpy",
+                                     "wheel"]
 
 SCRIPTS_BY_PACKAGING = ["buildout"]
 
