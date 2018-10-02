@@ -13,9 +13,12 @@ def _use_rpmbuild():
     return path.exists('/usr/bin/rpmbuild')
 
 
-def _call_rpmbuild(buildroot, specfile):
+def _call_rpmbuild(buildroot, specfile, target=None):
     rpmbuild_executable = "rpmbuild" if _use_rpmbuild() else "rpm"
-    return utils.execute.execute_assert_success([rpmbuild_executable, '--verbose', '--buildroot', buildroot, '-bb', specfile]).get_stdout()
+    rpmbuild_commandline = [rpmbuild_executable, '--verbose', '--buildroot', buildroot, '-bb', specfile]
+    if target:
+        rpmbuild_commandline += ['--target', target]
+    return utils.execute.execute_assert_success(rpmbuild_commandline).get_stdout()
 
 
 class Recipe(PackagingRecipe):
