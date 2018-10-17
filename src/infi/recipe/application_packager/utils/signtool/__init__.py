@@ -1,7 +1,6 @@
 
 from contextlib import contextmanager
 from logging import getLogger
-from .. import temporary_directory_context
 
 logger = getLogger(__name__)
 
@@ -34,6 +33,7 @@ def rewrite_record_file(archive_path, tempdir):
     from os import path, remove
     from distutils.dist import Distribution
     from wheel.wheelfile import WheelFile
+    from .. import temporary_directory_context
 
     [dist_info] = glob(path.join(tempdir, '*.dist-info'))
     record_file = path.join(dist_info, 'RECORD')
@@ -85,6 +85,7 @@ class Signtool(object):
 
     def sign_executables_in_archive(self, archive_path):
         from os import listdir, path
+        from .. import temporary_directory_context
         write_mode = 'w:gz' if archive_path.endswith('tar.gz') else 'w'
         with temporary_directory_context() as tempdir:
             with open_archive(archive_path) as archive:
