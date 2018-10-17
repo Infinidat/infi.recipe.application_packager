@@ -1,6 +1,7 @@
 
 from contextlib import contextmanager
 from logging import getLogger
+from .. import temporary_directory_context
 
 logger = getLogger(__name__)
 
@@ -28,17 +29,25 @@ def open_archive(archive_path, mode='r'):
         archive.close()
 
 
-def rewrite_record_file(tempdir):
+def rewrite_record_file(archive_path, tempdir):
     from glob import glob
     from os import path, remove
     from distutils.dist import Distribution
-    from wheel.bdist_wheel import bdist_wheel
+    from wheel.wheelfile import WheelFile
 
     [dist_info] = glob(path.join(tempdir, '*.dist-info'))
     record_file = path.join(dist_info, 'RECORD')
     remove(record_file)
-    wheel = bdist_wheel(Distribution())
-    wheel.write_record(tempdir, dist_info)
+
+    # we pack the wheel file ourselves and not with "wheel" package but
+    # we need to use the package to re-create the record file.
+    with temporary_directory_context() as tempwhldir:
+        wheel_path = path.join(tempwhldir, path.basename(archive_path))
+        with WheelFile(wheel_path, 'w') as wf:
+            wf.write_files(tempdir)
+        # the wheel file creates the record file on close
+        with WheelFile(wheel_path, 'r') as wf:
+            wf.extract(wf.record_path, tempdir)
 
 
 class SigntoolError(Exception):
@@ -76,14 +85,13 @@ class Signtool(object):
 
     def sign_executables_in_archive(self, archive_path):
         from os import listdir, path
-        from .. import temporary_directory_context
         write_mode = 'w:gz' if archive_path.endswith('tar.gz') else 'w'
         with temporary_directory_context() as tempdir:
             with open_archive(archive_path) as archive:
                 archive.extractall(tempdir)
             self.sign_executables_in_directory(tempdir)
             if archive_path.endswith('.whl'):
-                rewrite_record_file(tempdir)
+                rewrite_record_file(archive_path, tempdir)
             with open_archive(archive_path, write_mode) as archive:
                 for item in listdir(tempdir):
                     archive.add(path.join(tempdir, item), item)
