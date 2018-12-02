@@ -12,7 +12,7 @@ def set_icon_in_executable(executable, icon):
 def set_icon_for_executables_in_directory(tempdir, icon):
     from os import walk, path
     for dirpath, dirnames, filenames in walk(tempdir):
-        for filename in filter(lambda filename: filename.endswith('exe'), filenames):
+        for filename in [filename for filename in filenames if filename.endswith('exe')]:
             filepath = path.join(dirpath, filename)
             set_icon_in_executable(filepath, icon)
 

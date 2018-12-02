@@ -1,3 +1,4 @@
+from __future__ import print_function
 from infi.execute import execute
 import os
 import glob
@@ -8,10 +9,7 @@ import hashlib
 import stat
 
 from contextlib import contextmanager
-try:
-    from ConfigParser import ConfigParser, NoOptionError
-except:
-    from configparser import ConfigParser, NoOptionError
+from six.moves.configparser import ConfigParser, NoOptionError
 
 from tempfile import NamedTemporaryFile
 
@@ -175,7 +173,7 @@ class MsiInstaller(Installer):
         from infi.registry import LocalComputer
         registry = LocalComputer()
         userdata = registry.local_machine[INSTALLER_USERDATA]
-        for user in filter(lambda user: user.has_key(os.path.join('Products')), userdata.values()):
+        for user in [user for user in userdata.values() if os.path.join('Products') in user]:
             for product in user['Products'].values():
                 display_name = product['InstallProperties'].values_store['DisplayName'].to_python_object()
                 log.debug("product found: {!r}".format(display_name))
@@ -224,7 +222,7 @@ class RpmInstaller(Installer):
     def is_product_installed(self):
         pid = execute_assert_success(['rpm', '-q', self.package_name], allowed_return_codes=[0, 1])
         output = pid.get_stderr() + pid.get_stdout()
-        return 'not installed' not in output
+        return b'not installed' not in output
 
     def install_package(self, with_custom_actions=True):
         env = os.environ.copy()
