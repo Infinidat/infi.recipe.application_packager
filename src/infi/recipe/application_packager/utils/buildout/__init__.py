@@ -1,13 +1,9 @@
 
 from contextlib import contextmanager
 from logging import getLogger
+from six.moves.configparser import ConfigParser
 
 logger = getLogger(__name__)
-
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
 
 BUILDOUT_IN = """
 [buildout]

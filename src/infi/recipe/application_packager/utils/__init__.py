@@ -3,15 +3,8 @@ from pkg_resources import resource_filename
 from contextlib import contextmanager
 from logging import getLogger
 from . import buildout, compiler, execute, signtool, rcedit
-try:
-    from urllib import urlretrieve
-except ImportError:
-    from urllib.request import urlretrieve
-
-try:
-    from ConfigParser import ConfigParser, NoOptionError, NoSectionError
-except ImportError:
-    from configparser import ConfigParser, NoOptionError, NoSectionError
+from six.moves.configparser import ConfigParser, NoOptionError, NoSectionError
+from six.moves.urllib.request import urlretrieve
 
 
 logger = getLogger(__name__)

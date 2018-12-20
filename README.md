@@ -42,11 +42,9 @@ In order create an application with proper packaging, you'll need more than just
 * Run `projector devenv pack`; this will build all the sections in `buildout.cfg` that either of the recipes of this module.
 ** the default recipe: `infi.recipe.application_packager`, will build the OS package depending on the operating system.
 ** instead, you can explicitly define one of the following recipes:
-*** `infi.recipe.application_packager.executable`
 *** `infi.recipe.application_packager.deb`
 *** `infi.recipe.application_packager.msi`
 *** `infi.recipe.application_packager.rpm`
-*** `infi.recipe.application_packager.static_library`
 
 At the end, OS packages will be available under the `parts` directory, and single-file executables and static libraries will be placed under `dist`.
 
@@ -55,8 +53,6 @@ To debug exceptions, add 'pdb = true' to the recipe. The results are stored unde
 * `build/Python-<x.y.z>`. the Python source
 * `build/static`. this this where we copy to all the static libraries from the isolated python that will link the static python with
 * `build/dependencies`. this is where all the dependencies are being built
-* `build/embedded`. we the embedded python and the static library are being built
-* `bild/executables`. where we build the final console executables
 
 ### Recipe configuration options
 
@@ -64,10 +60,10 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 
 | Key                                   | Applied to                                | Default value                                                | Description                                                              |
 | ------------------------------------- | ----------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| pdb                                   | executable, deb, msi, rpm, static_library | false                                                        | enter pdb if exception is raise for post mortem                          |
-| dependent-scripts                     | executable, deb, msi, rpm                 | false                                                        |                                                                          |
-| eggs                                  | executable, deb, msi, rpm                 | \<project name>                                              |                                                                          |
-| scripts                               | executable, deb, msi, rpm                 | \<empty list>                                                |                                                                          |
+| pdb                                   | deb, msi, rpm                             | false                                                        | enter pdb if exception is raise for post mortem                          |
+| dependent-scripts                     | deb, msi, rpm                             | false                                                        |                                                                          |
+| eggs                                  | deb, msi, rpm                             | \<project name>                                              |                                                                          |
+| scripts                               | deb, msi, rpm                             | \<empty list>                                                |                                                                          |
 | gui-scripts                           | deb, msi, rpm                             | \<empty list>                                                |                                                                          |
 | minimal-packages                      | deb, msi, rpm                             |                                                              | Adds code to the entry point wrapper that tries to use less packages     |
 | shortcuts-icon                        | msi                                       | ~/.msi-ui/icon.exe                                           | Icon file in EXE binary format to be used as icon for shortcuts          |
@@ -172,3 +168,7 @@ Run the following:
 
     easy_install -U infi.projector
     projector devenv build
+
+Python 3 support
+================
+Python 3 support is experimental at this stage.

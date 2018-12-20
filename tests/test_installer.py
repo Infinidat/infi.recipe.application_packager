@@ -212,7 +212,7 @@ class Base(unittest.TestCase):
         self.install_package(with_custom_actions)
         self.assert_product_was_installed_successfully(with_custom_actions)
         delete_existing_builds()
-        head = execute_assert_success(['git', 'describe', '--tags']).get_stdout().strip()
+        head = execute_assert_success(['git', 'describe', '--tags']).get_stdout().decode().strip()
         self.addCleanup(execute_assert_success, ['git', 'reset', '--hard', head])
         do_a_refactoring_change()
         # HOSTDEV-1781
@@ -367,7 +367,7 @@ class RpmTestCase(Posix, RpmInstaller, X86_package_on_X64_machine):
         return 'redhat' in get_platform_string() or 'centos' in get_platform_string() or "suse" in get_platform_string() or "aix" in get_platform_string()
 
     def _assert_invalid_arch_message(self, stderr):
-        self.assertIn("is intended for a i386 architecture", stderr)
+        self.assertIn(b"is intended for a i386 architecture", stderr)
 
 
 class DebTestCase(Posix, DebInstaller, X86_package_on_X64_machine):
