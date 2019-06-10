@@ -5,6 +5,7 @@ from logging import getLogger
 from . import buildout, compiler, execute, signtool, rcedit
 from six.moves.configparser import ConfigParser, NoOptionError, NoSectionError
 from six.moves.urllib.request import urlretrieve
+import re
 
 
 logger = getLogger(__name__)
@@ -91,6 +92,9 @@ def get_dependencies(name):
         queue.extend(get_distribution(depenency).requires(extras=requirement.extras))
     return {requirement.project_name for requirement in requirements}
 
+def normalize_name(name):
+    return re.sub(r"[-_.]+", "-", name).lower()
+
 def get_distributions_from_dependencies(dependencies):
     """:returns a dict of {distname:version}"""
     from pkg_resources import get_distribution
@@ -100,9 +104,5 @@ def get_distributions_from_dependencies(dependencies):
     for dependency in dependencies:
         distribution = get_distribution(dependency)
         version = get_version(distribution)
-        # adding both solves two problems:
-        # * git-py is saved as git_py
-        # * egg_name for Archive on windows is archive
-        distributions[get_distname(distribution)] = version
-        distributions[dependency] = version
+        distributions[normalize_name(dependency)] = version
     return distributions
