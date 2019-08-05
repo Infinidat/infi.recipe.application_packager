@@ -344,25 +344,25 @@ class PackagingRecipe(object):
         dependencies = set.union(set(eggs), *[get_dependencies(name) for name in eggs])
         distributions = get_distributions_from_dependencies(dependencies)
         for filepath in glob(path.join(self.get_download_cache_dist(), '*')):
+            filepath_required = False
             basename = path.basename(filepath).lower()
-            if any([distname.lower() in basename and version.replace('-', '_') in basename.replace('-', '_')
-                    for distname, version in distributions.items()]):
-                continue
-            # in the post-pep-440 era, foo-1.0-1.tar.gz is parsed as foo-1.0.post1
-            if any([distname.lower() in basename and version.replace('.post', '-') in basename
-                    for distname, version in distributions.items()]):
-                continue
-            # in the post-pep-440 era, foo-2.0.0-pre8.tar.gz is parsed as 2.0.0rc8
-            if any([distname.lower() in basename and version in basename.replace('-pre', 'rc')
-                    for distname, version in distributions.items()]):
-                continue
-            # fix "2018.2.3" in "regex-2018.02.03.tar.gz"
-            if any([distname.lower() in basename and version in re.sub("\.0+", ".", basename)
-                    for distname, version in distributions.items()]):
-                continue
-
-            logger.info("shrinking cache-dist and removing {}".format(filepath))
-            remove(filepath)
+            normalized_name_with_version = utils.normalize_name(basename)
+            for distname, version in distributions.items():
+                if distname in normalized_name_with_version:
+                    if version.replace('-', '_') in basename.replace('-', '_'):
+                        filepath_required = True
+                    # in the post-pep-440 era, foo-1.0-1.tar.gz is parsed as foo-1.0.post1
+                    if version.replace('.post', '-') in basename:
+                        filepath_required = True
+                    # in the post-pep-440 era, foo-2.0.0-pre8.tar.gz is parsed as 2.0.0rc8
+                    if version in basename.replace('-pre', 'rc'):
+                        filepath_required = True
+                    # fix "2018.2.3" in "regex-2018.02.03.tar.gz"
+                    if version in re.sub("\.0+", ".", basename):
+                        filepath_required = True
+            if not filepath_required:
+                logger.info("shrinking cache-dist and removing {}".format(filepath))
+                remove(filepath)
 
     @contextmanager
     def with_most_mortem(self):
