@@ -7,7 +7,10 @@ import shutil
 import platform
 import hashlib
 import stat
-import io
+from sys import version_info
+
+if version_info[0] < 3:
+    from io import open  # To support encoding in open
 
 from contextlib import contextmanager
 from six.moves.configparser import ConfigParser, NoOptionError
@@ -198,7 +201,7 @@ class MsiInstaller(Installer):
             try:
                 execute_assert_success(args)
             finally:
-                with io.open(logfile, encoding='utf-16') as fd:
+                with open(logfile, encoding='utf-16') as fd:
                     print(fd.read())
 
     def uninstall_package(self, with_custom_actions=True):
@@ -213,7 +216,7 @@ class MsiInstaller(Installer):
         try:
             execute_assert_success(args)
         finally:
-            with io.open(logfile, encoding='utf-16') as fd:
+            with open(logfile, encoding='utf-16') as fd:
                 print(fd.read())
 
 
