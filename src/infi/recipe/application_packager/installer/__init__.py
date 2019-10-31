@@ -197,7 +197,7 @@ class MsiInstaller(Installer):
             try:
                 execute_assert_success(args)
             finally:
-                with open(logfile) as fd:
+                with open(logfile, encoding='utf-16') as fd:
                     print(fd.read())
 
     def uninstall_package(self, with_custom_actions=True):
@@ -212,7 +212,7 @@ class MsiInstaller(Installer):
         try:
             execute_assert_success(args)
         finally:
-            with open(logfile) as fd:
+            with open(logfile, encoding='utf-16') as fd:
                 print(fd.read())
 
 
