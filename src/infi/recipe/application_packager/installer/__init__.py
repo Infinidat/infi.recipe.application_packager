@@ -7,9 +7,9 @@ import shutil
 import platform
 import hashlib
 import stat
-from sys import version_info
+from six import PY2
 
-if version_info[0] < 3:
+if PY2:
     from io import open  # To support encoding in open
 
 from contextlib import contextmanager
