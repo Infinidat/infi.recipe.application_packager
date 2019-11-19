@@ -187,6 +187,7 @@ class MsiInstaller(Installer):
         return self._get_installed_product_from_registry() is not None
 
     def install_package(self, with_custom_actions=True):
+        import io
         logfile = self.get_package() + '.install.log'
         with open(logfile, 'w'):
             pass
@@ -197,10 +198,11 @@ class MsiInstaller(Installer):
             try:
                 execute_assert_success(args)
             finally:
-                with open(logfile) as fd:
+                with io.open(logfile, encoding='utf-16') as fd:
                     print(fd.read())
 
     def uninstall_package(self, with_custom_actions=True):
+        import io
         logfile = self.get_package() + '.uninstall.log'
         with open(logfile, 'w'):
             pass
@@ -212,7 +214,7 @@ class MsiInstaller(Installer):
         try:
             execute_assert_success(args)
         finally:
-            with open(logfile) as fd:
+            with io.open(logfile, encoding='utf-16') as fd:
                 print(fd.read())
 
 
