@@ -1,11 +1,12 @@
 import platform
+from distro import id as distro_id
 
 def get_platform_specific_recipe():
     if platform.system() == 'Windows':
         from .. import msi
         return msi.Recipe
     elif platform.system() == 'Linux':
-        distro = platform.linux_distribution()[0].lower()
+        distro = distro_id().replace('rhel', 'redhat').replace('sles', 'suse').replace('oracle', 'redhat').replace('enterpriseenterpriseserver', 'redhat')
         if distro.startswith('red') or distro.startswith('cent') or distro.startswith('suse'):
             from .. import rpm
             return rpm.Recipe
