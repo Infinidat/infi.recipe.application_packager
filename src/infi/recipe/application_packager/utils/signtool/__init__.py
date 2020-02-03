@@ -57,9 +57,9 @@ class Signtool(object):
     def __init__(self, timestamp_url, authenticode_certificate, certificate_password_file, retry_counter=5):
         super(Signtool, self).__init__()
         from os import path
-        import sys
+        from platform import python_version
 
-        if sys.version_info >= 3.8:
+        if python_version() >= '3.8':
             from pathlib import Path
             self.authenticode_certificate = path.abspath(str(Path(authenticode_certificate).expanduser()))
             self.certificate_password_file = path.abspath(str(Path(certificate_password_file).expanduser()))
