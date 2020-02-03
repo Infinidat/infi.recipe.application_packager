@@ -158,11 +158,12 @@ class PackagingRecipe(object):
         return self._get_recipe_atribute('documentation-url')
 
     def get_platform_arch(self):
-        from platform import system, dist, processor
+        from platform import system, processor
+        from distro import id as distro_id
         from sys import maxsize
         is_64 = maxsize > 2 ** 32
-        distribution_name, _, _ = dist()
-        is_rpm = any(distribution_name.lower().startswith(x) for x in ['red', 'cent', 'suse'])
+        distro_name = distro_id().replace('rhel', 'redhat').replace('sles', 'suse').replace('oracle', 'redhat').replace('enterpriseenterpriseserver', 'redhat')
+        is_rpm = any(distro_name.startswith(x) for x in ['red', 'cent', 'suse'])
         arch_by_distro = {''}
         arch_by_os = {
                       "Windows": 'x64' if is_64 else 'x86',
