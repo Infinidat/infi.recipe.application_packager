@@ -204,7 +204,7 @@ class Recipe(PackagingRecipe):
         wix.mkdir('buildout', parts)
         wix.mkdir('production-scripts', parts)
         wix.add_directory(path.join(self.get_buildout_dir(), 'parts', 'python'), parts, include_pyc=True)
-        wix.add_directory(path.join(self.get_buildout_dir(), 'src'), wix.installdir)
+        wix.add_directory(path.join(self.get_buildout_dir(), 'src',), wix.installdir, add_uninstall_pycache=True)
         wix.add_directory(path.join(self.get_buildout_dir(), 'eggs'), wix.installdir, True, True)
         self.add_aditional_directories()
         return silent_launcher_file_id
