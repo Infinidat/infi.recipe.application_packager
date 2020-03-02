@@ -230,6 +230,7 @@ class RpmInstaller(Installer):
         env = os.environ.copy()
         if not with_custom_actions:
             env['NO_CUSTOM_ACTIONS'] = '1'
+        env['LIBPATH'] = ''  # On AIX we don't want Python's LIBPATH for rpm
         with prevent_access_to_pypi_servers(), prevent_access_to_gcc():
             execute_assert_success(['rpm', '-Uvh', self.get_package()], env=env)
 
@@ -237,6 +238,7 @@ class RpmInstaller(Installer):
         env = os.environ.copy()
         if not with_custom_actions:
             env['NO_CUSTOM_ACTIONS'] = '1'
+        env['LIBPATH'] = ''  # On AIX we don't want Python's LIBPATH for rpm
         execute_assert_success(['rpm', '-e', self.package_name], env=env)
 
 
