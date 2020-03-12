@@ -217,22 +217,28 @@ class PackagingRecipe(object):
         return self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]) in [True, 'true', 'True']
 
     def get_pfx_file(self):
-        from os.path import normpath, expanduser
+        from os.path import normpath
         key = 'pfx-file'
-        return normpath(expanduser(self.get_recipe_section().get(key, RECIPE_DEFAULTS[key])))
+        return normpath(self._expanduser(self.get_recipe_section().get(key, RECIPE_DEFAULTS[key])))
 
     def get_pfx_password_file(self):
-        from os.path import normpath, expanduser
+        from os.path import normpath
         key = 'pfx-password-file'
-        return normpath(expanduser(self.get_recipe_section().get(key, RECIPE_DEFAULTS[key])))
+        return normpath(self._expanduser(self.get_recipe_section().get(key, RECIPE_DEFAULTS[key])))
 
     def _get_resource_file_from_recipe_section(self, name):
-        from os.path import exists, expanduser, abspath
+        from os.path import exists
+
         resource_file = self.get_recipe_section().get(name, RECIPE_DEFAULTS.get(name, None))
         if resource_file is None:
             return None
-        resource_file = abspath(expanduser(resource_file))
+        resource_file = self._expanduser(resource_file)
         return resource_file if exists(resource_file) else None
+
+    def _expanduser(self, file_path):
+        from os.path import abspath
+        from pathlib import Path
+        return abspath(str(Path(file_path).expanduser()))
 
     def get_add_remove_programs_icon(self):
         return self._get_resource_file_from_recipe_section('add-remove-programs-icon')

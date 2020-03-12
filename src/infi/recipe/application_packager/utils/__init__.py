@@ -49,15 +49,17 @@ def _get_install_package_verion(package_name):
     return pkg_info.version
 
 def get_pypi_index_url():
-    from os import path
-    pydistutils_files = [path.expanduser(path.join("~", basename)) for basename in ['.pydistutils.cfg', 'pydistutils.cfg']]
+    from os.path import join, abspath, exists
+    from pathlib import Path
+
+    pydistutils_files = [abspath(str(Path(join("~", basename)).expanduser())) for basename in ['.pydistutils.cfg', 'pydistutils.cfg']]
     pydistutils = ConfigParser()
     pydistutils.read(pydistutils_files)
     try:
         return pydistutils.get("easy_install", "index-url").strip("/")
     except (NoSectionError, NoOptionError):
         for filepath in pydistutils_files:
-            if path.exists(filepath):
+            if exists(filepath):
                 with open(filepath) as fd:
                     logger.debug("{}: {!r}".format(filepath, fd.read()))
             else:
