@@ -18,7 +18,7 @@ def _call_rpmbuild(buildroot, specfile, target=None):
     rpmbuild_commandline = [rpmbuild_executable, '--verbose', '--buildroot', buildroot, '-bb', specfile]
     if target:
         rpmbuild_commandline += ['--target', target]
-    return utils.execute.execute_assert_success(rpmbuild_commandline).get_stdout()
+    return utils.execute.execute_assert_success(rpmbuild_commandline).get_stdout().decode()
 
 
 class Recipe(PackagingRecipe):
@@ -50,7 +50,7 @@ class Recipe(PackagingRecipe):
             with utils.chdir(self.get_working_directory()):
                 specfile = self._create_specfile()
                 output = self._call_rpmbuild(specfile)
-                rpm_wrote = search(b"Wrote: (.*)", output).groups()[0]
+                rpm_wrote = search("Wrote: (.*)", output).groups()[0]
                 if path.exists(self.rpm_filepath):
                     remove(self.rpm_filepath)
                 copy(rpm_wrote, self.rpm_filepath)

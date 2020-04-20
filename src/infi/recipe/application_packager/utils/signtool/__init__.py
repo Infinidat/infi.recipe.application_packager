@@ -57,9 +57,18 @@ class Signtool(object):
     def __init__(self, timestamp_url, authenticode_certificate, certificate_password_file, retry_counter=5):
         super(Signtool, self).__init__()
         from os import path
+        from platform import python_version
+
+        if python_version() >= '3.8':
+            from pathlib import Path
+            self.authenticode_certificate = path.abspath(str(Path(authenticode_certificate).expanduser()))
+            self.certificate_password_file = path.abspath(str(Path(certificate_password_file).expanduser()))
+        else:
+            # os.path.expanduser was changes in py 3.8 and no longer uses HOME on Windows
+            self.authenticode_certificate = path.abspath(path.expanduser(authenticode_certificate))
+            self.certificate_password_file = path.abspath(path.expanduser(certificate_password_file))
+
         self.timestamp_url = timestamp_url
-        self.authenticode_certificate = path.abspath(path.expanduser(authenticode_certificate))
-        self.certificate_password_file = path.abspath(path.expanduser(certificate_password_file))
         self.retry_counter = retry_counter
 
     def read_password_from_file(self):

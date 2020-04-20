@@ -158,11 +158,12 @@ class PackagingRecipe(object):
         return self._get_recipe_atribute('documentation-url')
 
     def get_platform_arch(self):
-        from platform import system, dist, processor
+        from platform import system, processor
+        from distro import id as distro_id
         from sys import maxsize
         is_64 = maxsize > 2 ** 32
-        distribution_name, _, _ = dist()
-        is_rpm = any(distribution_name.lower().startswith(x) for x in ['red', 'cent', 'suse'])
+        distro_name = distro_id().replace('rhel', 'redhat').replace('sles', 'suse').replace('oracle', 'redhat').replace('enterpriseenterpriseserver', 'redhat')
+        is_rpm = any(distro_name.startswith(x) for x in ['red', 'cent', 'suse'])
         arch_by_distro = {''}
         arch_by_os = {
                       "Windows": 'x64' if is_64 else 'x86',
@@ -216,22 +217,28 @@ class PackagingRecipe(object):
         return self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]) in [True, 'true', 'True']
 
     def get_pfx_file(self):
-        from os.path import normpath, expanduser
+        from os.path import normpath
         key = 'pfx-file'
-        return normpath(expanduser(self.get_recipe_section().get(key, RECIPE_DEFAULTS[key])))
+        return normpath(self._expanduser(self.get_recipe_section().get(key, RECIPE_DEFAULTS[key])))
 
     def get_pfx_password_file(self):
-        from os.path import normpath, expanduser
+        from os.path import normpath
         key = 'pfx-password-file'
-        return normpath(expanduser(self.get_recipe_section().get(key, RECIPE_DEFAULTS[key])))
+        return normpath(self._expanduser(self.get_recipe_section().get(key, RECIPE_DEFAULTS[key])))
 
     def _get_resource_file_from_recipe_section(self, name):
-        from os.path import exists, expanduser, abspath
+        from os.path import exists
+
         resource_file = self.get_recipe_section().get(name, RECIPE_DEFAULTS.get(name, None))
         if resource_file is None:
             return None
-        resource_file = abspath(expanduser(resource_file))
+        resource_file = self._expanduser(resource_file)
         return resource_file if exists(resource_file) else None
+
+    def _expanduser(self, file_path):
+        from os.path import abspath
+        from pathlib import Path
+        return abspath(str(Path(file_path).expanduser()))
 
     def get_add_remove_programs_icon(self):
         return self._get_resource_file_from_recipe_section('add-remove-programs-icon')

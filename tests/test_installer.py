@@ -285,7 +285,10 @@ class Base(unittest.TestCase):
 
     def test_broken_buildout_default_cfg(self):
         # HOSTDEV-2247
-        cfg_path = os.path.expanduser("~/.buildout/default.cfg")
+        from os.path import abspath
+        from pathlib import Path
+
+        cfg_path = abspath(str(Path("~/.buildout/default.cfg").expanduser()))
         backup_path = cfg_path + ".bak"
         if os.path.exists(cfg_path):
             shutil.move(cfg_path, backup_path)

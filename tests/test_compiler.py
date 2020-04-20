@@ -1,18 +1,21 @@
 import unittest
 import mock
 from infi.recipe.application_packager import utils
-from os import path, curdir, name, pardir
-from . import get_archive_path, long_one
+from os import path, name, pardir, environ
+from functools import wraps
 
 is_windows = name == 'nt'
 
 BUILDOUT_DIRECTORY = path.abspath(path.join(path.dirname(__file__), pardir))
 
-import sys
-if sys.version_info > (3, 0):
-    patched_open_qualified_name = "builtins.open"
-else:
-    patched_open_qualified_name = "__builtin__.open"
+
+def long_one(func):
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        if not environ.get("INCLUDE_LONG_TESTS"):
+            raise unittest.SkipTest("To run this test, set environment variable INCLUDE_LONG_TESTS")
+        return func(*args, **kwargs)
+    return decorator
 
 
 class CompilerTestCase(unittest.TestCase):

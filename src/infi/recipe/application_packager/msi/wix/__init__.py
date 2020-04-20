@@ -203,11 +203,13 @@ class Wix(object):
         self._add_delete_empty_folder_component_to_directory(directory)
         return directory
 
-    def add_directory(self, src, parent_directory, recursive=True, only_directory_tree=False, include_pyc=False):
+    def add_directory(self, src, parent_directory, recursive=True, only_directory_tree=False, include_pyc=False, add_uninstall_pycache=False):
         from os import path, listdir
         src = path.abspath(src)
         source_dirname = path.basename(src)
         destination_directory = self.mkdir(source_dirname, parent_directory)
+        if add_uninstall_pycache:
+            self.mkdir('__pycache__', destination_directory)
         for filename in listdir(src):
             filepath = path.join(src, filename)
             if path.isfile(filepath):
@@ -217,7 +219,9 @@ class Wix(object):
                     continue
                 self.add_file(filepath, destination_directory)
             elif recursive:
-                self.add_directory(filepath, destination_directory, recursive, only_directory_tree, include_pyc)
+                if filename == '__pycache__' and not include_pyc:
+                    continue
+                self.add_directory(filepath, destination_directory, recursive, only_directory_tree, include_pyc, add_uninstall_pycache)
 
     def add_file(self, source_filepath, destination_directory, destination_filename=None):
         from os import path, curdir
