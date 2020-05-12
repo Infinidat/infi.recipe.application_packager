@@ -149,13 +149,17 @@ class Wix(object):
             variables=[],
             conditions=[],
             icons=[],
-            shortcuts=[]
+            shortcuts=[],
+            vcredist_path=self.get_vcredist_path()
         )
         self._add_delete_all_files_on_removal_component_to_directory(self.installdir)
         self._add_delete_empty_folder_component_to_directory(self.installdir)
         if arp_icon_path:
             self._context['arp_icon_id'] = self.add_icon(arp_icon_path)
         self._set_existing_installdir_registry_key(existing_installdir_registry_key)
+
+    def get_vcredist_path(self):
+        return os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, "Microsoft_VC141_CRT_x64.msm")
 
     def to_xml(self):
         import xml.dom.minidom
