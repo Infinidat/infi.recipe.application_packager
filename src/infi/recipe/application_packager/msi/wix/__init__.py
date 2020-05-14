@@ -161,7 +161,7 @@ class Wix(object):
     def get_vcredist_path(self):
         # Add necessary component to the installation (dlls)
         # https://docs.microsoft.com/en-us/windows/win32/msi/merge-modules
-        return r"C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Redist\MSVC\14.16.27012\MergeModules\Microsoft_VC141_CRT_x64.msm"
+        return os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, "Microsoft_VC141_CRT_x64.msm")
 
     def to_xml(self):
         import xml.dom.minidom
