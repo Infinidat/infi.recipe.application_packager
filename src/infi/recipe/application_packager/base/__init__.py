@@ -236,9 +236,15 @@ class PackagingRecipe(object):
         return resource_file if exists(resource_file) else None
 
     def _expanduser(self, file_path):
-        from os.path import abspath
-        from pathlib import Path
-        return abspath(str(Path(file_path).expanduser()))
+        try:
+            # Python 3
+            from os.path import abspath
+            from pathlib import Path
+            return abspath(str(Path(file_path).expanduser()))
+        except ImportError:
+            # Python 2
+            from os.path import expanduser, abspath
+            return abspath(expanduser(file_path))
 
     def get_add_remove_programs_icon(self):
         return self._get_resource_file_from_recipe_section('add-remove-programs-icon')
