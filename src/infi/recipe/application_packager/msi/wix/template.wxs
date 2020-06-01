@@ -32,6 +32,9 @@
                 </Directory>
             </Directory>
         </Directory>
+        <DirectoryRef Id="TARGETDIR">
+            <Merge Id="VCRedist" SourceFile="{{ vcredist_path }}" DiskId="1" Language="0"/>
+        </DirectoryRef>
         <Feature Id='Everything' Title='Everything' Level='1' Display='hidden' Absent='disallow' AllowAdvertise='no' InstallDefault='local' TypicalDefault='install'>
             {% for element in features %}
                 <ComponentRef Id="{{ element.id }}"/>
@@ -39,6 +42,9 @@
             {% if shortcuts %}
                 <ComponentRef Id="start_menu_shortcuts"/>
             {% endif %}
+        </Feature>
+        <Feature Id="VCRedist" Title="Visual C++ 2017 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
+            <MergeRef Id="VCRedist"/>
         </Feature>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
         <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable"/>
