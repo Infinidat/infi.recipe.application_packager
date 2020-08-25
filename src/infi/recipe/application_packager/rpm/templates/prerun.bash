@@ -6,6 +6,7 @@
 {% include 'header.bash' %}
 
 cleanup_site_packages_and_eggs_directory() {
+    find . -type d -name __pycache__ -prune -exec rm -rf  {} \;
     execute rm -rf parts/python/lib*/python*/site-packages/*
     execute rm -rf eggs/*ovo
 }
