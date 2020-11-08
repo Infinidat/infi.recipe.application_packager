@@ -22,4 +22,11 @@ if test -n "$$LONG_BIT" -a "$$LONG_BIT" == "64" -a "$target_arch" == "i386"; the
     exit 1
 fi
 
+# clean up python 2.7 leftover from older versions
+if [ "$is_python3" = "True" ] ; then
+    pushd .> /dev/null 2>&1
+    cd $prefix > /dev/null 2>&1
+    find parts/python/lib/ -name "python2.*" -type d -prune -exec rm -rf  {} \; > /dev/null 2>&1
+    popd > /dev/null 2>&1
+fi
 exit 0

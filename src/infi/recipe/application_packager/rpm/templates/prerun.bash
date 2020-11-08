@@ -9,6 +9,14 @@ cleanup_site_packages_and_eggs_directory() {
     find . -type d -name __pycache__ -prune -exec rm -rf  {} \;
     execute rm -rf parts/python/lib*/python*/site-packages/*
     execute rm -rf eggs/*ovo
+    # clean up python 2.7 leftover from older versions
+    {% if remove_python %}
+        {% if package_arch == "x86_64" %}
+            find parts/python/lib64/ -name "python2.*" -type d -prune -exec rm -rf  {} \; > /dev/null 2>&1
+        {% else %}
+            find parts/python/lib/ -name "python2.*" -type d -prune -exec rm -rf  {} \; > /dev/null 2>&1
+        {% endif %}
+    {% endif %}
 }
 
 # start

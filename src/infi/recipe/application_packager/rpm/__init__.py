@@ -106,6 +106,7 @@ class Recipe(PackagingRecipe):
         directories_to_clean = [item for item in self._directories_to_clean]
         directories_to_clean.sort()
         directories_to_clean.reverse()
+        pythonlib = 'parts/python/lib64/' if self.get_platform_arch() == 'x86_64' else 'parts/python/lib/'
 
         kwargs = {
                   'product_name': self.get_product_name(),
@@ -124,6 +125,8 @@ class Recipe(PackagingRecipe):
                   'files': "\n".join(['"{}"'.format(i) for i in self._files]),
                   'directories': "\n".join(['%dir "{}/"'.format(item) for item in self._directories]),
                   'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
+                  'remove_python': len([item for item in directories_to_clean if
+                                       pythonlib + 'python3.' in repr(item)]) > 0,
                   'aix': self._is_aix
                   }
         post_install_script_args = self.get_script_args("post_install")
