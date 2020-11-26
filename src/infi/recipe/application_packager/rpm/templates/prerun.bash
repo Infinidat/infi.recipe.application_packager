@@ -5,12 +5,6 @@
 
 {% include 'header.bash' %}
 
-cleanup_site_packages_and_eggs_directory() {
-    find . -type d -name __pycache__ -prune -exec rm -rf  {} \;
-    execute rm -rf parts/python/lib*/python*/site-packages/*
-    execute rm -rf eggs/*ovo
-}
-
 # start
 execute pushd .
 execute cd %{prefix}
@@ -48,19 +42,6 @@ for script in *; do
         RC=$?
         assert_rc
     fi
-done
-cd ..
-
-cleanup_site_packages_and_eggs_directory
-
-# clean installed directories
-# this also deletes installed files
-for dirname in {{ directories_to_clean }}; do
-{% if aix %}
-    execute rm -rf "$dirname"
-{% else %}
-    execute find "$dirname" -maxdepth 1 -mindepth 1 -delete
-{% endif %}
 done
 
 # end

@@ -149,8 +149,13 @@ class Recipe(PackagingRecipe):
                                                'pre_uninstall_script_name': pre_uninstall_script_name,
                                                'pre_uninstall_script_args': pre_uninstall_script_args,
                                                'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
+                                               'is_python3':  len([item for item in directories_to_clean
+                                                                   if 'parts/python/lib/python3.' in repr(item)]) > 0
                                                }, '755')
         self._write_template_file('preinst.in', {'target_arch': self.get_target_arch(),
+                                                 'prefix': self.get_install_prefix(),
+                                                 'is_python3':  len([item for item in directories_to_clean
+                                                                    if 'parts/python/lib/python3.' in repr(item)]) > 0
                                                  }, '755')
 
     def _write_debian_directory(self):
