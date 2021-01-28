@@ -127,7 +127,8 @@ class Recipe(PackagingRecipe):
                   'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
                   'remove_python': len([item for item in directories_to_clean if
                                        pythonlib + 'python3.' in repr(item)]) > 0,
-                  'aix': self._is_aix
+                  'aix': self._is_aix,
+                  'build_id_definition': self.get_build_id_definition()
                   }
         post_install_script_args = self.get_script_args("post_install")
         pre_uninstall_script_args = self.get_script_args("pre_uninstall")

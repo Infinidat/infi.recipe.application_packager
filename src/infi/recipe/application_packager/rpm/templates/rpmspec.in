@@ -5,6 +5,7 @@
 %define package_arch {{ package_arch }}
 %define target_arch {{ target_arch }}
 %define build_root {{ build_root }}
+{{ build_id_definition }}
 %define post_install_script_name {{ post_install_script_name }}
 %define pre_uninstall_script_name {{ pre_uninstall_script_name }}
 {{ post_install_script_args_definition }}

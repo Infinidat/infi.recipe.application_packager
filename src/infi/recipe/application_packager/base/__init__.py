@@ -264,6 +264,12 @@ class PackagingRecipe(object):
     def get_startmenu_shortcuts(self):
         return self._get_recipe_atribute("startmenu-shortcuts")
 
+    def get_build_id_definition(self):
+        skip_build_id =  self.get_project_section().get('skip_build_id')
+        if skip_build_id == 'true':
+            return "%define _build_id_links none"
+        return ''
+
     def get_additional_directories(slef):
         return slef._get_recipe_atribute("additional-directories")
 
