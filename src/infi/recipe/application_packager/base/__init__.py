@@ -17,7 +17,7 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'sign-executables-and-msi': 'false',
                    'pfx-file': '~/.authenticode/certificate.pfx',
                    'pfx-password-file': '~/.authenticode/certificate-password.txt',
-                   'timestamp-url':  "http://timestamp.verisign.com/scripts/timstamp.dll",
+                   'timestamp-url':  "http://timestamp.digicert.com/scripts/timstamp.dll",
                    'add-remove-programs-icon': "~/.msi-ui/icon.ico",
                    'shortcuts-icon': "~/.msi-ui/icon.exe",
                    'msi-banner-bmp': "~/.msi-ui/WixUIBanner.bmp",
@@ -263,6 +263,12 @@ class PackagingRecipe(object):
 
     def get_startmenu_shortcuts(self):
         return self._get_recipe_atribute("startmenu-shortcuts")
+
+    def get_build_id_definition(self):
+        skip_build_id =  self.get_project_section().get('skip_build_id')
+        if skip_build_id == 'true':
+            return "%define _build_id_links none"
+        return ''
 
     def get_additional_directories(slef):
         return slef._get_recipe_atribute("additional-directories")
