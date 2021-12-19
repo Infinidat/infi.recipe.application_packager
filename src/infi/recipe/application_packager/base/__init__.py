@@ -162,7 +162,7 @@ class PackagingRecipe(object):
         from distro import id as distro_id
         from sys import maxsize
         is_64 = maxsize > 2 ** 32
-        distro_name = distro_id().replace('rhel', 'redhat').replace('sles', 'suse').replace('oracle', 'redhat').replace('enterpriseenterpriseserver', 'redhat')
+        distro_name = distro_id().replace('rhel', 'redhat').replace('sles', 'suse').replace('oracle', 'redhat').replace('enterpriseenterpriseserver', 'redhat').replace('rocky', 'redhat')
         is_rpm = any(distro_name.startswith(x) for x in ['red', 'cent', 'suse'])
         arch_by_distro = {''}
         arch_by_os = {
