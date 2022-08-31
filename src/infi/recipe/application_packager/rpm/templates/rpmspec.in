@@ -11,6 +11,7 @@
 {{ post_install_script_args_definition }}
 {{ pre_uninstall_script_args_definition }}
 %define prefix {{ prefix }}
+%define _build_id_links none
 
 BuildArch: %{package_arch}
 BuildRoot: %{build_root}
