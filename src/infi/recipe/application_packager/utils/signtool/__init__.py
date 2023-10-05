@@ -79,7 +79,7 @@ class Signtool(object):
         from infi.winver import Windows
         from ..execute import execute_assert_success
         signtool = resource_filename(__name__, "signtool.exe")
-        args = [signtool, 'sign', '/f', self.authenticode_certificate,
+        args = [signtool, 'sign', '/debug', '/f', self.authenticode_certificate,
                 '/t', self.timestamp_url, '/p', self.read_password_from_file(), '/v', filepath]
         if Windows().greater_than("Windows Server 2008"):
             args.insert(-1, '/fd')
