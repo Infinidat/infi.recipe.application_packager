@@ -61,8 +61,8 @@ class Signtool(object):
 
         if is_windows():
             # os.path.expanduser was changes in py 3.8 and no longer uses HOME on Windows
-            self.authenticode_certificate = path.expandvars(authenticode_certificate.replace('~', '$HOME'))
-            self.certificate_password_file = path.expandvars(certificate_password_file.replace('~', '$HOME'))
+            self.authenticode_certificate = path.abspath(path.expandvars(authenticode_certificate.replace('~', '$HOME')))
+            self.certificate_password_file = path.abspath(path.expandvars(certificate_password_file.replace('~', '$HOME')))
         else:
             self.authenticode_certificate = path.abspath(path.expanduser(authenticode_certificate))
             self.certificate_password_file = path.abspath(path.expanduser(certificate_password_file))
