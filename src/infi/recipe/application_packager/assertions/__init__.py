@@ -1,6 +1,6 @@
 from sys import maxsize
 from os import path, name, curdir
-from gitpy import LocalRepository
+from infi.gitpy import LocalRepository
 from functools import wraps
 
 from logging import getLogger

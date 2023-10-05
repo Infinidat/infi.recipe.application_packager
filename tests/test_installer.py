@@ -87,7 +87,7 @@ def create_package(recipe_parameters=None):
                 print(fd.read())
 
 def do_an_empty_commit():
-    from gitpy import LocalRepository
+    from infi.gitpy import LocalRepository
     repository = LocalRepository('.')
     repository.commit("TRIVIAL empty commit for testing upgrades", allowEmpty=True)
 
@@ -103,7 +103,7 @@ def apply_change_in_file(filepath):
 
 def do_a_refactoring_change():
     # HOSTDEV-1781
-    from gitpy import LocalRepository
+    from infi.gitpy import LocalRepository
     from os import rename
     scripts_dir = os.path.join("src", "infi", "recipe", "application_packager", "scripts")
     refactoring_dir = os.path.join(scripts_dir, "refactoring")
@@ -224,7 +224,7 @@ class Base(unittest.TestCase):
         self.assert_product_was_uninstalled_successfully(with_custom_actions)
 
     def _apply_close_on_upgrade_or_removal(self, value):
-        from gitpy import LocalRepository
+        from infi.gitpy import LocalRepository
         from infi.recipe.application_packager.utils.buildout import open_buildout_configfile
         with open_buildout_configfile(write_on_exit=True) as buildout:
             buildout.set("pack", "close-on-upgrade-or-removal", value)
