@@ -57,14 +57,13 @@ class Signtool(object):
     def __init__(self, timestamp_url, authenticode_certificate, certificate_password_file, retry_counter=5):
         super(Signtool, self).__init__()
         from os import path
-        from platform import python_version
+        from infi.recipe.application_packager.assertions import is_windows
 
-        if python_version() >= '3.8':
-            from pathlib import Path
-            self.authenticode_certificate = path.abspath(str(Path(authenticode_certificate).expanduser()))
-            self.certificate_password_file = path.abspath(str(Path(certificate_password_file).expanduser()))
-        else:
+        if is_windows():
             # os.path.expanduser was changes in py 3.8 and no longer uses HOME on Windows
+            self.authenticode_certificate = path.abspath(path.expandvars(authenticode_certificate.replace('~', '$HOME')))
+            self.certificate_password_file = path.abspath(path.expandvars(certificate_password_file.replace('~', '$HOME')))
+        else:
             self.authenticode_certificate = path.abspath(path.expanduser(authenticode_certificate))
             self.certificate_password_file = path.abspath(path.expanduser(certificate_password_file))
 
@@ -80,7 +79,7 @@ class Signtool(object):
         from infi.winver import Windows
         from ..execute import execute_assert_success
         signtool = resource_filename(__name__, "signtool.exe")
-        args = [signtool, 'sign', '/f', self.authenticode_certificate,
+        args = [signtool, 'sign', '/debug', '/f', self.authenticode_certificate,
                 '/t', self.timestamp_url, '/p', self.read_password_from_file(), '/v', filepath]
         if Windows().greater_than("Windows Server 2008"):
             args.insert(-1, '/fd')
