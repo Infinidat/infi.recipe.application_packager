@@ -48,7 +48,15 @@ def open_buildout_configfile(filepath="buildout.cfg", write_on_exit=False):
 
 def write_get_pip_for_production():
     from pkg_resources import resource_filename
-    with open(resource_filename(__name__, 'get-pip.py')) as fd:
+    from sys import version_info
+    version = (version_info.major, version_info.minor)
+    if version > (3, 6):
+        name = "get-pip.py"
+    elif version > (2, 7):
+        name = "get-pip3.py"
+    else:
+        name = "get-pip2.py"
+    with open(resource_filename(__name__, name)) as fd:
         contents = fd.read()
         with open('get-pip.py', 'w') as fd:
             fd.write(contents)
