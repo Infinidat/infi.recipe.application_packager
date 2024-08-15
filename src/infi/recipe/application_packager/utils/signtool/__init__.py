@@ -74,16 +74,11 @@ class Signtool(object):
         with open(self.certificate_password_file) as fd:
             return fd.readlines()[0].strip()
 
-    def sign_file(self, filepath):
-        from pkg_resources import resource_filename
-        from infi.winver import Windows
+def sign_file(self, filepath):
         from ..execute import execute_assert_success
-        signtool = resource_filename(__name__, "signtool.exe")
-        args = [signtool, 'sign', '/debug', '/f', self.authenticode_certificate,
-                '/t', self.timestamp_url, '/p', self.read_password_from_file(), '/v', filepath]
-        if Windows().greater_than("Windows Server 2008"):
-            args.insert(-1, '/fd')
-            args.insert(-1, 'SHA256')
+        from os import getenv
+ 
+        args = ['smctl', 'sign', '-v', '-k', getenv('KEY_ALIAS'), '-i', filepath] 
         retry_counter = self.retry_counter
         while retry_counter:
             if execute_assert_success(args, allowed_return_codes=[0,2]).get_returncode() == 0:
