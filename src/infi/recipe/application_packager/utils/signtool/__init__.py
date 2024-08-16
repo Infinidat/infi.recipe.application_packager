@@ -74,7 +74,7 @@ class Signtool(object):
         with open(self.certificate_password_file) as fd:
             return fd.readlines()[0].strip()
 
-def sign_file(self, filepath):
+    def sign_file(self, filepath):
         from ..execute import execute_assert_success
         from os import getenv
  
