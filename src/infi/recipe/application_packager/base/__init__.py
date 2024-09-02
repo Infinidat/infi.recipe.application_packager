@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from infi.recipe.application_packager import utils
 from zc.buildout.download import Download
 from logging import getLogger
+from shutil import copy
 logger = getLogger(__name__)
 
 RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
@@ -405,3 +406,11 @@ class PackagingRecipe(object):
             dirname = path.dirname(d.rstrip('/\\'))
             dest_dir = path.join(self.get_install_prefix(), dirname)
             self._add_directory(path.join(self.get_buildout_dir(), d), dest_dir)
+
+    def copy_file(self, source_filepath, destination_filepath):
+        # HPT-3007: preserve symlinks for relocatable python directory only
+        if path.join('parts', 'python') in source_filepath:
+            follow_symlinks = False
+        else:
+            follow_symlinks = True
+        copy(source_filepath, destination_filepath, follow_symlinks=follow_symlinks)
