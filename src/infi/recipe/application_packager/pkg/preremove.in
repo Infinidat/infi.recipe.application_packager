@@ -27,9 +27,15 @@ function execute() {
 }
 
 function cleanup_site_packages_and_eggs_directory() {
-    find . -type d -name __pycache__ -prune -exec rm -rf  {} \;
+    find . -type d -name __pycache__ -prune -exec rm -rf {} \;
     execute rm -rf parts/python/lib/python*/site-packages/*
     execute rm -rf eggs/*ovo
+}
+
+# HPT-3146: readlink doesn't exist on Solaris
+function readlink() {
+    local path="$1"
+    bin/python -c "import os, sys; print(os.path.realpath(sys.argv[1]))" "$path"
 }
 
 # debugging
@@ -77,7 +83,7 @@ cd ..
 
 
 # setuptools has filenames with spaces, and solaris pkg does not support this
-find . -name '* *' -exec rm -vf {} \;
+find . -name '* *' -exec rm -f {} \;
 
 cleanup_site_packages_and_eggs_directory
 
