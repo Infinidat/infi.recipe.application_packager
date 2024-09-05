@@ -159,12 +159,11 @@ class PackagingRecipe(object):
 
     def get_platform_arch(self):
         from platform import system, processor
-        from distro import id as distro_id
         from sys import maxsize
+        from infi.os_info import get_platform_string, system_is_rhel_based
         is_64 = maxsize > 2 ** 32
-        distro_name = distro_id().replace('rhel', 'redhat').replace('sles', 'suse').replace('oracle', 'redhat').replace('enterpriseenterpriseserver', 'redhat').replace('rocky', 'redhat')
-        is_rpm = any(distro_name.startswith(x) for x in ['red', 'cent', 'suse'])
-        arch_by_distro = {''}
+        dist = get_platform_string().split('-')[1]
+        is_rpm = system_is_rhel_based() or dist == 'suse'
         arch_by_os = {
                       "Windows": 'x64' if is_64 else 'x86',
                       "Linux": ('ppc64le' if is_rpm else 'ppc64el') if processor() == 'ppc64le' else \
