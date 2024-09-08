@@ -94,7 +94,7 @@ class Recipe(PackagingRecipe):
             destination_filename = path.basename(source_filepath)
         buildroot_filepath = "{}{}/{}".format(self._buildroot, destination_directory, destination_filename)
         destination_filepath = path.join(destination_directory, destination_filename)
-        copy(source_filepath, buildroot_filepath, follow_symlinks=False)
+        self.copy_file(source_filepath, buildroot_filepath)
         self._files.add(destination_filepath)
 
     def _get_requires_declaration(self):

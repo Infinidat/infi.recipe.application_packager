@@ -405,3 +405,13 @@ class PackagingRecipe(object):
             dirname = path.dirname(d.rstrip('/\\'))
             dest_dir = path.join(self.get_install_prefix(), dirname)
             self._add_directory(path.join(self.get_buildout_dir(), d), dest_dir)
+
+    def copy_file(self, source_filepath, destination_filepath):
+        from os import path
+        from shutil import copy
+        # HPT-3007: preserve symlinks for relocatable python directory only
+        if path.join('parts', 'python') in source_filepath:
+            follow_symlinks = False
+        else:
+            follow_symlinks = True
+        copy(source_filepath, destination_filepath, follow_symlinks=follow_symlinks)
