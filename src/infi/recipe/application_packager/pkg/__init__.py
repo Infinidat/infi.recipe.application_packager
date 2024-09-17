@@ -5,7 +5,6 @@ from logging import getLogger
 from ..base import PackagingRecipe, RECIPE_DEFAULTS
 from .. import utils
 from os import path, curdir, makedirs, listdir, walk, stat, remove
-from shutil import copy
 from pkg_resources import resource_filename
 
 
@@ -70,8 +69,7 @@ class Recipe(PackagingRecipe):
         if destination_filename is None:
             destination_filename = path.basename(source_filepath)
         buildroot_filepath = "{}{}/{}".format(path.abspath(curdir), destination_directory, destination_filename)
-        destination_filepath = path.join(destination_directory, destination_filename)
-        copy(source_filepath, buildroot_filepath)
+        self.copy_file(source_filepath, buildroot_filepath)
 
     def _put_all_files(self):
         makedirs("{}{}".format(path.abspath(curdir), self.get_install_prefix()))

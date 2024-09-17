@@ -17,7 +17,7 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'sign-executables-and-msi': 'false',
                    'pfx-file': '~/.authenticode/certificate.pfx',
                    'pfx-password-file': '~/.authenticode/certificate-password.txt',
-                   'timestamp-url':  "http://timestamp.digicert.com/scripts/timstamp.dll",
+                   'timestamp-url':  "http://timestamp.digicert.com/",
                    'add-remove-programs-icon': "~/.msi-ui/icon.ico",
                    'shortcuts-icon': "~/.msi-ui/icon.exe",
                    'msi-banner-bmp': "~/.msi-ui/WixUIBanner.bmp",
@@ -159,12 +159,11 @@ class PackagingRecipe(object):
 
     def get_platform_arch(self):
         from platform import system, processor
-        from distro import id as distro_id
         from sys import maxsize
+        from infi.os_info import get_platform_string, system_is_rhel_based
         is_64 = maxsize > 2 ** 32
-        distro_name = distro_id().replace('rhel', 'redhat').replace('sles', 'suse').replace('oracle', 'redhat').replace('enterpriseenterpriseserver', 'redhat').replace('rocky', 'redhat')
-        is_rpm = any(distro_name.startswith(x) for x in ['red', 'cent', 'suse'])
-        arch_by_distro = {''}
+        dist = get_platform_string().split('-')[1]
+        is_rpm = system_is_rhel_based() or dist == 'suse'
         arch_by_os = {
                       "Windows": 'x64' if is_64 else 'x86',
                       "Linux": ('ppc64le' if is_rpm else 'ppc64el') if processor() == 'ppc64le' else \
@@ -405,3 +404,13 @@ class PackagingRecipe(object):
             dirname = path.dirname(d.rstrip('/\\'))
             dest_dir = path.join(self.get_install_prefix(), dirname)
             self._add_directory(path.join(self.get_buildout_dir(), d), dest_dir)
+
+    def copy_file(self, source_filepath, destination_filepath):
+        from os import path
+        from shutil import copy
+        # HPT-3007: preserve symlinks for relocatable python directory only
+        if path.join('parts', 'python') in source_filepath:
+            follow_symlinks = False
+        else:
+            follow_symlinks = True
+        copy(source_filepath, destination_filepath, follow_symlinks=follow_symlinks)
