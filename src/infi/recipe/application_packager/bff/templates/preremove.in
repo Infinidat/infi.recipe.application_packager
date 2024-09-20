@@ -1,0 +1,43 @@
+#!/bin/bash
+
+unset PYTHONPATH
+
+PREFIX="{{ prefix }}"
+POST_INSTALL="{{ post_install }}"
+PRE_UNINSTALL="{{ pre_uninstall }}"
+
+if [[ -n "$DEBUG_CUSTOM_ACTIONS" || -e /tmp/INFINIDAT_DEBUG_CUSTOM_ACTIONS ]]; then
+    set -xv
+else
+    exec > /dev/null 2>&1
+fi
+
+if [[ -n "$NO_CUSTOM_ACTIONS" || -e /tmp/INFINIDAT_NO_CUSTOM_ACTIONS ]]; then
+    exit 0
+fi
+
+{% for script in scripts %}
+if [[ -L "/usr/bin/{{ script }}" ]]; then
+    rm -f "/usr/bin/{{ script }}"
+fi
+{% endfor %}
+
+if [[ ! -d "$PREFIX" ]]; then
+    exit 0
+fi
+
+pushd "$PREFIX"
+
+if [[ -n "$PRE_UNINSTALL" && -x "bin/$PRE_UNINSTALL" ]]; then
+    "bin/$PRE_UNINSTALL"
+fi
+
+if [[ -x parts/python/bin/python && -x bin/buildout ]]; then
+    parts/python/bin/python bin/buildout -U install debug-logging close-application
+fi
+
+rm -rf .cache .installed.cfg bin develop-eggs eggs parts src
+
+popd
+
+exit 0

@@ -38,6 +38,8 @@ SETUP_INFO = dict(
                         'msi = ${project:name}.msi:Recipe',
                         'rpm = ${project:name}.rpm:Recipe',
                         'deb = ${project:name}.deb:Recipe',
+                        'pkg = ${project:name}.pkg:Recipe',
+                        'bff = ${project:name}.bff:Recipe',
                        ]
         },
     )

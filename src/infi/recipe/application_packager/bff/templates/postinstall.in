@@ -1,0 +1,52 @@
+#!/bin/bash
+
+unset PYTHONPATH
+
+PREFIX="{{ prefix }}"
+POST_INSTALL="{{ post_install }}"
+PRE_REMOVE="{{ pre_uninstall }}"
+
+if [[ -n "$DEBUG_CUSTOM_ACTIONS" || -e /tmp/INFINIDAT_DEBUG_CUSTOM_ACTIONS ]]; then
+    set -xv
+else
+    exec > /dev/null 2>&1
+fi
+
+if [[ -n "$NO_CUSTOM_ACTIONS" || -e /tmp/INFINIDAT_NO_CUSTOM_ACTIONS ]]; then
+    exit 0
+fi
+
+if [[ ! -d "$PREFIX" ]]; then
+    exit 0
+fi
+
+pushd "$PREFIX"
+
+rm -rf .installed.cfg bin develop-eggs eggs
+
+if [[ -x parts/python/bin/python && -d .cache/dist ]]; then
+    parts/python/bin/python get-pip.py --verbose --force-reinstall \
+        --ignore-installed --upgrade --isolated --no-index --find-links \
+        .cache/dist pip setuptools zc.buildout
+    if [[ -e parts/python/bin/buildout ]]; then
+        parts/python/bin/python parts/python/bin/buildout -U
+    fi
+fi
+
+if [[ -n "$POST_INSTALL" && -x "bin/$POST_INSTALL" ]]; then
+    "bin/$POST_INSTALL"
+fi
+
+if [[ -d bin ]]; then
+    pushd bin
+{%- for script in scripts %}
+    if [[ -x "{{ script }}" ]]; then
+        ln -s -f "$PREFIX/bin/{{ script }}" "/usr/bin/{{ script }}"
+    fi
+{%- endfor %}
+    popd
+fi
+
+popd
+
+exit 0

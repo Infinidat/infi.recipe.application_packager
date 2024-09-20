@@ -20,8 +20,8 @@ def get_platform_specific_recipe():
         from .. import pkg
         return pkg.Recipe
     elif system == "AIX":
-        from .. import rpm
-        return rpm.Recipe
+        from .. import aix
+        return aix.Recipe
     else:
         raise NotImplementedError("no packaging recipe available for %s platform" % system)
 
