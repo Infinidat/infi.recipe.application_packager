@@ -1,0 +1,26 @@
+Package Name: {{ package }}
+Package VRMF: {{ version }}
+Update: N
+Fileset
+  Fileset Name: {{ package }}.rte
+  Fileset VRMF: {{ version }}
+  Fileset Description: {{ description }}
+  USRLIBLPPFiles
+    Post-installation Script: {{ temproot }}/postinstall
+    Pre-deinstall Script: {{ temproot }}/preremove
+  EOUSRLIBLPPFiles
+  Bosboot required: N
+  License agreement acceptance required: N
+  Include license files in this package: N
+  Requisites:
+  USRFiles
+{%- for file in files %}
+    {{ file }}
+{%- endfor %}
+  EOUSRFiles
+  ROOT Part: N
+  ROOTFiles
+  EOROOTFiles
+  Relocatable: N
+EOFileset
+
