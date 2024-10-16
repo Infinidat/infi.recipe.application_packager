@@ -123,7 +123,7 @@ class Recipe(PackagingRecipe):
             'product': self.get_product_name(),
             'description': self.get_description(),
             'package': self.get_package_name(),
-            'version': self.get_project_version__short(),
+            'version': self.get_package_vrmf(),
             'prefix': self.get_install_prefix(),
             'post_install': post_install,
             'pre_uninstall': pre_uninstall,
@@ -150,11 +150,26 @@ class Recipe(PackagingRecipe):
         self._add_directory(os.path.join(self.get_buildout_dir(), 'eggs'), self.get_install_prefix(), True, True)
         self.add_aditional_directories()
 
+    # HOSTDEV-3578: BFF version should be: Version.Release.Modification.FixLevel
+    def get_package_vrmf(self):
+        from infi.os_info.parse_version import parse_version
+        version = self.get_project_version__short()
+        octets = list()
+        for octet in parse_version(version):
+            if not octet.isdigit():
+                break
+            octets.append(int(octet))
+        while len(octets) < 4:
+            octets.append(0)
+        while len(octets) > 4:
+            octets.pop()
+        return '.'.join([str(octet) for octet in octets])
+
     @property
     def bff_filename(self):
         name = self.get_package_name()
-        version = self.get_project_version__short()
-        return '%s.%s.bff' % (name, version)
+        vrmf = self.get_package_vrmf()
+        return '%s.%s.bff' % (name, vrmf)
 
     @property
     def bff_filepath(self):
