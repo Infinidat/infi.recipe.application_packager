@@ -207,9 +207,9 @@ class PackagingRecipe(object):
         return self.get_project_section().get('{}_script_args'.format(key), '')
 
     def should_sign_files(self):
-        from os import name
+        from os import environ, name
         key = 'sign-executables-and-msi'
-        return self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]) in [True, 'true', 'True'] and name == "nt"
+        return self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]) in [True, 'true', 'True'] and name == 'nt' and environ.get(key.upper().replace('-', '_'))
 
     def should_shrink_cache_dist(self):
         key = 'shrink-cache-dist'
