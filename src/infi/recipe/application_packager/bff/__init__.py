@@ -123,7 +123,7 @@ class Recipe(PackagingRecipe):
             'product': self.get_product_name(),
             'description': self.get_description(),
             'package': self.get_package_name(),
-            'version': self.get_project_version__short(),
+            'version': self.get_package_vrmf(),
             'prefix': self.get_install_prefix(),
             'post_install': post_install,
             'pre_uninstall': pre_uninstall,
@@ -150,17 +150,32 @@ class Recipe(PackagingRecipe):
         self._add_directory(os.path.join(self.get_buildout_dir(), 'eggs'), self.get_install_prefix(), True, True)
         self.add_aditional_directories()
 
+    # HOSTDEV-3578: BFF version should be: Version.Release.Modification.FixLevel
+    def get_package_vrmf(self):
+        from infi.os_info.parse_version import parse_version
+        version = self.get_project_version__short()
+        octets = list()
+        for octet in parse_version(version):
+            if not octet.isdigit():
+                break
+            octets.append(int(octet))
+        while len(octets) < 4:
+            octets.append(0)
+        if not len(octets) == 4:
+            raise NotImplementedError('version number %s contains more than 4 octets and not supported by AIX BFF package manager' % version)
+        return '.'.join([str(octet) for octet in octets])
+
     @property
     def bff_filename(self):
         name = self.get_package_name()
-        version = self.get_project_version__short()
-        return '%s.%s.bff' % (name, version)
+        vrmf = self.get_package_vrmf()
+        return '%s.%s.bff' % (name, vrmf)
 
     @property
     def bff_filepath(self):
         directory = self.get_working_directory()
         name = self.get_package_name()
-        version = self.get_project_version__long()
+        vrmf = self.get_package_vrmf()
         info = self.get_os_string()
-        filename = '%s-%s-%s.bff' % (name, version, info)
+        filename = '%s-%s-%s.bff' % (name, vrmf, info)
         return os.path.join(directory, filename)
