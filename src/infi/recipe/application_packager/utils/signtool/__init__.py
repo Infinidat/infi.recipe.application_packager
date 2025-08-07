@@ -80,8 +80,10 @@ class Signtool(object):
  
         args = ['smctl', 'sign', '-v', '-k', getenv('KEY_ALIAS'), '-i', filepath] 
         retry_counter = self.retry_counter
+        logger.info(f"Attempting to sign file: {filepath}")
         while retry_counter:
             if execute_assert_success(args, allowed_return_codes=[0,2]).get_returncode() == 0:
+                logger.info(f"Successfully signed: {filepath}")
                 return
             retry_counter -= 1
         raise SigntoolError("Failed to sign {} after {} times".format(filepath, self.retry_counter))
