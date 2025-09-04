@@ -85,18 +85,10 @@ class Recipe(PackagingRecipe):
             source_filepath = os.path.join(self.get_buildout_dir(), source_filepath)
         if destination_filename is None:
             destination_filename = os.path.basename(source_filepath)
+        if self.should_skip_file(destination_directory, destination_filename):
+            return
         buildroot_filepath = "{}{}/{}".format(self.buildroot, destination_directory, destination_filename)
         destination_filepath = os.path.join(destination_directory, destination_filename)
-        if destination_directory == os.path.join(self.get_install_prefix(), 'parts', 'python', 'bin'):
-            if 'python' not in destination_filename:
-                logger.debug('Skip script file %s', destination_filepath)
-                return
-        if 'site-packages' in destination_directory:
-            logger.debug('Skip site-packages file %s', destination_filepath)
-            return
-        if destination_directory.endswith('egg-info'):
-            logger.debug('Skip egg-info files %s', destination_filepath)
-            return
         if re.search(r'[\s{}()]+', destination_filepath):
             logger.warning('HPT-3161: skip %s file', destination_filepath)
             return

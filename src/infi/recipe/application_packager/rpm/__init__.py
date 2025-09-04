@@ -92,6 +92,8 @@ class Recipe(PackagingRecipe):
             source_filepath = path.join(self.get_buildout_dir(), source_filepath)
         if destination_filename is None:
             destination_filename = path.basename(source_filepath)
+        if self.should_skip_file(destination_directory, destination_filename):
+            return
         buildroot_filepath = "{}{}/{}".format(self._buildroot, destination_directory, destination_filename)
         destination_filepath = path.join(destination_directory, destination_filename)
         self.copy_file(source_filepath, buildroot_filepath)

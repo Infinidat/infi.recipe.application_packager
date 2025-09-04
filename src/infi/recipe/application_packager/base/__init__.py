@@ -414,3 +414,18 @@ class PackagingRecipe(object):
         else:
             follow_symlinks = True
         copy(source_filepath, destination_filepath, follow_symlinks=follow_symlinks)
+
+    # HPT-2941 do not install temporary files as a part of package
+    def should_skip_file(self, directory, filename):
+        from os import path
+        filepath = path.join(directory, filename)
+        if directory.endswith(path.join('parts', 'python', 'bin')) and 'python' not in filename:
+            logger.debug('Skip script file %s', filepath)
+            return True
+        if 'site-packages' in directory:
+            logger.debug('Skip site-packages file %s', filepath)
+            return True
+        if directory.endswith('egg-info'):
+            logger.debug('Skip egg-info file %s', filepath)
+            return True
+        return False
