@@ -1,12 +1,30 @@
-__import__("pkg_resources").declare_namespace(__name__)
+__import__('pkg_resources').declare_namespace(__name__)
 
-from logging import getLogger
-from ..base import PackagingRecipe, RECIPE_DEFAULTS
-from .. import utils
-from os import path, curdir, makedirs, listdir
-from pkg_resources import resource_filename
+import logging
+import os
+from infi.recipe.application_packager.base import PackagingRecipe, RECIPE_DEFAULTS
+from infi.recipe.application_packager import utils
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
+
+DEBIAN = 'DEBIAN'
+CONTROL = 'control'
+CHANGELOG = 'changelog'
+RULES = 'rules'
+PREINST = 'preinst'
+POSTINST = 'postinst'
+PRERM = 'prerm'
+POSTRM = 'postrm'
+
+TEMPLATES = {
+    CONTROL: 0o644,
+    CHANGELOG: 0o644,
+    RULES: 0o755,
+    PREINST: 0o755,
+    POSTINST: 0o755,
+    PRERM: 0o755,
+    POSTRM: 0o755
+}
 
 class Recipe(PackagingRecipe):
     def install(self):
@@ -19,144 +37,60 @@ class Recipe(PackagingRecipe):
                                                         self.get_download_cache_dist(),
                                                         self.get_eggs_directory())
             self.convert_python_packages_used_by_packaging_to_wheels()
-            package = self.build_package()
-            logger.debug("Built {}".format(package))
-            return [package, ]
+            self.build()
+            logger.debug('Built %s', self.deb_path)
+            return [self.deb_path]
 
-    def build_package(self):
-        self._directories = set()
-        with utils.temporary_directory_context() as tempdir:
-            self._put_all_files()
-            self._write_debian_directory()
-            self._call_dpkg()
-            return self.get_deb_filepath()
+    def build(self):
+        with utils.temporary_directory_context() as buildroot:
+            self.buildroot = buildroot
+            self.copy_tree()
+            self.walk_tree()
+            self.create_deb_files()
+            self.build_deb_package()
 
-    def _mkdir(self, name, parent_directory, just_add_it=False):
-        dst = path.join(parent_directory, name)
-        src = "{}{}/{}".format(path.abspath(curdir), parent_directory, name)
-        makedirs(src) if not just_add_it else None
-        self._directories.add(dst)
-        return dst
+    def build_deb_package(self):
+        cmd = ['fakeroot', '--', 'dpkg-deb', '-b', self.buildroot, self.deb_path]
+        utils.execute.execute_assert_success(cmd)
 
-    def _add_directory(self, src, parent_directory, recursive=True, only_directory_tree=False):
-        source_dirname = path.basename(src)
-        destination_directory = self._mkdir(source_dirname, parent_directory, only_directory_tree)
-        for filename in listdir(src):
-            filepath = path.join(src, filename)
-            if path.isfile(filepath):
-                if filename.endswith('pyc') or only_directory_tree:
-                    continue
-                self._add_file(filepath, destination_directory)
-            elif recursive:
-                self._add_directory(filepath, destination_directory, recursive, only_directory_tree)
+    def get_dependencies(self):
+        dependencies = self.get_recipe_section().get('deb-dependencies', RECIPE_DEFAULTS['deb-dependencies'])
+        dependencies = [dependency.strip() for dependency in dependencies.splitlines()]
+        return 'Depends: {}'.format(', '.join(dependencies)) if dependencies else ''
 
-    def _add_file(self, source_filepath, destination_directory, destination_filename=None):
-        if path.dirname(source_filepath) == '':
-            source_filepath = path.join(self.get_buildout_dir(), source_filepath)
-        if destination_filename is None:
-            destination_filename = path.basename(source_filepath)
-        buildroot_filepath = "{}{}/{}".format(path.abspath(curdir), destination_directory, destination_filename)
-        self.copy_file(source_filepath, buildroot_filepath)
+    def get_deb_kwargs(self):
+        return {
+            'prefix': self.get_install_prefix(),
+            'package': self.get_package_name(),
+            'version': self.get_project_version__short(),
+            'arch': self.get_target_arch(),
+            'summary': self.get_product_name(),
+            'description': self.get_description(),
+            'company': self.get_company_name(),
+            'dependencies': self.get_dependencies(),
+            'post_install_script_name': self.get_script_name('post_install') or '',
+            'post_install_script_args': self.get_script_args('post_install') or '',
+            'pre_uninstall_script_name': self.get_script_name("pre_uninstall") or '',
+            'pre_uninstall_script_args': self.get_script_args('pre_uninstall') or '',
+            'close' : '1' if self.should_close_app_on_upgrade_or_removal() else '0',
+            'scripts': self.get_scripts(),
+            'url': self.get_url()
+        }
 
-    def _put_all_files(self):
-        makedirs("{}{}".format(path.abspath(curdir), self.get_install_prefix()))
-        self._mkdir(self.get_install_prefix(), path.sep, True)
-        self._add_file('get-pip.py', self.get_install_prefix())
-        self._add_file('buildout.in', self.get_install_prefix(), 'buildout.cfg')
-        self._add_file('setup.py', self.get_install_prefix())
-        cachedir = self._mkdir('.cache', self.get_install_prefix())
-        develop_eggs = self._mkdir('develop-eggs', self.get_install_prefix())
-        self._add_directory(path.join(self.get_buildout_dir(), '.cache', 'dist'), cachedir, recursive=False)
-        parts = self._mkdir('parts', self.get_install_prefix())
-        self._mkdir('bin', self.get_install_prefix())
-        self._mkdir('buildout', parts)
-        self._mkdir('production-scripts', parts)
-        self._add_directory(path.join(self.get_buildout_dir(), 'parts', 'python'), parts)
-        self._add_directory(path.join(self.get_buildout_dir(), 'src'), self.get_install_prefix())
-        self._add_directory(path.join(self.get_buildout_dir(), 'eggs'), self.get_install_prefix(), True, True)
-        self.add_aditional_directories()
+    def create_deb_files(self):
+        kwargs = self.get_deb_kwargs()
+        os.makedirs(DEBIAN)
+        with utils.chdir(DEBIAN):
+            for name, mode in TEMPLATES.items():
+                self.render_template(__name__, name, kwargs, mode)
 
-    def get_deb_filename(self):
-        return "{}-{}-{}.deb".format(self.get_package_name(), self.get_project_version__long(), self.get_os_string())
+    @property
+    def deb_name(self):
+        name = self.get_package_name()
+        version = self.get_project_version__long()
+        info = self.get_os_string()
+        return "{}-{}-{}.deb".format(name, version, info)
 
-    def get_deb_filepath(self):
-        return path.join(self.get_working_directory(), self.get_deb_filename())
-
-    def _call_dpkg(self):
-        return utils.execute.execute_assert_success(['fakeroot', '--unknown-is-real', '--', 'dpkg-deb',
-                                                     '-b', path.abspath(curdir), self.get_deb_filepath()])
-
-    def _clean_debian_directory(self):
-        if path.exists("DEBIAN"):
-            rmtree("DEBIAN", ignore_errors=True)
-        makedirs("DEBIAN")
-
-    def _write_template_file(self, filename, formatting_dict, permissions='644'):
-        from string import Template
-        src = resource_filename(__name__, filename)
-        dst = path.join(curdir, 'DEBIAN', filename.replace('.in', ''))
-        with open(src, 'r') as fd:
-            template = Template(fd.read())
-        with open(dst, 'w') as fd:
-            contents = template.substitute(formatting_dict)
-            fd.write(contents)
-            logger.debug("writing {!r}:\n {}".format(filename, contents))
-            utils.execute.execute_assert_success("chmod {} {}".format(permissions, dst).split())
-
-    def _get_depends_declaration(self):
-        deb_dependencies = self.get_recipe_section().get("deb-dependencies", RECIPE_DEFAULTS["deb-dependencies"])
-        deps= [item.strip() for item in deb_dependencies.splitlines()]
-        return "Depends: {}".format(', '.join(deps)) if deps else ''
-
-    def _write_templates(self):
-        self._write_template_file('control.in', {'package_name': self.get_package_name(),
-                                                 'package_version': self.get_project_version__short(),
-                                                 'package_arch': self.get_platform_arch(),
-                                                 'company': self.get_company_name(),
-                                                 'product_description': self.get_description(),
-                                                 'depends_declaration': self._get_depends_declaration(),
-                                                 })
-        self._write_template_file('changelog.in', {'package_name': self.get_package_name(),
-                                                   'package_version': self.get_project_version__short(),
-                                                   })
-        self._write_template_file('md5sums.in', {})
-        post_install_script_name = self.get_script_name("post_install") or ''
-        post_install_script_args = self.get_script_args("post_install") or ''
-        pre_uninstall_script_name = self.get_script_name("pre_uninstall") or ''
-        pre_uninstall_script_args = self.get_script_name("pre_uninstall") or ''
-
-        self._write_template_file('postinst.in', {'package_name': self.get_package_name(),
-                                                  'package_version': self.get_project_version__short(),
-                                                  'prefix': self.get_install_prefix(),
-                                                  'post_install_script_name': post_install_script_name,
-                                                  'post_install_script_args': post_install_script_args,
-                                                  'pre_uninstall_script_name': pre_uninstall_script_name,
-                                                  'pre_uninstall_script_args': pre_uninstall_script_args,
-                                                 }, '755')
-
-        directories_to_clean = [item for item in self._directories]
-        directories_to_clean.sort()
-        directories_to_clean.reverse()
-        self._write_template_file('prerm.in', {'package_name': self.get_package_name(),
-                                               'package_version': self.get_project_version__short(),
-                                               'prefix': self.get_install_prefix(),
-                                               'close_on_upgrade_or_removal' : '1' if \
-                                                            self.should_close_app_on_upgrade_or_removal() else '0',
-                                               'post_install_script_name': post_install_script_name,
-                                               'post_install_script_args': post_install_script_args,
-                                               'pre_uninstall_script_name': pre_uninstall_script_name,
-                                               'pre_uninstall_script_args': pre_uninstall_script_args,
-                                               'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
-                                               'is_python3':  len([item for item in directories_to_clean
-                                                                   if 'parts/python/lib/python3.' in repr(item)]) > 0
-                                               }, '755')
-        self._write_template_file('preinst.in', {'target_arch': self.get_target_arch(),
-                                                 'prefix': self.get_install_prefix(),
-                                                 'is_python3':  len([item for item in directories_to_clean
-                                                                    if 'parts/python/lib/python3.' in repr(item)]) > 0
-                                                 }, '755')
-
-    def _write_debian_directory(self):
-        self._clean_debian_directory()
-        self._write_templates()
-
+    @property
+    def deb_path(self):
+        return os.path.join(self.get_working_directory(), self.deb_name)

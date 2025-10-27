@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+if test "$DEBUG_CUSTOM_ACTIONS" = "1" -o                   \
+        -r /tmp/INFINIDAT_DEBUG_CUSTOM_ACTIONS; then
+    set -xv
+else
+    exec > /dev/null 2>&1
+fi
+
+if test "$NO_CUSTOM_ACTIONS" = "1" -o                      \
+        -r /tmp/INFINIDAT_NO_CUSTOM_ACTIONS; then
+    exit 0
+fi
+
+echo "Start {{ package }} {{ version }} post-remove script: $0 $@"
+
+if test -d "{{ prefix }}"; then
+    find "{{ prefix }}"
+    rm -rf "{{ prefix }}"
+fi
+
+exit 0

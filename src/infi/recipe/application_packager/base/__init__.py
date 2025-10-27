@@ -1,8 +1,15 @@
 from contextlib import contextmanager
-from infi.recipe.application_packager import utils
+import jinja2
+import logging
+import os
+import re
+import platform
+import shutil
 from zc.buildout.download import Download
-from logging import getLogger
-logger = getLogger(__name__)
+from infi.os_info import get_platform_string
+from infi.recipe.application_packager import utils
+
+logger = logging.getLogger(__name__)
 
 RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'require-administrative-privileges-gui': 'false',
@@ -26,8 +33,9 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    'eula-rtf': None,
                    'documentation-url': None,
                    '_target_arch': None,
+                   '_target_isa': None,
                    'close-on-upgrade-or-removal' : 'true',
-                   'additional-directories': '[]'
+                   'additional-directories': ''
                   }
 
 PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
@@ -41,6 +49,7 @@ PYTHON_PACKAGES_USED_BY_PACKAGING = ["infi.recipe.buildout_logging",
 
 SCRIPTS_BY_PACKAGING = ["buildout"]
 
+URL = 'https://support.infinidat.com'
 
 class PackagingRecipe(object):
     def __init__(self, buildout, name, options):
@@ -48,6 +57,10 @@ class PackagingRecipe(object):
         self.buildout = buildout
         self.options = options
         self.downloader = Download(buildout)
+        self.directories = set()
+        self.files = set()
+        self.inodes = 0
+        self.bytes = 0
 
     def install(self): # pragma: no cover
         raise NotImplementedError()
@@ -112,6 +125,21 @@ class PackagingRecipe(object):
     def get_gui_scripts_for_production(self):
         return self._get_recipe_atribute("gui-scripts")
 
+    def get_scripts(self):
+        scripts = []
+        console_scripts = self.get_console_scripts_for_production()
+        if console_scripts:
+            scripts += console_scripts.split()
+        gui_scripts = self.get_gui_scripts_for_production()
+        if gui_scripts:
+            scripts += gui_scripts.split()
+        install_scripts = []
+        for name in ['post_install', 'pre_uninstall']:
+            script = self.get_script_name(name)
+            if script:
+                install_scripts.append(script)
+        return [script for script in scripts if script not in install_scripts]
+
     def get_require_administrative_privileges(self):
         return self._get_recipe_atribute("require-administrative-privileges")
 
@@ -158,22 +186,21 @@ class PackagingRecipe(object):
         return self._get_recipe_atribute('documentation-url')
 
     def get_platform_arch(self):
-        from platform import system, processor
-        from sys import maxsize
-        from infi.os_info import get_platform_string, system_is_rhel_based
-        is_64 = maxsize > 2 ** 32
-        dist = get_platform_string().split('-')[1]
-        is_rpm = system_is_rhel_based() or dist == 'suse'
-        arch_by_os = {
-                      "Windows": 'x64' if is_64 else 'x86',
-                      "Linux": ('ppc64le' if is_rpm else 'ppc64el') if processor() == 'ppc64le' else \
-                               ('ppc64' if is_rpm else 'powerpc') if processor() == 'ppc64' else \
-                               ('x86_64' if is_rpm else 'amd64') if is_64 else \
-                               ('i686' if is_rpm else 'i386'),
-                      "SunOS": 'sparc' if 'sparc' == processor() else ('amd64' if is_64 else 'i386'),
-                      "AIX": "ppc",
-                     }
-        return arch_by_os.get(system())
+        platform_string = get_platform_string()
+        system = platform.system()
+        if system == 'Windows':
+            return platform_string.split('-')[-1]
+        elif system in ['AIX', 'SunOS']:
+            cmd = ['uname', '-p']
+        elif system == 'Linux':
+            if platform_string.split('-')[1] in ['debian', 'ubuntu']:
+                cmd = ['dpkg', '--print-architecture']
+            else:
+                cmd = ['uname', '-m']
+        else:
+            raise NotImplementedError('Platform {} not supported'.format(platform_string))
+        process = utils.execute.execute_assert_success(cmd)
+        return process.get_stdout().decode().strip()
 
     def get_target_arch(self):
         return self._get_recipe_atribute('_target_arch') or self.get_platform_arch()
@@ -182,8 +209,17 @@ class PackagingRecipe(object):
         from os import path
         return path.join(r'C:\Program Files', self.get_company_name(), self.get_product_name())
 
+    def get_url(self):
+        return URL
+
+    def get_opt_prefix(self):
+        return os.path.join(os.path.sep, 'opt')
+
+    def get_vendor_prefix(self):
+        return os.path.join(self.get_opt_prefix(), self.get_company_name().lower())
+
     def get_install_prefix(self):
-        return "/opt/{}/{}".format(self.get_company_name().lower(), self.get_project_name())
+        return os.path.join(self.get_vendor_prefix(), self.get_project_name())
 
     def _get_centos_dist_name(self):
         from os import path
@@ -269,8 +305,8 @@ class PackagingRecipe(object):
             return "%define _build_id_links none"
         return ''
 
-    def get_additional_directories(slef):
-        return slef._get_recipe_atribute("additional-directories")
+    def get_additional_directories(self):
+        return self._get_recipe_atribute('additional-directories')
 
     def write_bootstrap_for_production(self):
         from ..utils.buildout import write_bootstrap_for_production
@@ -376,7 +412,7 @@ class PackagingRecipe(object):
                     if version in basename.replace('-pre', 'rc'):
                         filepath_required = True
                     # fix "2018.2.3" in "regex-2018.02.03.tar.gz"
-                    if version in re.sub("\.0+", ".", basename):
+                    if version in re.sub(r'\.0+', '.', basename):
                         filepath_required = True
             if not filepath_required:
                 logger.info("shrinking cache-dist and removing {}".format(filepath))
@@ -399,18 +435,95 @@ class PackagingRecipe(object):
         return utils.signtool.Signtool(timestamp_url, certificate, password_file)
 
     def add_aditional_directories(self):
-        from os import path
-        for d in eval(self.get_additional_directories()):
-            dirname = path.dirname(d.rstrip('/\\'))
-            dest_dir = path.join(self.get_install_prefix(), dirname)
-            self._add_directory(path.join(self.get_buildout_dir(), d), dest_dir)
+        directories = self.get_additional_directories()
+        for directory in directories.split():
+            directory = os.path.normpath(directory)
+            self.add_entry(directory)
 
-    def copy_file(self, source_filepath, destination_filepath):
-        from os import path
-        from shutil import copy
-        # HPT-3007: preserve symlinks for relocatable python directory only
-        if path.join('parts', 'python') in source_filepath:
-            follow_symlinks = False
+    def render_template(self, base, name, kwargs, mode=0o644):
+        loader = jinja2.PackageLoader(base)
+        undefined=jinja2.StrictUndefined
+        environment = jinja2.Environment(loader=loader,
+                                         undefined=undefined,
+                                         lstrip_blocks=True,
+                                         trim_blocks=True,
+                                         keep_trailing_newline=True)
+        template = environment.get_template(name)
+        content = template.render(kwargs)
+        with open(name, 'w') as fd:
+            fd.write(content)
+        os.chmod(name, mode)
+
+    def get_ignore(self, parent, names):
+        ignore = set()
+        for name in names:
+            reason = None
+            if parent.endswith(os.path.join('parts', 'python', 'bin')) and 'python' not in name:
+                reason = 'executable file'
+            elif re.search(r'[\s{}()]+', name):
+                reason = 'invalid name'
+            elif name.endswith('.pyc') or name.endswith('.pyo'):
+                reason = 'bytecode file'
+            elif name == '__pycache__':
+                reason = 'cache directory'
+            elif name == 'site-packages':
+                reason = 'site packages directory'
+            elif name.endswith('.egg-info'):
+                reason = 'egg info directory'
+            if reason:
+                path = os.path.join(parent, name)
+                logger.info('Skip %s %s', reason, path)
+                ignore.add(name)
+        return ignore
+
+    def copy_entry(self, src, dst=None):
+        if not dst:
+            dst = src
+        buildout = self.get_buildout_dir()
+        src = os.path.join(buildout, src)
+        prefix = self.get_install_prefix()
+        suffix = os.path.relpath(prefix, os.path.sep)
+        dst = os.path.join(self.buildroot, suffix, dst)
+        if os.path.isfile(src) or os.path.islink(src):
+            shutil.copy(src, dst, follow_symlinks=True)
+        elif os.path.isdir(src):
+            shutil.copytree(src, dst, symlinks=True, ignore=self.get_ignore)
         else:
-            follow_symlinks = True
-        copy(source_filepath, destination_filepath, follow_symlinks=follow_symlinks)
+            logger.info('Skip special file %s %s', src, os.stat(src))
+
+    def copy_tree(self):
+        self.copy_entry('src')
+        self.copy_entry(os.path.join('.cache', 'dist'))
+        self.copy_entry(os.path.join('parts', 'python'))
+        self.copy_entry('buildout.in', 'buildout.cfg')
+        self.copy_entry('get-pip.py')
+        self.copy_entry('setup.py')
+        self.add_aditional_directories()
+
+    def walk_tree(self):
+        vendor = self.get_vendor_prefix()
+        prefix = os.path.relpath(vendor, os.path.sep)
+        parent = os.path.join(self.buildroot, prefix)
+        logger.info('Start walk at %s', parent)
+        self.inodes += 1
+        self.bytes += os.lstat(parent).st_size
+        for parent, directories, files in os.walk(parent):
+            self.inodes += len(directories) + len(files)
+            for directory in directories:
+                path = os.path.join(parent, directory)
+                name = os.path.join(os.path.sep, os.path.relpath(path, self.buildroot))
+                if os.path.islink(path):
+                    self.files.add(name)
+                else:
+                    self.directories.add(name)
+                size = os.lstat(path).st_size
+                self.bytes += size
+                logger.info('Added directory %s [%d bytes]', name, size)
+            for file in files:
+                path = os.path.join(parent, file)
+                name = os.path.join(os.path.sep, os.path.relpath(path, self.buildroot))
+                self.files.add(name)
+                size = os.lstat(path).st_size
+                self.bytes += size
+                logger.info('Added file %s [%d bytes]', name, size)
+        logger.info('Stage tree contains %s inodes and %s bytes', self.inodes, self.bytes)
