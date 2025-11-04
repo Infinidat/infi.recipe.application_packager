@@ -455,6 +455,8 @@ class PackagingRecipe(object):
         os.chmod(name, mode)
 
     def get_ignore(self, parent, names):
+        # HOSTDEV-3614: compatible with old Python 3 versions
+        parent = os.fspath(parent)
         ignore = set()
         for name in names:
             reason = None
