@@ -478,7 +478,7 @@ class PackagingRecipe(object):
                 ignore.add(name)
         return ignore
 
-    def copy_entry(self, src, dst=None):
+    def copy_entry(self, src, dst=None, symlinks=False):
         if not dst:
             dst = src
         buildout = self.get_buildout_dir()
@@ -486,17 +486,17 @@ class PackagingRecipe(object):
         prefix = self.get_install_prefix()
         suffix = os.path.relpath(prefix, os.path.sep)
         dst = os.path.join(self.buildroot, suffix, dst)
-        if os.path.isfile(src) or os.path.islink(src):
-            shutil.copy(src, dst, follow_symlinks=True)
+        if os.path.isfile(src):
+            shutil.copy(src, dst, follow_symlinks=symlinks)
         elif os.path.isdir(src):
-            shutil.copytree(src, dst, symlinks=True, ignore=self.get_ignore)
+            shutil.copytree(src, dst, symlinks=symlinks, ignore=self.get_ignore)
         else:
             logger.info('Skip special file %s %s', src, os.stat(src))
 
     def copy_tree(self):
         self.copy_entry('src')
         self.copy_entry(os.path.join('.cache', 'dist'))
-        self.copy_entry(os.path.join('parts', 'python'))
+        self.copy_entry(os.path.join('parts', 'python'), symlinks=True)
         self.copy_entry('buildout.in', 'buildout.cfg')
         self.copy_entry('get-pip.py')
         self.copy_entry('setup.py')
