@@ -1,25 +1,16 @@
-__import__("pkg_resources").declare_namespace(__name__)
+__import__('pkg_resources').declare_namespace(__name__)
 
-from logging import getLogger
-from ..base import PackagingRecipe, RECIPE_DEFAULTS
-from .. import utils
-from os import path, curdir, makedirs, listdir, remove
-from shutil import copy
+import logging
+import re
+import os
+import shutil
 
-logger = getLogger(__name__)
+from infi.recipe.application_packager.base import PackagingRecipe, RECIPE_DEFAULTS
+from infi.recipe.application_packager import utils
 
+logger = logging.getLogger(__name__)
 
-def _use_rpmbuild():
-    return path.exists('/usr/bin/rpmbuild')
-
-
-def _call_rpmbuild(buildroot, specfile, target=None):
-    rpmbuild_executable = "rpmbuild" if _use_rpmbuild() else "rpm"
-    rpmbuild_commandline = [rpmbuild_executable, '--verbose', '--buildroot', buildroot, '-bb', specfile]
-    if target:
-        rpmbuild_commandline += ['--target', target]
-    return utils.execute.execute_assert_success(rpmbuild_commandline).get_stdout().decode()
-
+SPEC = 'rpm.spec'
 
 class Recipe(PackagingRecipe):
     def install(self):
@@ -32,139 +23,68 @@ class Recipe(PackagingRecipe):
                                                         self.get_download_cache_dist(),
                                                         self.get_eggs_directory())
             self.convert_python_packages_used_by_packaging_to_wheels()
-            package = self.build_package()
-            logger.debug("Built {}".format(package))
-            return [package, ]
+            self.build()
+            logger.debug('Built %s', self.rpm_path)
+            return [self.rpm_path]
 
-    def build_package(self):
-        from re import search
-        import platform
-        self._is_aix = platform.system() == "AIX"
-        self._files = set()
-        self._directories = set()
-        self._directories_to_clean = set()
+    def build(self):
+        with utils.temporary_directory_context() as buildroot:
+            self.buildroot = buildroot
+            self.copy_tree()
+            self.walk_tree()
+            with utils.temporary_directory_context():
+                self.create_rpm_files()
+                package = self.build_rpm_package()
+                if os.path.exists(self.rpm_path):
+                    os.remove(self.rpm_path)
+                shutil.copy(package, self.rpm_path)
 
-        with utils.temporary_directory_context() as tempdir:
-            self._buildroot = tempdir
-            self._put_all_files()
-            with utils.chdir(self.get_working_directory()):
-                specfile = self._create_specfile()
-                output = self._call_rpmbuild(specfile)
-                rpm_wrote = search("Wrote: (.*)", output).groups()[0]
-                if path.exists(self.rpm_filepath):
-                    remove(self.rpm_filepath)
-                copy(rpm_wrote, self.rpm_filepath)
-            return self.rpm_filepath
+    def build_rpm_package(self):
+        cmd = ['rpmbuild', '--verbose', '--noclean', '--buildroot',
+               self.buildroot, '-bb', SPEC]
+        process = utils.execute.execute_assert_success(cmd)
+        output = process.get_stdout().decode()
+        package = re.search('Wrote: (.*)', output).groups()[0]
+        return package
 
-    def _create_specfile(self):
-        from jinja2 import Environment, PackageLoader
-        env = Environment(loader=PackageLoader('infi.recipe.application_packager', 'rpm/templates'))
-        template = env.get_template("rpmspec.in")
-        kwargs = self._get_template_kwargs()
-        content = template.render(kwargs)
-        specfile = 'rpm.spec'
-        with open(specfile, 'w') as fd:
-            fd.write(content)
-        return specfile
+    def create_rpm_files(self):
+        kwargs = self.get_rpm_kwargs()
+        self.render_template(__name__, SPEC, kwargs)
 
-    def _mkdir(self, name, parent_directory, just_add_it=False):
-        dst = path.join(parent_directory, name)
-        src = "{}{}/{}".format(self._buildroot, parent_directory, name)
-        self._directories.add(dst) if not just_add_it else None
-        self._directories_to_clean.add(dst)
-        makedirs(src) if not just_add_it else None
-        return dst
+    def get_dependencies(self):
+        dependencies = self.get_recipe_section().get('rpm-dependencies', RECIPE_DEFAULTS['rpm-dependencies'])
+        dependencies = [dependency.strip() for dependency in dependencies.splitlines()]
+        return '\n'.join(['Requires: {}'.format(dependency) for dependency in dependencies])
 
-    def _add_directory(self, src, parent_directory, recursive=True, only_directory_tree=False):
-        source_dirname = path.basename(src)
-        destination_directory = self._mkdir(source_dirname, parent_directory, only_directory_tree)
-        for filename in listdir(src):
-            filepath = path.join(src, filename)
-            if path.isfile(filepath):
-                if filename.endswith('pyc') or only_directory_tree:
-                    continue
-                self._add_file(filepath, destination_directory)
-            elif recursive:
-                self._add_directory(filepath, destination_directory, recursive, only_directory_tree)
-
-    def _add_file(self, source_filepath, destination_directory, destination_filename=None):
-        if path.dirname(source_filepath) == '':
-            source_filepath = path.join(self.get_buildout_dir(), source_filepath)
-        if destination_filename is None:
-            destination_filename = path.basename(source_filepath)
-        buildroot_filepath = "{}{}/{}".format(self._buildroot, destination_directory, destination_filename)
-        destination_filepath = path.join(destination_directory, destination_filename)
-        self.copy_file(source_filepath, buildroot_filepath)
-        self._files.add(destination_filepath)
-
-    def _get_requires_declaration(self):
-        rpm_dependencies = self.get_recipe_section().get("rpm-dependencies", RECIPE_DEFAULTS["rpm-dependencies"])
-        deps = [item.strip() for item in rpm_dependencies.splitlines()]
-        return "\n".join(["Requires: {}".format(dep) for dep in deps])
-
-    def _get_template_kwargs(self):
-        directories_to_clean = [item for item in self._directories_to_clean]
-        directories_to_clean.sort()
-        directories_to_clean.reverse()
-        pythonlib = 'parts/python/lib64/' if self.get_platform_arch() == 'x86_64' else 'parts/python/lib/'
-
-        kwargs = {
-                  'product_name': self.get_product_name(),
-                  'product_description': self.get_description(),
-                  'package_name': self.get_package_name(),
-                  'package_version': self.get_project_version__short(),
-                  'package_arch': self.get_platform_arch(),
-                  'target_arch': self.get_target_arch(),
-                  'requires_declaration': self._get_requires_declaration(),
-                  'close_on_upgrade_or_removal' : '1' if \
-                      self.should_close_app_on_upgrade_or_removal() else '0',
-                  'prefix': self.get_install_prefix(),
-                  'build_root': self._buildroot,
-                  'post_install_script_name': self.get_script_name("post_install") or "''",
-                  'pre_uninstall_script_name': self.get_script_name("pre_uninstall") or "''",
-                  'files': "\n".join(['"{}"'.format(i) for i in self._files]),
-                  'directories': "\n".join(['%dir "{}/"'.format(item) for item in self._directories]),
-                  'directories_to_clean': ' '.join([repr(i) for i in directories_to_clean]),
-                  'remove_python': len([item for item in directories_to_clean if
-                                       pythonlib + 'python3.' in repr(item)]) > 0,
-                  'aix': self._is_aix,
-                  'build_id_definition': self.get_build_id_definition()
-                  }
-        post_install_script_args = self.get_script_args("post_install")
-        pre_uninstall_script_args = self.get_script_args("pre_uninstall")
-        kwargs['post_install_script_args_definition'] = \
-                "%define post_install_script_args {}".format(post_install_script_args) if post_install_script_args \
-                else ''
-        kwargs['pre_uninstall_script_args_definition'] = \
-            "%define pre_uninstall_script_args {}".format(pre_uninstall_script_args) if pre_uninstall_script_args \
-            else ''
-        return kwargs
-
-    def _put_all_files(self):
-        makedirs("{}{}".format(self._buildroot, self.get_install_prefix()))
-        self._mkdir(self.get_install_prefix(), path.sep, True)
-        self._add_file('get-pip.py', self.get_install_prefix())
-        self._add_file('buildout.in', self.get_install_prefix(), 'buildout.cfg')
-        self._add_file('setup.py', self.get_install_prefix())
-        cachedir = self._mkdir('.cache', self.get_install_prefix())
-        develop_eggs = self._mkdir('develop-eggs', self.get_install_prefix())
-        self._add_directory(path.join(self.get_buildout_dir(), '.cache', 'dist'), cachedir, recursive=False)
-        parts = self._mkdir('parts', self.get_install_prefix())
-        self._mkdir('bin', self.get_install_prefix())
-        self._mkdir('buildout', parts)
-        self._mkdir('production-scripts', parts)
-        self._add_directory(path.join(self.get_buildout_dir(), 'parts', 'python'), parts)
-        self._add_directory(path.join(self.get_buildout_dir(), 'src'), self.get_install_prefix())
-        self._add_directory(path.join(self.get_buildout_dir(), 'eggs'), self.get_install_prefix(), True, True)
-        self.add_aditional_directories()
-
-    def get_rpm_filename(self):
-        return "{}-{}-{}.rpm".format(self.get_package_name(), self.get_project_version__long(),
-                                     self.get_os_string())
+    def get_rpm_kwargs(self):
+        return {
+           'buildroot': self.buildroot,
+           'prefix': self.get_install_prefix(),
+           'package': self.get_package_name(),
+           'version': self.get_project_version__short(),
+           'arch': self.get_target_arch(),
+           'summary': self.get_product_name(),
+           'description': self.get_description(),
+           'company': self.get_company_name(),
+           'dependencies': self.get_dependencies(),
+           'post_install_script_name': self.get_script_name('post_install') or '',
+           'post_install_script_args': self.get_script_args('post_install') or '',
+           'pre_uninstall_script_name': self.get_script_name('pre_uninstall') or '',
+           'pre_uninstall_script_args': self.get_script_args('pre_uninstall') or '',
+           'directories': sorted(self.directories),
+           'files': sorted(self.files),
+           'close' : '1' if self.should_close_app_on_upgrade_or_removal() else '0',
+           'scripts': self.get_scripts(),
+           'url': self.get_url()
+        }
 
     @property
-    def rpm_filepath(self):
-        return path.join(self.get_working_directory(), self.get_rpm_filename())
+    def rpm_name(self):
+        name = self.get_package_name()
+        version = self.get_project_version__long()
+        info = self.get_os_string()
+        return '{}-{}-{}.rpm'.format(name, version, info)
 
-    def _call_rpmbuild(self, specfile):
-        return _call_rpmbuild(self._buildroot, specfile)
+    @property
+    def rpm_path(self):
+        return os.path.join(self.get_working_directory(), self.rpm_name)

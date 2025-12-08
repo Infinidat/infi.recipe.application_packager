@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from unittest import SkipTest
 import infi.unittest as unittest
-from infi.os_info import get_platform_string
+from infi.os_info import get_platform_string, system_is_rhel_based
 import infi.recipe.buildout_logging as buildout_logging
 import os
 import glob
@@ -104,25 +104,24 @@ def apply_change_in_file(filepath):
 def do_a_refactoring_change():
     # HOSTDEV-1781
     from infi.gitpy import LocalRepository
-    from os import rename
-    scripts_dir = os.path.join("src", "infi", "recipe", "application_packager", "scripts")
-    refactoring_dir = os.path.join(scripts_dir, "refactoring")
-    scripts_init = os.path.join(scripts_dir, "__init__.py")
-    refactoring_py = "{}.py".format(refactoring_dir)
-    if not os.path.exists(refactoring_dir):
-        return
+    init_py = '__init__.py'
+    scripts_dir = os.path.join('src', 'infi', 'recipe', 'application_packager', 'scripts')
+    scripts_init_py = os.path.join(scripts_dir, init_py)
+    refactoring_dir = os.path.join(scripts_dir, 'refactoring')
+    refactoring_py = '{}.py'.format(refactoring_dir)
+    refactoring_init_py = os.path.join(refactoring_dir, init_py)
     # move the file
-    rename(os.path.join(refactoring_dir, "__init__.py"), refactoring_py)
-
+    if not os.path.isdir(refactoring_dir):
+        os.mkdir(refactoring_dir)
+    if os.path.exists(refactoring_py):
+        os.rename(refactoring_py, refactoring_init_py)
     # change the files
-    apply_change_in_file(refactoring_py)
-    apply_change_in_file(scripts_init)
-
+    apply_change_in_file(refactoring_init_py)
+    apply_change_in_file(scripts_init_py)
     # commit the changes
     repository = LocalRepository('.')
-    repository.delete(refactoring_dir, recursive=True, force=True)
-    repository.add(refactoring_py)
-    repository.add(scripts_init)
+    repository.add(refactoring_init_py)
+    repository.add(scripts_init_py)
     repository.commit("HOSTDEV-1781 refactoring scripts/refactoring")
 
 from infi.recipe.application_packager.utils.execute import execute_assert_success, execute_async
@@ -177,6 +176,7 @@ class Base(unittest.TestCase):
     def tearDown(self):
         if self._chdir_context is not None:
             self._chdir_context.__exit__()
+        self._clean_remainings_of_previous_installations()
         super(Base, self).tearDown()
 
     def has_application_post_install_script_was_executed(self):
@@ -322,20 +322,19 @@ class Posix(Base):
     pass
 
 
-class X86_package_on_X64_machine(object):
-    def _skip_on_irrelvant_platforms(self):
-        from infi.os_info import get_platform_string
-        if 'x64' not in get_platform_string():
-            raise SkipTest("this test runs only on 64bit machines")
-
+class PackageForInvalidArch(object):
     def _build_package_with_invalid_arch(self):
         delete_existing_builds()
         do_an_empty_commit()
         devenv_build()
-        create_package(recipe_parameters=["buidlout:installed=.installed_32_on_64.cfg", "pack:_target_arch=i386"])
+        recipe_parameters = [
+            'buidlout:installed=.installed_invalid_arch.cfg',
+            'pack:_target_arch=ironman'
+        ]
+        create_package(recipe_parameters=recipe_parameters)
 
-    def _assert_invalid_arch_message(self, stderr):
-        raise NotImplementedError()
+    def _assert_invalid_arch_message(self, message):
+        self.assertIn('CPU architecture mismatch', message)
 
     def _build_a_proper_package_again(self):
         delete_existing_builds()
@@ -343,16 +342,16 @@ class X86_package_on_X64_machine(object):
         devenv_build()
         create_package()
 
-    def test_installation_of_32bit_package_on_64bit_machine(self):
+    def test_install_package_for_invalid_cpu_arch(self):
         from infi.execute import ExecutionError
-        self._skip_on_irrelvant_platforms()
         self.addCleanup(self._build_a_proper_package_again)
         self._build_package_with_invalid_arch()
-        with self.assertRaises(ExecutionError) as cm:
+        with self.assertRaises(ExecutionError) as error:
             self.install_package()
-        self._assert_invalid_arch_message(cm.exception.result.get_stderr())
+        message = error.exception.result.get_stderr().decode()
+        self._assert_invalid_arch_message(message)
 
-class RpmTestCase(Posix, RpmInstaller, X86_package_on_X64_machine):
+class RpmTestCase(Posix, RpmInstaller, PackageForInvalidArch):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
         RpmInstaller.__init__(self, TEST_BUILDOUT)
@@ -367,16 +366,17 @@ class RpmTestCase(Posix, RpmInstaller, X86_package_on_X64_machine):
 
     @classmethod
     def should_run(cls):
-        return 'redhat' in get_platform_string() or 'centos' in get_platform_string() or "suse" in get_platform_string() or "aix" in get_platform_string()
-
-    def _assert_invalid_arch_message(self, stderr):
-        self.assertIn(b"is intended for a i386 architecture", stderr)
+        platform_string = get_platform_string()
+        return system_is_rhel_based() or 'suse' in platform_string or 'aix' in platform_string
 
 
-class DebTestCase(Posix, DebInstaller, X86_package_on_X64_machine):
+class DebTestCase(Posix, DebInstaller, PackageForInvalidArch):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
         DebInstaller.__init__(self, TEST_BUILDOUT)
+
+    def _assert_invalid_arch_message(self, message):
+        self.assertIn('does not match system', message)
 
     @classmethod
     def platform_specific_cleanup(cls):
@@ -388,13 +388,11 @@ class DebTestCase(Posix, DebInstaller, X86_package_on_X64_machine):
 
     @classmethod
     def should_run(cls):
-        return 'ubuntu' in get_platform_string() or 'debian' in get_platform_string()
-
-    def _assert_invalid_arch_message(self, stderr):
-        self.assertIn(b"package architecture (i386) does not match system (amd64)", stderr)
+        platform_string = get_platform_string()
+        return 'ubuntu' in platform_string or 'debian' in platform_string
 
 
-class PkgTestCase(Posix, PkgInstaller):
+class PkgTestCase(Posix, PkgInstaller, PackageForInvalidArch):
     def __init__(self, *args, **kwargs):
         Posix.__init__(self, *args, **kwargs)
         PkgInstaller.__init__(self, TEST_BUILDOUT)
@@ -410,3 +408,13 @@ class PkgTestCase(Posix, PkgInstaller):
     @classmethod
     def should_run(cls):
         return 'solaris' in get_platform_string()
+
+    def test_install_package_for_invalid_cpu_arch(self):
+        from infi.execute import ExecutionError
+        self.addCleanup(self._build_a_proper_package_again)
+        self._build_package_with_invalid_arch()
+        with self.assertRaises(ExecutionError) as error:
+            self.install_package()
+        # Solaris package scripts can use only stdout as output for errors
+        message = error.exception.result.get_stdout().decode()
+        self._assert_invalid_arch_message(message)

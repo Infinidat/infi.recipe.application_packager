@@ -268,24 +268,31 @@ class PkgInstaller(Installer):
 
     def __init__(self, *args, **kwargs):
         super(PkgInstaller, self).__init__(*args, **kwargs)
-        admin_file_content = '\n'.join(['partial=nocheck',
-                                    'runlevel=nocheck',
-                                    'idepend=nocheck',
-                                    'rdepend=nocheck',
-                                    'setuid=nocheck',
-                                    'action=nocheck',
-                                    'partial=nocheck',
-                                    'conflict=nocheck',
-                                    'authentication=quit',
-                                    'instance=overwrite',
-                                    'basedir=default'])
+        pairs = {
+            'partial': 'nocheck',
+            'runlevel': 'nocheck',
+            'idepend': 'nocheck',
+            'rdepend': 'nocheck',
+            'setuid': 'nocheck',
+            'action': 'nocheck',
+            'conflict': 'nocheck',
+            'authentication': 'quit',
+            'space': 'quit',
+            'instance': 'overwrite',
+            'basedir': 'default'
+        }
+        content = '\n'.join(['{}={}'.format(k, v) for k, v in pairs.items()])
         self.admin_file = NamedTemporaryFile(mode='w')
-        self.admin_file.write(admin_file_content)
+        self.admin_file.write(content)
         self.admin_file.flush()
         os.fsync(self.admin_file.fileno())
 
     def is_product_installed(self):
-        return 0 == execute(["pkginfo", self.package_name]).get_returncode()
+        # python also have the pkginfo command
+        # it is a good idea to use full command path on Solaris
+        pkginfo = os.path.join(os.path.sep, 'usr', 'bin', 'pkginfo')
+        cmd = [pkginfo, self.package_name]
+        return 0 == execute(cmd).get_returncode()
 
     def install_package(self, with_custom_actions=True):
         response_file = NamedTemporaryFile(mode='w')
@@ -295,15 +302,16 @@ class PkgInstaller(Installer):
         with prevent_access_to_pypi_servers(), prevent_access_to_gcc():
             zipped_package_name = self.get_package()
             unzipped_package_name = zipped_package_name[:-3]
-            execute_assert_success('gunzip -c {} > {}'.format(zipped_package_name, unzipped_package_name), shell=True)
-            execute_assert_success(['pkgadd',
-                                    '-n',
-                                    '-a', self.admin_file.name,
-                                    '-r', response_file.name,
-                                    '-d', unzipped_package_name,
-                                    self.package_name])
+            cmd = 'gunzip -c {} > {}'.format(zipped_package_name, unzipped_package_name)
+            execute_assert_success(cmd, shell=True)
+            pkgadd = os.path.join(os.path.sep, 'usr', 'sbin', 'pkgadd')
+            cmd = [pkgadd, '-n', '-a', self.admin_file.name, '-r', response_file.name,
+                   '-d', unzipped_package_name, self.package_name]
+            execute_assert_success(cmd)
 
     def uninstall_package(self, with_custom_actions=True):
         # with_custom_actions is actually ignored here. This flag is passed to the installer through the response file.
         # Luckily, the preremove scripts also gets this info (it's saved somwhere in the os until the removal)
-        execute_assert_success(['pkgrm', '-n', '-a', self.admin_file.name, self.package_name], allowed_return_codes=[0,])
+        pkgrm = os.path.join(os.path.sep, 'usr', 'sbin', 'pkgrm')
+        cmd = [pkgrm, '-n', '-a', self.admin_file.name, self.package_name]
+        execute_assert_success(cmd)

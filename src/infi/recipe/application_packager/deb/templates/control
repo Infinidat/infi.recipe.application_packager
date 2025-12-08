@@ -1,0 +1,10 @@
+Source: {{ package }}
+Package: {{ package }}
+Version: {{ version }}
+Architecture: {{ arch }}
+Description: {{ description }}
+Maintainer: {{ company }}
+Homepage: {{ url }}
+Section: misc
+Priority: optional
+{{ dependencies }}

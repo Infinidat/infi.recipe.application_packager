@@ -1,0 +1,32 @@
+#!/sbin/sh
+
+set -e
+
+exec 3>&1 4>&2
+
+if test "$DEBUG_CUSTOM_ACTIONS" = "1" -o                   \
+        -r /tmp/INFINIDAT_DEBUG_CUSTOM_ACTIONS; then
+    set -xv
+else
+    exec > /dev/null 2>&1
+fi
+
+if test "$NO_CUSTOM_ACTIONS" = "1" -o                      \
+        -r /tmp/INFINIDAT_NO_CUSTOM_ACTIONS; then
+    exit 0
+fi
+
+echo "Start {{ package }} {{ version }} check-install script: $0 $@"
+
+ARCH=`uname -p`
+ISA=`isainfo -n`
+
+if test "$ARCH" != "{{ arch }}" -o "$ISA" != "{{ isa }}"; then
+    exec 1>&4 2>&4
+    echo "Installation aborted due to CPU architecture mismatch"
+    echo "Package {{ package }} {{ version }} built for {{ arch }} ({{ isa }})"
+    echo "Host CPU is $ARCH ($ISA)"
+    exit 1
+fi
+
+exit 0

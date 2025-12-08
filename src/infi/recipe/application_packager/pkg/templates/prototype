@@ -1,0 +1,8 @@
+i space
+i pkginfo
+i checkinstall
+i preinstall
+i postinstall
+i preremove
+i postremove
+{{ proto }}

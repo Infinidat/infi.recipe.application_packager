@@ -1,0 +1,74 @@
+#!/bin/sh
+
+set -e
+
+if test "$DEBUG_CUSTOM_ACTIONS" = "1" -o                   \
+        -r /tmp/INFINIDAT_DEBUG_CUSTOM_ACTIONS; then
+    set -xv
+else
+    exec > /dev/null 2>&1
+fi
+
+if test "$NO_CUSTOM_ACTIONS" = "1" -o                      \
+        -r /tmp/INFINIDAT_NO_CUSTOM_ACTIONS; then
+    exit 0
+fi
+
+echo "Start {{ package }} {{ version }} post-install script: $0 $@"
+
+if test "$1" != "configure"; then
+    exit 0
+fi
+
+if test ! -d "{{ prefix }}"; then
+    exit 0
+fi
+
+cd "{{ prefix }}"
+
+if test ! -x parts/python/bin/python; then
+    exit 0
+fi
+
+rm -rf .installed.cfg bin develop-eggs eggs                \
+    parts/python/lib*/python*/site-packages                \
+    src/*.egg-info
+
+find . -type d -name __pycache__ -prune -exec rm -rf {} ";"
+find . -type f -name "*.py[co]" -exec rm -f {} ";"
+
+if test -r get-pip.py -a -d .cache/dist; then
+    parts/python/bin/python -I get-pip.py                  \
+        --verbose --force-reinstall                        \
+        --ignore-installed --upgrade                       \
+        --isolated --no-index --find-links                 \
+        .cache/dist pip setuptools wheel zc.buildout
+fi
+
+if test -r parts/python/bin/buildout; then
+    parts/python/bin/python -I                             \
+        parts/python/bin/buildout -U -v install
+fi
+
+if ! parts/python/bin/python -I -m                         \
+        compileall -f eggs parts src; then
+    echo "Ignore compilation errors"
+fi
+
+{% for script in scripts %}
+if test -x "{{ prefix }}/bin/{{ script }}"; then
+    if test ! -L "/usr/bin/{{ script }}"; then
+        ln -f -s "{{ prefix }}/bin/{{ script }}"           \
+            "/usr/bin/{{ script }}"
+    fi
+fi
+{% endfor %}
+
+if test -n "{{ post_install_script_name }}" -a             \
+        -r "bin/{{ post_install_script_name }}"; then
+    parts/python/bin/python -I                             \
+        "bin/{{ post_install_script_name }}"               \
+            {{ post_install_script_args }}
+fi
+
+exit 0
