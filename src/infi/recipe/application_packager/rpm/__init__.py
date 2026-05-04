@@ -28,7 +28,7 @@ class Recipe(PackagingRecipe):
             return [self.rpm_path]
 
     def build(self):
-        with utils.temporary_directory_context() as buildroot:
+        with utils.temporary_directory_context(should_chdir=False) as buildroot:
             self.buildroot = buildroot
             self.copy_tree()
             self.walk_tree()
@@ -40,7 +40,7 @@ class Recipe(PackagingRecipe):
                 shutil.copy(package, self.rpm_path)
 
     def build_rpm_package(self):
-        cmd = ['rpmbuild', '--verbose', '--noclean', '--buildroot',
+        cmd = ['rpmbuild', '--verbose', '--buildroot',
                self.buildroot, '-bb', SPEC]
         process = utils.execute.execute_assert_success(cmd)
         output = process.get_stdout().decode()
