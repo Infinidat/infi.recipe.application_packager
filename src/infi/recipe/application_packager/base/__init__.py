@@ -35,6 +35,7 @@ RECIPE_DEFAULTS = {'require-administrative-privileges': 'false',
                    '_target_arch': None,
                    '_target_isa': None,
                    'close-on-upgrade-or-removal' : 'true',
+                   'windows-buildout-rename-retry-timeout': '0',
                    'additional-directories': ''
                   }
 
@@ -152,6 +153,14 @@ class PackagingRecipe(object):
     def should_close_app_on_upgrade_or_removal(self):
         key = 'close-on-upgrade-or-removal'
         return self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]) in [True, 'true', 'True']
+
+    def get_windows_buildout_rename_retry_timeout(self):
+        from math import isinf, isnan
+        key = 'windows-buildout-rename-retry-timeout'
+        value = float(self.get_recipe_section().get(key, RECIPE_DEFAULTS[key]))
+        if value < 0 or isnan(value) or isinf(value):
+            raise ValueError('{} must be a non-negative finite number'.format(key))
+        return value
 
     def get_product_name(self):
         return self.get_project_section().get('product_name', self.get_project_section().get('name'))
@@ -307,10 +316,6 @@ class PackagingRecipe(object):
 
     def get_additional_directories(self):
         return self._get_recipe_atribute('additional-directories')
-
-    def write_bootstrap_for_production(self):
-        from ..utils.buildout import write_bootstrap_for_production
-        write_bootstrap_for_production()
 
     def write_get_pip_for_production(self):
         from ..utils.buildout import write_get_pip_for_production
