@@ -104,6 +104,7 @@ Under the `pack` recipe in your `buildout.cfg`, you can define the following opt
 | exclude-eggs                          | executable, static_library                | []                                                           | eggs not to include in the build                                         |
 | existing-installdir                   | msi                                       | None                                                         | path to registry value to look for installation directory                |
 | custom-installdir                     | msi                                       | None                                                         | override if want to use something other than [EXISTINGINSTALLDIR]        |
+| windows-buildout-rename-retry-timeout | msi                                       | 0                                                            | retry transient Windows errors while buildout moves a temporary egg to its final directory; value is the timeout in seconds |
 | eula-rtf                              | msi                                       | None                                                         | path to end-user license agreement RTF file                              |
 | documentation-url                     | msi                                       | None                                                         | gives the user an option to launch the online docs after install         |
 

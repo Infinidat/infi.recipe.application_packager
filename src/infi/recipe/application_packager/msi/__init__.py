@@ -196,6 +196,11 @@ class Recipe(PackagingRecipe):
         wix.add_file('get-pip.py', wix.installdir)
         wix.add_file('buildout.in', wix.installdir, 'buildout.cfg')
         wix.add_file('setup.py', wix.installdir)
+        if self.get_windows_buildout_rename_retry_timeout() > 0:
+            bootstrap_wrapper = resource_filename(
+                'infi.recipe.application_packager.utils.buildout',
+                'windows_bootstrap.py')
+            wix.add_file(bootstrap_wrapper, wix.installdir, 'buildout-bootstrap.py')
         cachedir = wix.mkdir('.cache', wix.installdir)
         silent_launcher_file_id = wix.add_file(silent_launcher, cachedir).id
         develop_eggs = wix.mkdir('develop-eggs', wix.installdir)
@@ -231,7 +236,13 @@ class Recipe(PackagingRecipe):
         return action.id
 
     def _append_bootstrap_custom_action(self, wix, os_removedirs_eggs_id, silent_launcher_file_id):
-        commandline = r'''"[INSTALLDIR]parts\python\bin\python.exe" -m pythonpy "zc.buildout.buildout.main(list(('-U',)))"'''
+        timeout = self.get_windows_buildout_rename_retry_timeout()
+        if timeout > 0:
+            commandline = (
+                r'''"[INSTALLDIR]parts\python\bin\python.exe" buildout-bootstrap.py '''
+                r'''--rename-retry-timeout={} -U''').format(timeout)
+        else:
+            commandline = r'''"[INSTALLDIR]parts\python\bin\python.exe" -m pythonpy "zc.buildout.buildout.main(list(('-U',)))"'''
         action = wix.add_deferred_in_system_context_custom_action('bootstrap', commandline,
                                                                   after=os_removedirs_eggs_id,
                                                                   condition=CONDITION_DURING_INSTALL_OR_REPAIR,
