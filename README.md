@@ -117,7 +117,34 @@ The basic flow of the installer is as follows:
 * Run get-pip
 * Run bootstrap
 * Create the executable scripts
+* On Windows, restore inherited permissions on installed Python dependencies
 * Run the user-defined post install script, if was defined in `buildout.cfg`
+
+### Windows dependency permissions
+
+Every MSI includes a standalone, standard-library-only
+`restore-egg-permissions.py` helper. A deferred system-context action runs it
+after buildout bootstrap and before the application's `post_install`. It runs
+on fresh installs, upgrades, Modify and Repair/`REINSTALL`, but not uninstall;
+`NO_CUSTOM_ACTIONS=1` skips it along with the other custom actions. It does not
+depend on `windows-buildout-rename-retry-timeout` or import the application or
+packager from installed eggs.
+
+Buildout's temporary dependency directories use `mkdir(0o700)`, which applies
+a protected Windows ACL on patched Python 3.8+ builds (for example 3.8.20,
+3.10.15 and 3.11.10). A rename retains that ACL, so non-elevated processes can
+fail to import installed dependencies. The helper enables inheritance and resets
+ACLs only within `INSTALLDIR\eggs`, inheriting the installation parent's policy
+instead of granting additional rights explicitly. Under standard Program Files
+permissions, Users receive read/execute access, not write access. See the
+[Python documentation](https://docs.python.org/3.8/library/os.html#os.mkdir).
+
+The helper rejects symlinks, junctions/reparse points and hard-linked/special
+files, and reports failures to MSI instead of silently succeeding. It does not
+change installation-parent, profile, log, configuration or ProgramData
+credentials-store ACLs. Python below 3.8 and non-Windows execution are no-ops;
+legacy interpreters predate this Windows `mkdir(0o700)` change. Unix packaging
+is unchanged. Applications no longer need their own dependency ACL repair.
 
 The uninstall procedure is:
 
