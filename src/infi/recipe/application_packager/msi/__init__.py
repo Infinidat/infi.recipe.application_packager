@@ -12,6 +12,9 @@ logger = getLogger(__name__)
 
 BYPASS_CUSTOM_ACTION_PROPERTY = "NO_CUSTOM_ACTIONS"
 CONDITION_DURING_INSTALL_OR_REPAIR = 'NOT Installed OR MaintenanceMode="Modify"'
+CONDITION_DURING_EGG_ACL_REPAIR = (
+    '({} OR MaintenanceMode="Repair" OR REINSTALL) AND NOT REMOVE="ALL"'
+).format(CONDITION_DURING_INSTALL_OR_REPAIR)
 CONDITION_DURING_UNINSTALL_NOT_UPGRADE = 'REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE'
 CONDITION_DURING_UPGRADE = "UPGRADINGPRODUCTCODE"
 CONDITION_DURING_UPGRADE_AND_UNINSTALL = "({}) OR ({})".format(CONDITION_DURING_UPGRADE, CONDITION_DURING_UNINSTALL_NOT_UPGRADE)
@@ -196,6 +199,10 @@ class Recipe(PackagingRecipe):
         wix.add_file('get-pip.py', wix.installdir)
         wix.add_file('buildout.in', wix.installdir, 'buildout.cfg')
         wix.add_file('setup.py', wix.installdir)
+        permissions_helper = resource_filename(
+            'infi.recipe.application_packager.utils.buildout',
+            'windows_permissions.py')
+        wix.add_file(permissions_helper, wix.installdir, 'restore-egg-permissions.py')
         if self.get_windows_buildout_rename_retry_timeout() > 0:
             bootstrap_wrapper = resource_filename(
                 'infi.recipe.application_packager.utils.buildout',
@@ -251,6 +258,16 @@ class Recipe(PackagingRecipe):
 
         return action.id
 
+    def _append_restore_egg_permissions_custom_action(self, wix, bootstrap_id, silent_launcher_file_id):
+        commandline = r'"[INSTALLDIR]parts\python\bin\python.exe" -E -S "[INSTALLDIR]restore-egg-permissions.py"'
+        action = wix.add_deferred_in_system_context_custom_action(
+            'restore_egg_permissions', commandline,
+            after=bootstrap_id,
+            condition=CONDITION_DURING_EGG_ACL_REPAIR,
+            silent_launcher_file_id=silent_launcher_file_id,
+            text="Restoring Python dependency permissions")
+        return action.id
+
     def _append_delete_extra_executables_custom_action(self, wix, bootstrap_id, silent_launcher_file_id):
         from itertools import product
         after = bootstrap_id
@@ -298,7 +315,8 @@ class Recipe(PackagingRecipe):
         os_removedirs_eggs_id = self._append_os_removedirs_eggs(wix, silent_launcher_file_id)
         get_pip_id = self._append_get_pip_custom_action(wix, os_removedirs_eggs_id, silent_launcher_file_id)
         bootstrap_id = self._append_bootstrap_custom_action(wix, get_pip_id, silent_launcher_file_id)
-        delete_executables_id = self._append_delete_extra_executables_custom_action(wix, bootstrap_id, silent_launcher_file_id)
+        permissions_id = self._append_restore_egg_permissions_custom_action(wix, bootstrap_id, silent_launcher_file_id)
+        delete_executables_id = self._append_delete_extra_executables_custom_action(wix, permissions_id, silent_launcher_file_id)
         close_application_id = self._append_close_application_action(wix, silent_launcher_file_id)
         pip_uninstall_id = self._append_pip_uninstall_buildout_stuff(wix, close_application_id, silent_launcher_file_id)
         os_removedirs_eggs_uninstall_id = self._append_os_removedirs_eggs_uninstall(wix, pip_uninstall_id, silent_launcher_file_id)
@@ -328,7 +346,7 @@ class Recipe(PackagingRecipe):
         return " Or ".join([condition for condition in prevent_installation_on_operating_systems])
 
     def _add_project_entry_points(self, wix, silent_launcher_file_id):
-        for key, value in {'post_install': {'after': 'custom_action_bootstrap',
+        for key, value in {'post_install': {'after': 'custom_action_restore_egg_permissions',
                                             'before': None,
                                             'condition': CONDITION_DURING_INSTALL_OR_REPAIR},
                            'pre_uninstall': {'after': None,
